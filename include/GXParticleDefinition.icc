@@ -1,0 +1,218 @@
+//
+// ********************************************************************
+// * License and Disclaimer                                           *
+// *                                                                  *
+// * The  Geant4 software  is  copyright of the Copyright Holders  of *
+// * the Geant4 Collaboration.  It is provided  under  the terms  and *
+// * conditions of the Geant4 Software License,  included in the file *
+// * LICENSE and available at  http://cern.ch/geant4/license .  These *
+// * include a list of copyright holders.                             *
+// *                                                                  *
+// * Neither the authors of this software system, nor their employing *
+// * institutes,nor the agencies providing financial support for this *
+// * work  make  any representation or  warranty, express or implied, *
+// * regarding  this  software system or assume any liability for its *
+// * use.  Please see the license in the file  LICENSE  and URL above *
+// * for the full disclaimer and the limitation of liability.         *
+// *                                                                  *
+// * This  code  implementation is the result of  the  scientific and *
+// * technical work of the GEANT4 collaboration.                      *
+// * By using,  copying,  modifying or  distributing the software (or *
+// * any work based  on the software)  you  agree  to acknowledge its *
+// * use  in  resulting  scientific  publications,  and indicate your *
+// * acceptance of all terms of the Geant4 Software license.          *
+// ********************************************************************
+//
+//
+// $Id: GXParticleDefinition.icc 106143 2017-09-14 06:34:42Z gcosmo $
+//
+
+inline 
+ G4int GXParticleDefinition::GetInstanceID() const
+{ 
+  return g4particleDefinitionInstanceID; 
+}
+
+inline
+ G4bool GXParticleDefinition::GetPDGStable() const
+{
+  if(IsGeneralIon())
+  { return (GetIonLifeTime()<0.); }
+  else
+  { return thePDGStable; }
+}
+
+inline
+ G4double GXParticleDefinition::GetPDGLifeTime() const
+{ return thePDGLifeTime; }
+
+inline 
+ G4double GXParticleDefinition::GetIonLifeTime() const
+{ return thePDGLifeTime; }
+
+//-- No longer needed to access to G4IonTable.
+//-- Method GetIonLifeTime() itself is kept for compatibility
+//-- but moved to icc file as an inlined method.
+//inline
+// G4double GXParticleDefinition::GetPDGLifeTime() const
+//{
+//  if(IsGeneralIon())
+//  { return GetIonLifeTime(); }
+//  else
+//  { return thePDGLifeTime; }
+//}
+
+inline 
+ GXParticleTable* GXParticleDefinition::GetParticleTable() const
+{ 
+  return theParticleTable; 
+}
+
+inline
+ GXDecayTable* GXParticleDefinition::GetDecayTable() const
+{ 
+  return theDecayTable; 
+}
+
+inline
+ void GXParticleDefinition::SetDecayTable(GXDecayTable* aDecayTable) 
+{ 
+  theDecayTable = aDecayTable; 
+}
+
+inline 
+ void GXParticleDefinition::SetVerboseLevel(G4int value)
+{
+   verboseLevel = value;
+}
+
+inline 
+ G4int GXParticleDefinition::GetVerboseLevel() const
+{
+   return verboseLevel;
+}
+
+inline
+ G4ProcessManager* GXParticleDefinition::GetMasterProcessManager() const
+{
+    return theProcessManagerShadow;
+}
+
+inline
+  void GXParticleDefinition::SetMasterProcessManager( G4ProcessManager* aNewPM )
+{
+   theProcessManagerShadow = aNewPM;
+}
+
+inline
+ G4int GXParticleDefinition::GetQuarkContent(G4int flavor) const 
+{
+  G4int content = 0; 
+  if ((flavor>0) && (flavor<=NumberOfQuarkFlavor))
+  {
+    content = theQuarkContent[flavor-1];
+  }
+  else
+  {
+#ifdef G4VERBOSE
+    if (verboseLevel >0)
+    {
+      std::ostringstream message;
+      message << "Invalid Quark Flavor: " << flavor;
+      G4Exception("GXParticleDefinition::GetQuarkContent()",
+                  "InvalidFlavor", JustWarning, message);
+    }	
+#endif	
+  }
+  return content;  
+}
+
+inline
+ G4int GXParticleDefinition::GetAntiQuarkContent(G4int flavor) const 
+{
+  G4int content = 0;
+  if ((flavor>0) && (flavor<=NumberOfQuarkFlavor))
+  {
+    content = theAntiQuarkContent[flavor-1];
+  }
+  else
+  {
+#ifdef G4VERBOSE
+    if (verboseLevel >0)
+    {
+      std::ostringstream message;
+      message << "Invalid Quark Flavor: " << flavor;
+      G4Exception("GXParticleDefinition::GetAntiQuarkContent()",
+                  "InvalidFlavor", JustWarning, message);
+    }
+#endif
+  }  
+  return content;
+}
+
+inline 
+ void GXParticleDefinition::SetParticleSubType(const G4String& subtype)
+{
+  theParticleSubType = subtype;
+}
+ 
+inline 
+ void             GXParticleDefinition::SetAntiPDGEncoding(G4int aEncoding)
+{ 
+  theAntiPDGEncoding = aEncoding; 
+}
+
+inline 
+G4bool GXParticleDefinition::GetApplyCutsFlag() const
+{
+  return fApplyCutsFlag;
+}
+
+inline
+ void GXParticleDefinition::SetAtomicNumber(G4int i)
+{
+  theAtomicNumber = i;
+}
+
+inline
+ G4int GXParticleDefinition::GetAtomicNumber() const
+{
+  return theAtomicNumber;
+}
+
+inline
+ void GXParticleDefinition::SetAtomicMass(G4int i)
+{
+  theAtomicMass = i;
+}
+
+inline
+ G4int GXParticleDefinition::GetAtomicMass() const
+{
+  return theAtomicMass;
+}
+
+inline 
+  void  GXParticleDefinition::SetPDGMagneticMoment(G4double magneticMoment)
+{
+   thePDGMagneticMoment = magneticMoment;
+}
+
+inline      
+  G4bool GXParticleDefinition::IsGeneralIon() const
+{
+  return isGeneralIon;
+}
+
+inline
+  G4bool GXParticleDefinition::IsMuonicAtom() const
+{
+  return isMuonicAtom;
+}
+
+inline
+  G4int GXParticleDefinition::GetParticleDefinitionID() const
+{
+  return g4particleDefinitionInstanceID; 
+}
+
