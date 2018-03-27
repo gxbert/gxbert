@@ -419,84 +419,86 @@ set(SRC_CPP_RELATIVE
   src/nucleiLevelDensity.cc
   src/paraMaker.cc
 
-  base/clhep/src/AxisAngle.cc
-  base/clhep/src/BasicVector3D.cc
-  base/clhep/src/Boost.cc
-  base/clhep/src/BoostX.cc
-  base/clhep/src/BoostY.cc
-  base/clhep/src/BoostZ.cc
   base/clhep/src/DoubConv.cc
+  base/clhep/src/LorentzRotation.cc
+  base/clhep/src/LorentzVector.cc
+  base/clhep/src/LorentzVectorL.cc
+  base/clhep/src/Rotation.cc
+  base/clhep/src/RotationInterfaces.cc
+  base/clhep/src/setStdMath.cc
+  base/clhep/src/setSystemOfUnits.cc
+  base/clhep/src/SpaceVector.cc
+  base/clhep/src/ThreeVector.cc
+  base/clhep/src/ThreeVectorR.cc
+  base/clhep/src/ZMinput.cc
+
   base/clhep/src/DualRand.cc
   base/clhep/src/EngineFactory.cc
   base/clhep/src/engineIDulong.cc
-  base/clhep/src/erfQ.cc
-  base/clhep/src/EulerAngles.cc
-  base/clhep/src/Evaluator.cc
-  base/clhep/src/flatToGaussian.cc
-  base/clhep/src/gammln.cc
   base/clhep/src/JamesRandom.cc
-  base/clhep/src/LorentzRotation.cc
-  base/clhep/src/LorentzRotationC.cc
-  base/clhep/src/LorentzRotationD.cc
-  base/clhep/src/LorentzVectorB.cc
-  base/clhep/src/LorentzVector.cc
-  base/clhep/src/LorentzVectorC.cc
-  base/clhep/src/LorentzVectorK.cc
-  base/clhep/src/LorentzVectorL.cc
-  base/clhep/src/LorentzVectorR.cc
   base/clhep/src/mixmax.cc
   base/clhep/src/MixMaxRng.cc
   base/clhep/src/MTwistEngine.cc
   base/clhep/src/NonRandomEngine.cc
-  base/clhep/src/Normal3D.cc
-  base/clhep/src/Plane3D.cc
-  base/clhep/src/Point3D.cc
-  base/clhep/src/RandBinomial.cc
-  base/clhep/src/RandBit.cc
-  base/clhep/src/RandBreitWigner.cc
-  base/clhep/src/RandChiSquare.cc
-  base/clhep/src/RandExponential.cc
-  base/clhep/src/RandExpZiggurat.cc
   base/clhep/src/RandFlat.cc
-  base/clhep/src/RandGamma.cc
   base/clhep/src/RandGauss.cc
-  base/clhep/src/RandGaussQ.cc
-  base/clhep/src/RandGaussZiggurat.cc
   base/clhep/src/RandGeneral.cc
-  base/clhep/src/RandLandau.cc
   base/clhep/src/Random.cc
   base/clhep/src/RandomEngine.cc
-  base/clhep/src/RandPoisson.cc
-  base/clhep/src/RandPoissonQ.cc
-  base/clhep/src/RandStudentT.cc
   base/clhep/src/RanecuEngine.cc
   base/clhep/src/Ranlux64Engine.cc
   base/clhep/src/RanluxEngine.cc
   base/clhep/src/RanshiEngine.cc
-  base/clhep/src/RotationA.cc
-  base/clhep/src/Rotation.cc
-  base/clhep/src/RotationC.cc
-  base/clhep/src/RotationE.cc
-  base/clhep/src/RotationInterfaces.cc
-  base/clhep/src/RotationIO.cc
-  base/clhep/src/RotationL.cc
-  base/clhep/src/RotationP.cc
-  base/clhep/src/RotationX.cc
-  base/clhep/src/RotationY.cc
-  base/clhep/src/RotationZ.cc
-  base/clhep/src/setStdMath.cc
-  base/clhep/src/setSystemOfUnits.cc
-  base/clhep/src/SpaceVector.cc
-  base/clhep/src/SpaceVectorD.cc
-  base/clhep/src/SpaceVectorP.cc
-  base/clhep/src/SpaceVectorR.cc
   base/clhep/src/StaticRandomStates.cc
-  base/clhep/src/ThreeVector.cc
-  base/clhep/src/ThreeVectorR.cc
-  base/clhep/src/Transform3D.cc
-  base/clhep/src/TwoVector.cc
-  base/clhep/src/Vector3D.cc
-  base/clhep/src/ZMinput.cc
+
+#  base/clhep/src/AxisAngle.cc
+#  base/clhep/src/BasicVector3D.cc
+#  base/clhep/src/Boost.cc
+#  base/clhep/src/BoostX.cc
+#  base/clhep/src/BoostY.cc
+#  base/clhep/src/BoostZ.cc
+#  base/clhep/src/erfQ.cc
+#  base/clhep/src/EulerAngles.cc
+#  base/clhep/src/Evaluator.cc
+#  base/clhep/src/flatToGaussian.cc
+#  base/clhep/src/gammln.cc
+#  base/clhep/src/LorentzRotationC.cc
+#  base/clhep/src/LorentzRotationD.cc
+#  base/clhep/src/LorentzVectorB.cc
+#  base/clhep/src/LorentzVectorC.cc
+#  base/clhep/src/LorentzVectorK.cc
+#  base/clhep/src/LorentzVectorR.cc
+#  base/clhep/src/Normal3D.cc
+#  base/clhep/src/Plane3D.cc
+#  base/clhep/src/Point3D.cc
+#  base/clhep/src/RandBinomial.cc
+#  base/clhep/src/RandBit.cc
+#  base/clhep/src/RandBreitWigner.cc
+#  base/clhep/src/RandChiSquare.cc
+#  base/clhep/src/RandExponential.cc
+#  base/clhep/src/RandExpZiggurat.cc
+#  base/clhep/src/RandGamma.cc
+#  base/clhep/src/RandGaussQ.cc
+#  base/clhep/src/RandGaussZiggurat.cc
+#  base/clhep/src/RandLandau.cc
+#  base/clhep/src/RandPoisson.cc
+#  base/clhep/src/RandPoissonQ.cc
+#  base/clhep/src/RandStudentT.cc
+#  base/clhep/src/RotationA.cc
+#  base/clhep/src/RotationC.cc
+#  base/clhep/src/RotationE.cc
+#  base/clhep/src/RotationIO.cc
+#  base/clhep/src/RotationL.cc
+#  base/clhep/src/RotationP.cc
+#  base/clhep/src/RotationX.cc
+#  base/clhep/src/RotationY.cc
+#  base/clhep/src/RotationZ.cc
+#  base/clhep/src/SpaceVectorD.cc
+#  base/clhep/src/SpaceVectorP.cc
+#  base/clhep/src/SpaceVectorR.cc
+#  base/clhep/src/Transform3D.cc
+#  base/clhep/src/TwoVector.cc
+#  base/clhep/src/Vector3D.cc
 )
 
 if (GXBERT_CUDA)
@@ -519,13 +521,9 @@ if (GXBERT_CUDA)
       )
   endforeach()
 
-  set(SRC_CUDA ${SRC_CUDA}
-    src/RngBenchmarker.cu
-    src/RngBenchmarker_gpu.cu
-
-    src/PdfBenchmarker.cu
-    src/PdfBenchmarker_gpu.cu
-  )
+#  set(SRC_CUDA ${SRC_CUDA}
+#  add cuda tests
+#  )
 endif()
 
 foreach(SRC ${SRC_CPP_RELATIVE})
@@ -586,7 +584,6 @@ if (GXBERT_VECTEST)
   set(TEST_EXECUTABLES ${TEST_EXECUTABLES}
     ${PROJECT_SOURCE_DIR}/test/gvbertTest.cc
   ) 
-  message(STATUS "===>syjun TEST_EXECUTABLES ===>: ${TEST_EXECUTABLES}")
 endif()
 
 # Build executables
