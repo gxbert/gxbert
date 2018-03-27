@@ -82,13 +82,15 @@ else()
 endif()
 
 # Find VecCore with selected components turned on (CUDA and backend)
-#find_package(VecCore REQUIRED COMPONENTS ${VecCore_COMPONENTS})
 
-#include_directories(SYSTEM ${VecCore_INCLUDE_DIRS})
-#set(GXBERT_DEFINITIONS "${GXBERT_DEFINITIONS} ${VecCore_DEFINITIONS}")
-#set(GXBERT_DEFINITIONS "${GXBERT_DEFINITIONS} -DGXBERT_${_BACKEND_UP}")
-#set(GXBERT_EXTERNAL_INCLUDES "${GXBERT_EXTERNAL_INCLUDES};${VecCore_INCLUDE_DIRS}")
-#set(GXBERT_LIBRARIES_EXTERNAL ${GXBERT_LIBRARIES_EXTERNAL} ${VecCore_LIBRARIES})
+if (GXBERT_VECTEST)
+  find_package(VecCore REQUIRED COMPONENTS ${VecCore_COMPONENTS})
+  include_directories(SYSTEM ${VecCore_INCLUDE_DIRS})
+  set(GXBERT_DEFINITIONS "${GXBERT_DEFINITIONS} ${VecCore_DEFINITIONS}")
+  set(GXBERT_DEFINITIONS "${GXBERT_DEFINITIONS} -DGXBERT_${_BACKEND_UP}")
+  set(GXBERT_EXTERNAL_INCLUDES "${GXBERT_EXTERNAL_INCLUDES};${VecCore_INCLUDE_DIRS}")
+  set(GXBERT_LIBRARIES_EXTERNAL ${GXBERT_LIBRARIES_EXTERNAL} ${VecCore_LIBRARIES})
+endif()
 
 ################################################################################
 
@@ -579,6 +581,13 @@ endif()
 set(TEST_EXECUTABLES
   ${PROJECT_SOURCE_DIR}/test/gxbertTest.cc
 )
+
+if (GXBERT_VECTEST)
+  set(TEST_EXECUTABLES ${TEST_EXECUTABLES}
+    ${PROJECT_SOURCE_DIR}/test/gvbertTest.cc
+  ) 
+  message(STATUS "===>syjun TEST_EXECUTABLES ===>: ${TEST_EXECUTABLES}")
+endif()
 
 # Build executables
 set(GXBERT_EXECUTABLES)
