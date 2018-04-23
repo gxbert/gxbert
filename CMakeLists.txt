@@ -193,7 +193,7 @@ message(STATUS "Compiling for ${_arch_up} SIMD architecture")
 if (GXBERT_CUDA)
   set(GXBERT_COMPILATION_FLAGS "${GXBERT_COMPILATION_FLAGS} -DGXBERT_CUDA")
 
-  set(CUDA_ARCH 30 CACHE STRING "CUDA device architecture.")
+  set(CUDA_ARCH 35 CACHE STRING "CUDA device architecture.")
   set(CUDA_ARCH "-arch=sm_${CUDA_ARCH}")
   set(GXBERT_DEFINITIONS "${GXBERT_DEFINITIONS} -DGXBERT_ENABLE_CUDA")
   set(GXBERT_NVCC_COMPILATION_FLAGS ${GXBERT_NVCC_COMPILATION_FLAGS}
@@ -257,167 +257,35 @@ endif()
 
 include_directories(${PROJECT_SOURCE_DIR} include 
                                           base/external 
-                                          base/clhep/include )
+                                          base/clhep/include 
+                                          base/vechep 
+                                          test/include 
+)
+
+file(GLOB _gxbert RELATIVE ${CMAKE_SOURCE_DIR} src/*.cc)
+
+if(GXBERT_CUDA)
 
 set(SRC_CPP_RELATIVE
- src/bindingEnergyAsymptotic.cc
-  src/bindingEnergy.cc
-  src/G4Analyser.cc
-  src/G4BigBanger.cc
-  src/G4CascadeChannel.cc
-  src/G4CascadeChannelTables.cc
-  src/G4CascadeCheckBalance.cc
-  src/G4CascadeCoalescence.cc
-  src/G4CascadeColliderBase.cc
-  src/G4CascadeDeexcitation.cc
-  src/G4CascadeDeexciteBase.cc
-  src/G4CascadeFinalStateAlgorithm.cc
-  src/G4CascadeFinalStateGenerator.cc
-  src/G4CascadeHistory.cc
-  src/G4CascadeKminusNChannel.cc
-  src/G4CascadeKminusPChannel.cc
-  src/G4CascadeKplusNChannel.cc
-  src/G4CascadeKplusPChannel.cc
-  src/G4CascadeKzeroBarNChannel.cc
-  src/G4CascadeKzeroBarPChannel.cc
-  src/G4CascadeKzeroNChannel.cc
-  src/G4CascadeKzeroPChannel.cc
-  src/G4CascadeLambdaNChannel.cc
-  src/G4CascadeLambdaPChannel.cc
-  src/G4CascadeMuMinusPChannel.cc
-  src/G4CascadeNNChannel.cc
-  src/G4CascadeNPChannel.cc
-  src/G4CascadeOmegaMinusNChannel.cc
-  src/G4CascadeOmegaMinusPChannel.cc
-  src/G4CascadeParameters.cc
-  src/G4CascadePPChannel.cc
-  src/G4CascadeRecoilMaker.cc
-  src/G4CascadeSigmaMinusNChannel.cc
-  src/G4CascadeSigmaMinusPChannel.cc
-  src/G4CascadeSigmaPlusNChannel.cc
-  src/G4CascadeSigmaPlusPChannel.cc
-  src/G4CascadeSigmaZeroNChannel.cc
-  src/G4CascadeSigmaZeroPChannel.cc
-  src/G4CascadeT11pizNChannel.cc
-  src/G4CascadeT1GamNChannel.cc
-  src/G4CascadeT31piNChannel.cc
-  src/G4CascadeT33piNChannel.cc
-  src/G4CascadeXiMinusNChannel.cc
-  src/G4CascadeXiMinusPChannel.cc
-  src/G4CascadeXiZeroNChannel.cc
-  src/G4CascadeXiZeroPChannel.cc
-  src/G4CascadParticle.cc
-  src/G4CollisionOutput.cc
-  src/G4Dineutron.cc
-  src/G4Diproton.cc
-  src/G4ElementaryParticleCollider.cc
-  src/G4EquilibriumEvaporator.cc
-  src/G4EvaporationInuclCollider.cc
-  src/G4ExitonConfiguration.cc
-  src/G4FissionConfiguration.cc
-  src/G4Fissioner.cc
-  src/G4FissionStore.cc
-  src/G4GammaNuclAngDst.cc
-  src/G4GamP2NPipAngDst.cc
-  src/G4GamP2PPi0AngDst.cc
-  src/G4GDecay3.cc
-  src/G4HadNElastic1AngDst.cc
-  src/G4HadNElastic2AngDst.cc
-  src/G4HadNucl3BodyAngDst.cc
-  src/G4HadNucl3BodyMomDst.cc
-  src/G4HadNucl4BodyMomDst.cc
-  src/G4HyperonSampler.cc
-  src/G4InteractionCase.cc
-  src/G4IntraNucleiCascader.cc
-  src/G4InuclCollider.cc
-  src/G4InuclElementaryParticle.cc
-  src/G4InuclNuclei.cc
-  src/G4InuclParamAngDst.cc
-  src/G4InuclParamMomDst.cc
-  src/G4InuclParticle.cc
-  src/G4InuclParticleNames.cc
-  src/G4InuclSpecialFunctions.cc
-  src/G4KaonHypSampler.cc
-  src/G4KaonSampler.cc
-  src/G4LorentzConvertor.cc
-  src/G4MultiBodyMomentumDist.cc
-  src/G4NonEquilibriumEvaporator.cc
-  src/G4NP2NPAngDst.cc
-  src/G4NucleiModel.cc
-  src/G4NuclNucl3BodyAngDst.cc
-  src/G4NuclNucl3BodyMomDst.cc
-  src/G4NuclNucl4BodyMomDst.cc
-  src/G4NuclNuclAngDst.cc
-  src/G4NuclWatcher.cc
-  src/G4Pi0P2Pi0PAngDst.cc
-  src/G4PimP2Pi0NAngDst.cc
-  src/G4PimP2PimPAngDst.cc
-  src/G4PiNInelasticAngDst.cc
-  src/G4PionNucSampler.cc
-  src/G4PipP2PipPAngDst.cc
-  src/G4PP2PPAngDst.cc
-  src/G4TwoBodyAngularDist.cc
-  src/G4UnboundPN.cc
-  src/G4VCascadeCollider.cc
-  src/G4VCascadeDeexcitation.cc
-  src/G4VMultiBodyMomDst.cc
-  src/G4VTwoBodyAngDst.cc
-  src/G4WatcherGun.cc
-  src/GXAllocator.cc
-  src/GXAllocatorList.cc
-  src/GXAllocatorPool.cc
-  src/GXAlpha.cc
-  src/GXAntiKaonZero.cc
-  src/GXCascadeInterface.cc
-  src/GXDecayProducts.cc
-  src/GXDecayTable.cc
-  src/GXDeuteron.cc
-  src/GXDynamicParticle.cc
-  src/GXElectronOccupancy.cc
-  src/GXException.cc
-  src/GXFragment.cc
-  src/GXGamma.cc
-  src/GXHadDecayGenerator.cc
-  src/GXHadPhaseSpaceGenbod.cc
-  src/GXHadPhaseSpaceKopylov.cc
-  src/GXHadPhaseSpaceNBodyAsai.cc
-  src/GXHe3.cc
-  src/GXIons.cc
-  src/GXIonTable.cc
-  src/GXios.cc
-  src/GXKaonMinus.cc
-  src/GXKaonPlus.cc
-  src/GXKaonZero.cc
-  src/GXKaonZeroLong.cc
-  src/GXKaonZeroShort.cc
-  src/GXLambda.cc
-  src/GXNeutron.cc
-  src/GXNucleiProperties.cc
-  src/GXNucleiPropertiesTableAME12.cc
-  src/GXNucleiPropertiesTheoreticalTableA.cc
-  src/GXNucleiPropertiesTheoreticalTableB.cc
-  src/GXOmegaMinus.cc
-  src/GXParticleDefinition.cc
-  src/GXParticleTable.cc
-  src/GXPDGCodeChecker.cc
-  src/GXPhaseSpaceDecayChannel.cc
-  src/GXPionMinus.cc
-  src/GXPionPlus.cc
-  src/GXPionZero.cc
-  src/GXPow.cc
-  src/GXProton.cc
-  src/GXSigmaMinus.cc
-  src/GXSigmaPlus.cc
-  src/GXSigmaZero.cc
-  src/GXTriton.cc
-  src/GXVDecayChannel.cc
-  src/GXVHadDecayAlgorithm.cc
-  src/GXVHadPhaseSpaceAlgorithm.cc
-  src/GXVShortLivedParticle.cc
-  src/GXXiMinus.cc
-  src/GXXiZero.cc
-  src/nucleiLevelDensity.cc
-  src/paraMaker.cc
+  base/clhep/src/DoubConv.cc
+  base/clhep/src/LorentzRotation.cc
+  base/clhep/src/LorentzVector.cc
+  base/clhep/src/LorentzVectorL.cc
+  base/clhep/src/Rotation.cc
+  base/clhep/src/RotationInterfaces.cc
+  base/clhep/src/setStdMath.cc
+  base/clhep/src/setSystemOfUnits.cc
+  base/clhep/src/SpaceVector.cc
+  base/clhep/src/ThreeVector.cc
+  base/clhep/src/ThreeVectorR.cc
+  base/clhep/src/ZMinput.cc
+)
+
+else()
+
+set(SRC_CPP_RELATIVE
+
+  ${_gxbert}
 
   base/clhep/src/DoubConv.cc
   base/clhep/src/LorentzRotation.cc
@@ -450,62 +318,19 @@ set(SRC_CPP_RELATIVE
   base/clhep/src/RanluxEngine.cc
   base/clhep/src/RanshiEngine.cc
   base/clhep/src/StaticRandomStates.cc
-
-#  base/clhep/src/AxisAngle.cc
-#  base/clhep/src/BasicVector3D.cc
-#  base/clhep/src/Boost.cc
-#  base/clhep/src/BoostX.cc
-#  base/clhep/src/BoostY.cc
-#  base/clhep/src/BoostZ.cc
-#  base/clhep/src/erfQ.cc
-#  base/clhep/src/EulerAngles.cc
-#  base/clhep/src/Evaluator.cc
-#  base/clhep/src/flatToGaussian.cc
-#  base/clhep/src/gammln.cc
-#  base/clhep/src/LorentzRotationC.cc
-#  base/clhep/src/LorentzRotationD.cc
-#  base/clhep/src/LorentzVectorB.cc
-#  base/clhep/src/LorentzVectorC.cc
-#  base/clhep/src/LorentzVectorK.cc
-#  base/clhep/src/LorentzVectorR.cc
-#  base/clhep/src/Normal3D.cc
-#  base/clhep/src/Plane3D.cc
-#  base/clhep/src/Point3D.cc
-#  base/clhep/src/RandBinomial.cc
-#  base/clhep/src/RandBit.cc
-#  base/clhep/src/RandBreitWigner.cc
-#  base/clhep/src/RandChiSquare.cc
-#  base/clhep/src/RandExponential.cc
-#  base/clhep/src/RandExpZiggurat.cc
-#  base/clhep/src/RandGamma.cc
-#  base/clhep/src/RandGaussQ.cc
-#  base/clhep/src/RandGaussZiggurat.cc
-#  base/clhep/src/RandLandau.cc
-#  base/clhep/src/RandPoisson.cc
-#  base/clhep/src/RandPoissonQ.cc
-#  base/clhep/src/RandStudentT.cc
-#  base/clhep/src/RotationA.cc
-#  base/clhep/src/RotationC.cc
-#  base/clhep/src/RotationE.cc
-#  base/clhep/src/RotationIO.cc
-#  base/clhep/src/RotationL.cc
-#  base/clhep/src/RotationP.cc
-#  base/clhep/src/RotationX.cc
-#  base/clhep/src/RotationY.cc
-#  base/clhep/src/RotationZ.cc
-#  base/clhep/src/SpaceVectorD.cc
-#  base/clhep/src/SpaceVectorP.cc
-#  base/clhep/src/SpaceVectorR.cc
-#  base/clhep/src/Transform3D.cc
-#  base/clhep/src/TwoVector.cc
-#  base/clhep/src/Vector3D.cc
 )
+endif()
+
+foreach(SRC ${SRC_CPP_RELATIVE})
+  set(SRC_CPP ${SRC_CPP} ${CMAKE_CURRENT_SOURCE_DIR}/${SRC})
+endforeach()
+
 
 if (GXBERT_CUDA)
 #-------------------------------------------------------------------------------
 # Copy source files to .cu files in order to compile them with NVCC
 #
-  foreach(SRC_FILE ${SRC_CPP})
+  foreach(SRC_FILE ${SRC_CPP_CUDA})
     get_filename_component(SRC_FILENAME ${SRC_FILE} NAME_WE)
 
     ADD_CUSTOM_COMMAND(
@@ -520,15 +345,7 @@ if (GXBERT_CUDA)
       ${CMAKE_CURRENT_BINARY_DIR}/cuda_src/${SRC_FILENAME}.cu
       )
   endforeach()
-
-#  set(SRC_CUDA ${SRC_CUDA}
-#  add cuda tests
-#  )
 endif()
-
-foreach(SRC ${SRC_CPP_RELATIVE})
-  set(SRC_CPP ${SRC_CPP} ${CMAKE_CURRENT_SOURCE_DIR}/${SRC})
-endforeach()
 
 set(GXBERT_SRCS
   ${GXBERT_SRCS}
@@ -538,6 +355,19 @@ set(GXBERT_SRCS
 foreach(SRC ${GXBERT_SRCS})
   set(SRC_CPP ${SRC_CPP} ${CMAKE_SOURCE_DIR}/${SRC})
 endforeach()
+
+if(GXBERT_VECTEST) 
+   set(SRC_CPP ${SRC_CPP}
+     test/src/GXTrackHandler.cc
+     test/src/GXBenchmarker.cc
+     test/src/GXBenchmarker_cpu.cc
+   )
+   set(SRC_CUDA ${SRC_CUDA}
+     test/src/GXCurand.cu
+     test/src/GXBenchmarker.cu
+     test/src/GXBenchmarker_gpu.cu
+     )
+endif()
 
 ################################################################################
 # Build libraries
@@ -576,13 +406,17 @@ endif()
 
 ################################################################################
 # Define executables
-set(TEST_EXECUTABLES
+set(TEST_EXECUTABLES)
+if (NOT GXBERT_CUDA)
+  set(TEST_EXECUTABLES ${TEST_EXECUTABLES}
   ${PROJECT_SOURCE_DIR}/test/gxbertTest.cc
 )
+endif()
 
 if (GXBERT_VECTEST)
   set(TEST_EXECUTABLES ${TEST_EXECUTABLES}
     ${PROJECT_SOURCE_DIR}/test/gvbertTest.cc
+    ${PROJECT_SOURCE_DIR}/test/benchmark.cc
   ) 
 endif()
 
