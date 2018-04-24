@@ -20,7 +20,8 @@ Modularization and Vectorization of the Geant4 Bertini Cascade Model
     make
     ./g4bert proton Pb 1.5GeV 100
 
-### how to build gvbertTest (unit tests for SIMD vectorization)
+### how to build gvbertTest (the main routine to test SIMD vectorization of a 
+    simplified chain of gxbert)
 
     export VCROOT=${INSTALL_DIR}/vc_1_3_0
     export VECCORE=${INSTALL_DIR}/VecCore
@@ -29,3 +30,11 @@ Modularization and Vectorization of the Geant4 Bertini Cascade Model
     cmake $SRC_DIR/gxbert -DCMAKE_BUILD_TYPE=Release -DGXBERT_VECTEST=ON \
           -DBACKEND=Vc   -DCMAKE_PREFIX_PATH="${VCROOT};${VECCORE}"
     make 
+
+### how to build benchmark (unit tests for SIMD vectorization and GPU)
+
+    cd ${BUILD_DIR}
+    cmake $SRC_DIR/gxbert -DCMAKE_BUILD_TYPE=Release -DGXBERT_VECTEST=ON \
+      -DBACKEND=Vc -DCMAKE_PREFIX_PATH="${VCROOT};${VECCORE}" -DDGXBERT_CUDA=ON
+    make 
+    ./benchmark [ntracks] [nrepetitions] [minEnergy] [maxEnergy]
