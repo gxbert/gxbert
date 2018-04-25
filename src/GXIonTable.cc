@@ -66,6 +66,11 @@
 //#include "G4VIsotopeTable.hh"
 //#include "G4NuclideTable.hh"
 
+// GL: fake isotope table to make compiler happy
+class G4VIsotopeTable {
+  //int dummy;
+};
+
 // It is very important for multithreaded Geant4 to keep only one copy of the
 // particle table pointer and the ion table pointer. However, we try to let 
 // each worker thread hold its own copy of the particle dictionary and the 
@@ -191,7 +196,7 @@ GXIonTable::~GXIonTable()
       //delete fIsotopeTable;
       //TK for GXBERT   
       //if( fIsotopeTable != G4NuclideTable::GetNuclideTable() ) delete fIsotopeTable;
-      if( fIsotopeTable != NULL ) delete fIsotopeTable;
+      if( fIsotopeTable ) delete fIsotopeTable;
     }
     fIsotopeTableList->clear();
     delete fIsotopeTableList;
@@ -246,11 +251,12 @@ GXParticleDefinition* GXIonTable::CreateIon(G4int Z, G4int A, G4double E,
 {
   GXParticleDefinition* ion=0;
 
+//TK GXIons is internal BERT, following check is not necessary
+/*
   // check whether GenericIon has processes
   GXParticleDefinition* genericIon = 
     GXParticleTable::GetParticleTable()->GetGenericIon();
-//TK GXIons is internal BERT, following check is not necessary
-/*
+
   G4ProcessManager* pman=0;
   if (genericIon!=0) pman = genericIon->GetProcessManager();
   if ((genericIon ==0) || (genericIon->GetParticleDefinitionID() < 0) || (pman==0)){

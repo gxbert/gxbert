@@ -83,11 +83,11 @@ GXPionZero* GXPionZero::Definition()
    // Life time is given from width
    anInstance->SetPDGLifeTime( hbar_Planck/(anInstance->GetPDGWidth()) );
      
+//TK PionZero will not decay in BERT
+/*
   //create Decay Table
   GXDecayTable* table = new GXDecayTable();
 
-//TK PionZero will not decay in BERT
-/*
   // create a decay channel
   GXVDecayChannel* mode;
   // pi0 -> gamma + gamma
