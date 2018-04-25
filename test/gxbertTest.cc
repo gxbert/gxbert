@@ -41,15 +41,8 @@ int main(int argc , char* const argv[] ) {
 
    std::string s_proj = argv[1];
    std::string s_targ = argv[2];
-   std::string s_energy = argv[3];
-
-   int event_per_job(1024);
-   //int event_per_job(1024*64);
-
-   std::map< std::string , double > mEnergy;
-   mEnergy.insert( std::pair< std::string , double > ( "800MeV" , 0.8 ) );
-   mEnergy.insert( std::pair< std::string , double > ( "1.5GeV" , 1.5 ) );
-   mEnergy.insert( std::pair< std::string , double > ( "3GeV"   , 3.0 ) );
+   G4double energy = atof(argv[3]);
+   int event_per_job(atoi(argv[4]));
 
    std::map< std::string , GXNucleus* > mNucleus;
    mNucleus.insert( std::pair< std::string , GXNucleus* > ("C", new GXNucleus(   12 ,  6) ) );
@@ -80,8 +73,6 @@ int main(int argc , char* const argv[] ) {
    GXParticleDefinition* pd = GXParticleTable::GetParticleTable()->FindParticle( s_proj );
 
    GXNucleus nucleus = *(mNucleus.find( s_targ )->second);
-
-   G4double energy = mEnergy.find( s_energy )->second;
 
    //prepair projectile
    //GXDynamicParticle* dp = new GXDynamicParticle( pd , G4ThreeVector(0,0,1) , energy[ie]*CLHEP::GeV );

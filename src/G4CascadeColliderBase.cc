@@ -93,6 +93,7 @@ G4CascadeColliderBase::inelasticInteractionPossible(G4InuclParticle* bullet,
   // If hadron-hadron collision, defer to ElementaryParticleCollider
   if (useEPCollider(bullet, target)) return true;
 
+  /* GL: unused, commented out
   // See which one of the two (or both) is a nucleus, get properties
   // FIXME:  Should set a = baryon() for both, but that's not in base
   G4InuclNuclei* nuclei_bullet = dynamic_cast<G4InuclNuclei*>(bullet);
@@ -107,12 +108,12 @@ G4CascadeColliderBase::inelasticInteractionPossible(G4InuclParticle* bullet,
   const G4double coeff = 0.001 * 1.2;
 
   G4double VCOL = coeff * zt * zb / (G4cbrt(at) + G4cbrt(ab)); 
-  
-  G4bool possible = true;	// Force inelastic; should be (ekin >= VCOL)
+  */ // GL: endof commented out
+
+  G4bool possible = true; // Force inelastic; should be (ekin >= VCOL)
 
   if (verboseLevel > 3) {
-    G4cout << " VCOL: " << VCOL << " ekin: " << ekin << " inelastic possible: "
-	   << possible << G4endl;
+    G4cout << /*" VCOL: " << VCOL <<*/ " ekin: " << ekin << " inelastic possible: " << possible << G4endl;
   }
 
   return possible;

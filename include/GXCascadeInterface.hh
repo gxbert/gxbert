@@ -76,7 +76,6 @@ class G4CascadParticle;
 class G4CascadeCheckBalance;
 class G4CollisionOutput;
 class GXDynamicParticle;
-class GXHadFinalState;
 class G4InuclCollider;
 class G4InuclParticle;
 class G4ParticleDefinition;
