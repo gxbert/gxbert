@@ -4,6 +4,7 @@
 /* 
 SIMD/SIMT version of LORENTZVECTOR of CLHEP
 */
+#include "VecHepDefs.h"
 
 #include "VectorBase.h"
 #include "GXThreeVector.h" //replace by the new one
@@ -12,14 +13,15 @@ SIMD/SIMT version of LORENTZVECTOR of CLHEP
 #include <ostream>
 #include <string>
 
-namespace vecCore {
-inline namespace VECCORE_IMPL_NAMESPACE {
+namespace gxbert {
+inline namespace GXBERT_IMPL_NAMESPACE {
+  //inline namespace VECCORE_IMPL_NAMESPACE {
 
 template <typename T>
 class LorentzVector : VectorBase
 {
 private:
-  ThreeVector<T> fp;
+  GXThreeVector<T> fp;
   T fE;
 
 public:
@@ -36,12 +38,12 @@ public:
   VECCORE_FORCE_INLINE
   LorentzVector()
   {
-    fp(0); fE = 0;
+    fp.Set(0,0,0); fE = 0;
   }
 
   VECCORE_ATT_HOST_DEVICE
   VECCORE_FORCE_INLINE
-  LorentzVector(ThreeVector<T> p, const T t)
+  LorentzVector(GXThreeVector<T> p, const T t)
   {
     fp = p ;  fE = t;
   }
@@ -53,6 +55,7 @@ public:
     fp = rhs.fp; fE = rhs.fE;
   }
 
+  /*
   VECCORE_ATT_HOST_DEVICE
   VECCORE_FORCE_INLINE
   LorentzVector &operator=(LorentzVector const &rhs)
@@ -60,31 +63,32 @@ public:
     fp = rhs.fp; dE = rhs.fE;
     return *this;
   }
+  */
 
- //Get
+  //Get
   VECCORE_ATT_HOST_DEVICE 
   VECCORE_FORCE_INLINE                       
-  T& x() { return fp.fx; }                                          
-
-  VECCORE_ATT_HOST_DEVICE 
-  VECCORE_FORCE_INLINE                       
-  T const& x() const { return fp.fx; }                                          
+  T& x() { return fp.x(); }                                          
 
   VECCORE_ATT_HOST_DEVICE 
   VECCORE_FORCE_INLINE                       
-  T& y() { return fp.fy; }                                          
+  T const& x() const { return fp.x(); }                                          
 
   VECCORE_ATT_HOST_DEVICE 
   VECCORE_FORCE_INLINE                       
-  T const& y() const { return fp.fy; }                                          
+  T& y() { return fp.y(); }                                          
 
   VECCORE_ATT_HOST_DEVICE 
   VECCORE_FORCE_INLINE                       
-  T& z() { return fp.fz; }                                          
+  T const& y() const { return fp.y(); }                                          
 
   VECCORE_ATT_HOST_DEVICE 
   VECCORE_FORCE_INLINE                       
-  T const& z() const { return fp.fz; }                                          
+  T& z() { return fp.z(); }                                          
+
+  VECCORE_ATT_HOST_DEVICE 
+  VECCORE_FORCE_INLINE                       
+  T const& z() const { return fp.z(); }                                          
 
   VECCORE_ATT_HOST_DEVICE 
   VECCORE_FORCE_INLINE                       
@@ -105,15 +109,15 @@ public:
   //Set
   VECCORE_ATT_HOST_DEVICE    
   VECCORE_FORCE_INLINE       
-  void SetX(T const &x) { fp.fx = x; }
+  void SetX(T const &x) { fp.SetX(x); }
 
   VECCORE_ATT_HOST_DEVICE    
   VECCORE_FORCE_INLINE       
-  void SetY(T const &y) { fp.fy = y; }
+  void SetY(T const &y) { fp.SetY(y); }
 
   VECCORE_ATT_HOST_DEVICE    
   VECCORE_FORCE_INLINE       
-  void SetZ(T const &z) { fp.fz = z; }
+  void SetZ(T const &z) { fp.SetZ(z); }
 
   VECCORE_ATT_HOST_DEVICE    
   VECCORE_FORCE_INLINE       
@@ -133,11 +137,11 @@ public:
 
   VECCORE_ATT_HOST_DEVICE
   VECCORE_FORCE_INLINE
-  void SetVect(const ThreeVector<T> &p) { fp = p; }
+  void SetVect(const GXThreeVector<T> &p) { fp = p; }
 
   VECCORE_ATT_HOST_DEVICE
   VECCORE_FORCE_INLINE
-  void SetVectMag(const ThreeVector<T> &spatial, T magnitude) 
+  void SetVectMag(const GXThreeVector<T> &spatial, T magnitude) 
   { 
     SetVect(spatial);
     SetT(math::Sqrt(magnitude * magnitude + spatial * spatial));
@@ -145,7 +149,7 @@ public:
 
   VECCORE_ATT_HOST_DEVICE
   VECCORE_FORCE_INLINE
-  void SetVectM(const ThreeVector<T> &spatial, T magnitude) 
+  void SetVectM(const GXThreeVector<T> &spatial, T magnitude) 
   { 
     SetVecMag(spatial,magnitude);
   }
@@ -157,7 +161,7 @@ public:
 
   VECCORE_ATT_HOST_DEVICE
   VECCORE_FORCE_INLINE
-  T Perp() const { return fp.Perp()); }
+  T Perp() const { return fp.Perp(); }
 
   VECCORE_ATT_HOST_DEVICE
   VECCORE_FORCE_INLINE
@@ -216,11 +220,18 @@ public:
   //boost
   VECCORE_ATT_HOST_DEVICE 
   VECCORE_FORCE_INLINE
+  GXThreeVector<T> BoostVector() 
+  {
+    return fp/fE;
+  } 
+
+  VECCORE_ATT_HOST_DEVICE 
+  VECCORE_FORCE_INLINE
   LorentzVector<T>& Boost(T bx, T by, T bz); 
 
   VECCORE_ATT_HOST_DEVICE 
   VECCORE_FORCE_INLINE
-  LorentzVector<T>& Boost(const ThreeVector<T>& b) 
+  LorentzVector<T>& Boost(GXThreeVector<T> b) 
   { 
     return Boost(b.x(),b.y(),b.z());
   }
@@ -256,9 +267,9 @@ public:
   T &operator OPERATOR(int index)                               \
   {                                                             \
     switch(index) {                                             \
-      case 0: return fpfx;                                      \
-      case 1: return fpfy;                                      \
-      case 2: return fpfz;                                      \
+      case 0: return fp.fx;                                     \
+      case 1: return fp.fy;                                     \
+      case 2: return fp.fz;                                     \
       case 3: return fE;                                        \
       default: return 0;                                        \
     }                                                           \
@@ -317,6 +328,7 @@ LorentzVector<T>& LorentzVector<T>::Boost(T bx, T by, T bz)
   SetY(y() + gamma2*bp*by + ggamma*by*t());
   SetZ(z() + gamma2*bp*bz + ggamma*bz*t());
   SetT(ggamma*(t() + bp));
+
   return *this;
 } 
 
@@ -330,7 +342,7 @@ LorentzVector<T>& LorentzVector<T>::BoostX(T bbeta)
   //check beta >= 1 (speed of light): no boost done along x
   Mask_v<T> ge_c = (b2 >= 1);
   bbeta = Blend(ge_c, 0.0, bbeta);
-  T ggamma = Blend(ge_c, 1.0, math::Sqrt(1./(1-b2));
+  T ggamma = Blend(ge_c, 1.0, math::Sqrt(1./(1-b2)));
 
   T tt = fE;
   fE = ggamma*(fE + bbeta*fp.getX());
@@ -349,7 +361,7 @@ LorentzVector<T>& LorentzVector<T>::BoostY(T bbeta)
   //check beta >= 1 (speed of light): no boost done along y
   Mask_v<T> ge_c = (b2 >= 1);
   bbeta = Blend(ge_c, 0.0, bbeta);
-  T ggamma = Blend(ge_c, 1.0, math::Sqrt(1./(1-b2));
+  T ggamma = Blend(ge_c, 1.0, math::Sqrt(1./(1-b2)));
 
   T tt = fE;
   fE = ggamma*(fE + bbeta*fp.GetY());
@@ -368,7 +380,7 @@ LorentzVector<T>& LorentzVector<T>::BoostZ(T bbeta)
   //check beta >= 1 (speed of light): no boost done along z
   Mask_v<T> ge_c = (b2 >= 1);
   bbeta = Blend(ge_c, 0.0, bbeta);
-  T ggamma = Blend(ge_c, 1.0, math::Sqrt(1./(1-b2));
+  T ggamma = Blend(ge_c, 1.0, math::Sqrt(1./(1-b2)));
 
   T tt = fE;
   fE = ggamma*(fE + bbeta*fp.GetZ());
@@ -379,6 +391,7 @@ LorentzVector<T>& LorentzVector<T>::BoostZ(T bbeta)
 
 
 #define LORENTZVECTOR_BINARY_OP(OPERATOR, ASSIGNMENT)                                         \
+template <typename T, typename ScalarT>                                                       \
 VECCORE_FORCE_INLINE                                                                          \
 VECCORE_ATT_HOST_DEVICE                                                                       \
 LorentzVector<T> operator OPERATOR(const LorentzVector<T> &lhs, const LorentzVector<T> &rhs)  \
@@ -411,9 +424,10 @@ LORENTZVECTOR_BINARY_OP(*, *=)
 LORENTZVECTOR_BINARY_OP(/, /=)
 #undef LORENTZVECTOR_BINARY_OP
 
+template <typename T>
 VECCORE_FORCE_INLINE
 VECCORE_ATT_HOST_DEVICE
-bool operator==(LorentzVector<Real_t> const &lhs, LorentzVector<Real_t> const &rhs)
+bool operator==(LorentzVector<T> const &lhs, LorentzVector<T> const &rhs)
 {
   return math::Abs(lhs.x() - rhs.x()) < 0. && 
          math::Abs(lhs.y() - rhs.y()) < 0. && 
@@ -421,9 +435,10 @@ bool operator==(LorentzVector<Real_t> const &lhs, LorentzVector<Real_t> const &r
          math::Abs(lhs.t() - rhs.t()) < 0. ;
 }
 
+template <typename T>
 VECCORE_FORCE_INLINE
 VECCORE_ATT_HOST_DEVICE
-LorentzVector<bool> operator!=(LorentzVector<Real_t> const &lhs, LorentzVector<Real_t> const &rhs)
+LorentzVector<bool> operator!=(LorentzVector<T> const &lhs, LorentzVector<T> const &rhs)
 {
   return !(lhs == rhs);
 }

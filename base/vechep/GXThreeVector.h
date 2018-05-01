@@ -152,10 +152,9 @@ public:
   VECCORE_FORCE_INLINE
   GXThreeVector<T> Unit() const
   {
-    GXThreeVector<T> output(*this);
-    const T mag2 = Mag2();
-    output /= math::Sqrt(mag2);
-    return output;
+    T mag2 = Mag2();
+    GXThreeVector<T> normalized(*this);
+    return normalized/math::Sqrt(mag2);
   }
 
   // Rotates
@@ -174,7 +173,7 @@ public:
   // Rotates reference frame from Uz to newUz (unit vector) (Geant4)
   VECCORE_ATT_HOST_DEVICE 
   VECCORE_FORCE_INLINE
-  GXThreeVector<T>& RotateUz(GXThreeVector<T>& newUz);
+  GXThreeVector<T>& RotateUz(const GXThreeVector<T>& newUz);
 
   //operators - index
 #define THREEVECTOR_ELEMENT_OP(OPERATOR)                        \
@@ -257,7 +256,7 @@ THREEVECTOR_ROTATION_AXIS(Z, fx, fy)
 template <typename T>
 VECCORE_ATT_HOST_DEVICE 
 VECCORE_FORCE_INLINE
-GXThreeVector<T>& GXThreeVector<T>::RotateUz(GXThreeVector<T>& newUz)
+GXThreeVector<T>& GXThreeVector<T>::RotateUz(const GXThreeVector<T>& newUz)
 {
   // newUzVector must be normalized !
 
@@ -289,7 +288,7 @@ GXThreeVector<T>& GXThreeVector<T>::RotateUz(GXThreeVector<T>& newUz)
 template <>
 VECCORE_ATT_HOST_DEVICE 
 VECCORE_FORCE_INLINE
-GXThreeVector<double>& GXThreeVector<double>::RotateUz(GXThreeVector<double>& newUz)
+GXThreeVector<double>& GXThreeVector<double>::RotateUz(const GXThreeVector<double>& newUz)
 {
   //from CLHEP Hep3Vector::rotateUz
   double u1 = newUz.x();
@@ -298,11 +297,11 @@ GXThreeVector<double>& GXThreeVector<double>::RotateUz(GXThreeVector<double>& ne
   double up = u1*u1 + u2*u2;
 
   if (up>0) {
-    up = std::sqrt(up);
+    double invup = 1./std::sqrt(up);
     double px = fx,  py = fy,  pz = fz;
-    fx = (u1*u3*px - u2*py)/up + u1*pz;
-    fy = (u2*u3*px + u1*py)/up + u2*pz;
-    fz =    -up*px +             u3*pz;
+    fx = (u1*u3*px - u2*py)*invup + u1*pz;
+    fy = (u2*u3*px + u1*py)*invup + u2*pz;
+    fz =    -up*px +                u3*pz;
   }
   else if (u3 < 0.) { fx = -fx; fz = -fz; }      // phi=0  teta=pi
   else {};

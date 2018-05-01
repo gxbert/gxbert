@@ -52,29 +52,35 @@ void GXBenchmarker::RunGeant4()
   GXTrack *itrack_aos = (GXTrack *)malloc(fNtracks * sizeof(GXTrack));
   GXTrack *otrack_aos = (GXTrack *)malloc(fNtracks * sizeof(GXTrack));
 
-  Real_t elapsedTotal[kNumberTest];
-  Real_t elapsedT[kNumberTest];
-  for (int k = 0; k < kNumberTest; ++k) elapsedTotal[k] = 0.;
+  double result;
+  double elapsedTotal[kNumberTest];
+  double elapsedT[kNumberTest];
+  double resultTotal[kNumberTest];
+
+  for (int k = 0; k < kNumberTest; ++k) {
+    elapsedTotal[k] = 0.;
+    resultTotal[k] = 0.;
+  }
+
+  // prepare input tracks
+  fTrackHandler->SetRandomStream(1);
+  fTrackHandler->GenerateRandomTracks(fNtracks, fMinP, fMaxP);
+  GXTrack *track_aos = fTrackHandler->GetAoSTracks();
 
   for (unsigned r = 0; r < fRepetitions; ++r) {
-
-    // prepare input tracks
-    fTrackHandler->GenerateRandomTracks(fNtracks, fMinP, fMaxP);
-
-    GXTrack *track_aos = fTrackHandler->GetAoSTracks();
-    fTrackHandler->SortAoSTracksByEnergy(track_aos, fNtracks);
-
     for (int k = 0; k < kNumberTest; ++k) {
       fTrackHandler->CopyAoSTracks(track_aos, itrack_aos, fNtracks);
       elapsedT[k] = 0.0;
-      elapsedT[k] = Geant4KernelFunc[k](fNtracks, itrack_aos, otrack_aos);
+      result = 0;
+      elapsedT[k] = Geant4KernelFunc[k](fNtracks, itrack_aos, otrack_aos, result);
       elapsedTotal[k] += elapsedT[k];
+      resultTotal[k] += result;
     }
   }
 
   for (int k = 0; k < kNumberTest; ++k) {
-    printf("%s  Geant4 Total time of %3d reps = %6.3f msec\n", 
-      TestName[k], fRepetitions, elapsedTotal[k]*1E-6);
+    printf("%s  Geant4 Total time of %3d reps = %6.3f msec result = %6.3f\n", 
+	   TestName[k], fRepetitions, elapsedTotal[k]*1E-6, resultTotal[k]);
   }
 
   free(itrack_aos);
@@ -86,29 +92,35 @@ void GXBenchmarker::RunScalar()
   GXTrack *itrack_aos = (GXTrack *)malloc(fNtracks * sizeof(GXTrack));
   GXTrack *otrack_aos = (GXTrack *)malloc(fNtracks * sizeof(GXTrack));
 
-  Real_t elapsedTotal[kNumberTest];
-  Real_t elapsedT[kNumberTest];
-  for (int k = 0; k < kNumberTest; ++k) elapsedTotal[k] = 0.;
+  double result;
+  double elapsedTotal[kNumberTest];
+  double elapsedT[kNumberTest];
+  double resultTotal[kNumberTest];
 
-  for (unsigned r = 0; r < fRepetitions; ++r) {
+  for (int k = 0; k < kNumberTest; ++k) {
+    elapsedTotal[k] = 0.;
+    resultTotal[k] = 0.;
+  }
 
     // prepare input tracks
-    fTrackHandler->GenerateRandomTracks(fNtracks, fMinP, fMaxP);
+  fTrackHandler->SetRandomStream(1);
+  fTrackHandler->GenerateRandomTracks(fNtracks, fMinP, fMaxP);
+  GXTrack *track_aos = fTrackHandler->GetAoSTracks();
 
-    GXTrack *track_aos = fTrackHandler->GetAoSTracks();
-    fTrackHandler->SortAoSTracksByEnergy(track_aos, fNtracks);
-
+  for (unsigned r = 0; r < fRepetitions; ++r) {
     for (int k = 0; k < kNumberTest; ++k) {
       fTrackHandler->CopyAoSTracks(track_aos, itrack_aos, fNtracks);
       elapsedT[k] = 0.0;
-      elapsedT[k] = ScalarKernelFunc[k](fNtracks, itrack_aos, otrack_aos);
+      result = 0;
+      elapsedT[k] = ScalarKernelFunc[k](fNtracks, itrack_aos, otrack_aos, result);
       elapsedTotal[k] += elapsedT[k];
+      resultTotal[k] += result;
     }
   }
 
   for (int k = 0; k < kNumberTest; ++k) {
-    printf("%s  Scalar Total time of %3d reps = %6.3f msec\n",
-      TestName[k], fRepetitions, elapsedTotal[k]*1E-6);
+    printf("%s  Scalar Total time of %3d reps = %6.3f msec result = %6.3f\n",
+	   TestName[k], fRepetitions, elapsedTotal[k]*1E-6, resultTotal[k]);
   }
 
   free(itrack_aos);
@@ -117,41 +129,49 @@ void GXBenchmarker::RunScalar()
 
 void GXBenchmarker::RunVector()
 {
+  //  GXTrack *itrack_soa = (GXTrack *)malloc(fNtracks * sizeof(GXTrack));
+  //  GXTrack *otrack_soa = (GXTrack *)malloc(fNtracks * sizeof(GXTrack));
+
   // input SOA tracks
   GXTrackHandler *handler_in = new GXTrackHandler(fNtracks);
   GXTrack_v itrack_soa       = handler_in->GetSoATracks();
+  GXTrack_v otrack_soa = handler_in->GetSoATracks();
 
   // output SOA tracks
-  GXTrackHandler *handler_out = new GXTrackHandler(fNtracks);
-  GXTrack_v otrack_soa = handler_out->GetSoATracks();
+  //  GXTrackHandler *handler_out = new GXTrackHandler(fNtracks);
 
-  Real_t elapsedTotal[kNumberTest];
-  Real_t elapsedT[kNumberTest];
-  for (int k = 0; k < kNumberTest; ++k) elapsedTotal[k] = 0.;
+  double result;
+  double elapsedTotal[kNumberTest];
+  double elapsedT[kNumberTest];
+  double resultTotal[kNumberTest];
+  for (int k = 0; k < kNumberTest; ++k) {
+    elapsedTotal[k] = 0.;
+    resultTotal[k] = 0.;
+  }
+
+  // prepare input tracks
+  fTrackHandler->SetRandomStream(1);
+  fTrackHandler->GenerateRandomTracks(fNtracks, fMinP, fMaxP);
+  GXTrack_v &track_soa = fTrackHandler->GetSoATracks();
 
   for (unsigned r = 0; r < fRepetitions; ++r) {
-
-    // prepare input tracks
-    fTrackHandler->GenerateRandomTracks(fNtracks, fMinP, fMaxP);
-
-    GXTrack_v &track_soa = fTrackHandler->GetSoATracks();
-    fTrackHandler->SortSoATracksByEnergy(track_soa, fNtracks);
-
     for (int k = 0; k < kNumberTest; ++k) {
       fTrackHandler->CopySoATracks(track_soa, itrack_soa, fNtracks);
       elapsedT[k] = 0.0;
-      elapsedT[k] = VectorKernelFunc[k](itrack_soa, otrack_soa);
+      result = 0;
+      elapsedT[k] = VectorKernelFunc[k](itrack_soa, otrack_soa, result);
       elapsedTotal[k] += elapsedT[k];
+      resultTotal[k] += result;
     }
   }
 
   for (int k = 0; k < kNumberTest; ++k) {
-    printf("%s  Vector Total time of %3d reps = %6.3f msec\n", 
-      TestName[k], fRepetitions, elapsedTotal[k]*1E-6);
+    printf("%s  Vector Total time of %3d reps = %6.3f msec result = %6.3f\n", 
+	   TestName[k], fRepetitions, elapsedTotal[k]*1E-6, resultTotal[k]);
   }
 
   delete handler_in;
-  delete handler_out;
+  //  delete handler_out;
 }
 
 } // end namespace gxbert

@@ -1,7 +1,7 @@
 #ifndef GXCURAND_INIT_H
 #define GXCURAND_INIT_H 1
 
-#include "VecHepDefs.h"
+#include "VecRng/RngDefs.h"
 
 namespace gxbert {
 

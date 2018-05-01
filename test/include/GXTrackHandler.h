@@ -4,6 +4,9 @@
 #include "GXTrack.h"
 #include "stddef.h"
 
+#include "VecRng/MRG32k3a.h"
+#include "VecHepDefs.h"
+
 namespace gxbert {
 
 class GXTrackHandler {
@@ -18,6 +21,8 @@ public:
   void Allocate(size_t nTracks);
   void Deallocate();
   void Reallocate(size_t nTracks);
+  double Random();
+  void SetRandomStream(long streamId);
 
   GXTrack *GetAoSTracks() { return fTrack_aos; };
   GXTrack_v &GetSoATracks() { return fTrack_soa; };
@@ -38,6 +43,9 @@ private:
   GXTrack *fTrack_aos;
   GXTrack_v fTrack_soa;
   char *fBuffer;
+
+  vecRng::MRG32k3a<ScalarBackend> *fRNG;
+  
 };
 
 } // end namespace gxbert

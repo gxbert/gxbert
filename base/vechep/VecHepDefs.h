@@ -83,15 +83,6 @@ To Convert(const From& x)
 #define GXBERT_GLOBAL constexpr
 #endif
 
-#ifdef GXBERT_CUDA
-#include <cuda.h>
-#include <curand_kernel.h>
-typedef curandState Random_t;
-#else
-typedef int Random_t;
-#endif
-
-
 #if defined(GXBERT_CUDA)
 #define GXBERT_HOST_FORWARD_DECLARE(X) \
   namespace cxx {                      \

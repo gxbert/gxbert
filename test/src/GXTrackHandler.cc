@@ -6,10 +6,18 @@
 #include <cmath>
 #include <iostream>
 
+//#include "VecRng/MRG32k3a.h"
+
 namespace gxbert {
 
+
 GXTrackHandler::GXTrackHandler() 
-  : fNumberOfTracks(0), fTrack_aos(0), fBuffer(0) {}
+  : fNumberOfTracks(0), fTrack_aos(0), fBuffer(0) 
+{
+  // Scalar MRG32k3a
+  fRNG = new  vecRng::cxx::MRG32k3a<ScalarBackend>;
+  fRNG->Initialize();
+}
 
 GXTrackHandler::GXTrackHandler(size_t nTracks) { Allocate(nTracks); }
 
@@ -95,6 +103,16 @@ void GXTrackHandler::Reallocate(size_t nTracks)
   Allocate(nTracks);
 }
 
+double GXTrackHandler::Random() 
+{
+  return fRNG->Uniform<ScalarBackend>();
+}
+
+void GXTrackHandler::SetRandomStream(long streamId) 
+{
+  fRNG->Initialize(streamId);
+}
+
 void GXTrackHandler::GenerateRandomTracks(size_t nTracks, double minP, double maxP)
 {
   Reallocate(nTracks);
@@ -114,19 +132,19 @@ void GXTrackHandler::GenerateRandomTracks(size_t nTracks, double minP, double ma
     double cosphi, sinphi;
     double sintheta, tantheta, costheta;
 
-    rho = ecalRmim + (ecalRmax - ecalRmim) * drand48();
+    rho = ecalRmim + (ecalRmax - ecalRmim) * Random();
 
     if (minP == maxP) {
       p = maxP;
     }
     else {
       do {
-        p = minP - 0.2 * (maxP - minP) * std::log(drand48());
+        p = minP - 0.2 * (maxP - minP) * std::log(Random());
       } while (p > maxP);
     }
 
-    z = ecalZmax * (2 * drand48() - 1.0);
-    phi = 2 * pi * drand48();
+    z = ecalZmax * (2 * Random() - 1.0);
+    phi = 2 * pi * Random();
     tantheta = rho / z;
     theta = std::atan(tantheta); // (rho/z);
 
