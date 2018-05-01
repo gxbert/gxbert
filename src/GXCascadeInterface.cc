@@ -158,11 +158,10 @@ typedef std::vector<G4InuclNuclei>::const_iterator nucleiIterator;
 
 GXCascadeInterface::GXCascadeInterface(const G4String& name)
   : //G4VIntraNuclearTransportModel(name), 
-    verboseLevel(0),
     randomFile(G4CascadeParameters::randomFile()),
     maximumTries(20), numberOfTries(0),
     collider(new G4InuclCollider), balance(new G4CascadeCheckBalance(name)),
-    bullet(0), target(0), output(new G4CollisionOutput) {
+    bullet(0), target(0), output(new G4CollisionOutput), verboseLevel(0) {
   // Set up global objects for master thread or sequential build
   /*if (G4Threading::IsMasterThread())*/ Initialize();
 

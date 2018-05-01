@@ -6,7 +6,7 @@
 namespace gxbert {
 
 GXBenchmarker::GXBenchmarker()
-    : fNtracks(4992), fRepetitions(1), fVerbosity(1), 
+    : fNtracks(4992), fRepetitions(1), // fVerbosity(1),
       fMinP(1E+4), fMaxP(1E+4)
 {
   fTrackHandler = new GXTrackHandler();

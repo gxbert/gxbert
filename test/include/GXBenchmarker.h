@@ -48,12 +48,11 @@ private:
 #endif
 
 private:
-
   GXTrackHandler *fTrackHandler;
 
   int fNtracks;
   unsigned fRepetitions;
-  int fVerbosity;
+  // int fVerbosity;
 
   double fMinP;
   double fMaxP;

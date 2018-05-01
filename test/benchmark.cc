@@ -16,7 +16,7 @@ int main(int argc, char* argv[])
   if(argc >= 3) nrepetitions = atoi(argv[2]);
   if(argc >= 4) {
     minEnergy  =  atof(argv[3]);
-    std::cout << "  Min energy" << minEnergy << std::endl;
+    std::cout << "  Min energy = " << minEnergy << std::endl;
     maxEnergy = minEnergy; 
     if(argc >= 5) {
       maxEnergy  =  atof(argv[4]);
