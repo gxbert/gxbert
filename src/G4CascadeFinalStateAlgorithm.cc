@@ -49,7 +49,6 @@
 #include "GXExp.hh"
 #include "G4InuclElementaryParticle.hh"
 #include "G4InuclSpecialFunctions.hh"
-#include "G4LorentzConvertor.hh"
 #include "G4MultiBodyMomentumDist.hh"
 #include "GXPow.hh"
 #include "G4TwoBodyAngularDist.hh"

@@ -143,7 +143,6 @@
 #include "G4InuclSpecialFunctions.hh"
 //#include "G4KineticTrack.hh"
 //#include "G4KineticTrackVector.hh"
-#include "G4LorentzConvertor.hh"
 //#include "G4Neutron.hh"
 #include "G4NucleiModel.hh"
 #include "G4ParticleLargerEkin.hh"
