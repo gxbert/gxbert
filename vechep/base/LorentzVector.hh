@@ -4,10 +4,10 @@
 /* 
 SIMD/SIMT version of LORENTZVECTOR of CLHEP
 */
-#include "VecHepDefs.h"
+#include "VecHepDefs.hh"
 
-#include "VectorBase.h"
-#include "GXThreeVector.h" //replace by the new one
+#include "VectorBase.hh"
+#include "GXThreeVector.hh" //replace by the new one
 
 #include <cstdlib>
 #include <ostream>

@@ -1,11 +1,11 @@
 #include "VecCore/Timer.h"
 
-#include "GXThreeVector.h"
-#include "LorentzVector.h"
+#include "GXThreeVector.hh"
+#include "LorentzVector.hh"
 #include "CLHEP/Vector/ThreeVector.h"
 #include "CLHEP/Vector/LorentzVector.h"
-#include "GXTrack.h"
-#include "VecHepDefs.h"
+#include "GXTrack.hh"
+#include "VecHepDefs.hh"
 
 namespace gxbert {
 

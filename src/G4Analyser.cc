@@ -346,3 +346,11 @@ void G4Analyser::printResultsNtuple() {
     std::setw(15) << averagePionKinEnergy / (averagePionNumber + 1.0e-10) << G4endl;
 }
 */
+
+// dummy symbol to make compiler happy
+class G4Analyser {
+  G4Analyser();
+};
+
+G4Analyser::G4Analyser() { }
+//G4Analyser::~G4Analyser() { }

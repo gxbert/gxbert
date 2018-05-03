@@ -1,7 +1,7 @@
 #ifndef GXBENCHMARKER_CPU_H
 #define GXBENCHMARKER_CPU_H 1
 
-#include "GXTrack.h"
+#include "GXTrack.hh"
 
 namespace gxbert {
 

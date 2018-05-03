@@ -258,8 +258,8 @@ endif()
 include_directories(${PROJECT_SOURCE_DIR} include 
                                           base/external 
                                           base/clhep/include 
-                                          base/vechep 
-                                          test/include 
+                                          test/include
+                                          vechep/base
 )
 
 file(GLOB _gxbert RELATIVE ${CMAKE_SOURCE_DIR} src/*.cc)

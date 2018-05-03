@@ -1,7 +1,7 @@
-#include "GXBenchmarker.h"
-#include "GXBenchmarker_cpu.h"
-#include "GXTrackHandler.h"
-#include "VecHepDefs.h"
+#include "GXBenchmarker.hh"
+#include "GXBenchmarker_cpu.hh"
+#include "GXTrackHandler.hh"
+#include "VecHepDefs.hh"
 
 namespace gxbert {
 

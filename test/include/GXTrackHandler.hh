@@ -1,11 +1,11 @@
 #ifndef GXTrackHandler_H
 #define GXTrackHandler_H 1
 
-#include "GXTrack.h"
+#include "GXTrack.hh"
 #include "stddef.h"
 
 #include "VecRng/MRG32k3a.h"
-#include "VecHepDefs.h"
+#include "VecHepDefs.hh"
 
 namespace gxbert {
 

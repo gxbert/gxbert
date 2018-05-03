@@ -1,10 +1,10 @@
-#include "GXBenchmarker.h"
-#include "GXBenchmarker_gpu.h"
+#include "GXBenchmarker.hh"
+#include "GXBenchmarker_gpu.hh"
 
-#include "VecHepDefs.h"
-#include "GXTrackHandler.h"
-#include "GXTrack.h"
-#include "GXCurand.h"
+#include "VecHepDefs.hh"
+#include "GXTrackHandler.hh"
+#include "GXTrack.hh"
+#include "GXCurand.hh"
 
 namespace gxbert {
 

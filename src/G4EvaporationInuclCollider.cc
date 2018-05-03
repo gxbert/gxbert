@@ -74,3 +74,10 @@ G4EvaporationInuclCollider::deExcite(const GXFragment& target,
   }
 }
 */
+
+// dummy symbol to make compiler happy
+class G4EvaporationInuclCollider {
+  G4EvaporationInuclCollider();
+};
+
+G4EvaporationInuclCollider::G4EvaporationInuclCollider() {;}

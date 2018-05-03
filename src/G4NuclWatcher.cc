@@ -202,3 +202,10 @@ void G4NuclWatcher::print() {
 	 << G4endl;
 }
 */
+
+// dummy symbol to make compiler happy
+class G4NuclWatcher {
+  G4NuclWatcher();
+};
+
+G4NuclWatcher::G4NuclWatcher() { ; }

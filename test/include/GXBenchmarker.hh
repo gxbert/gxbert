@@ -1,7 +1,7 @@
 #ifndef GXBenchmarker_H
 #define GXBenchmarker_H 1
 
-#include "VecHepDefs.h"
+#include "VecHepDefs.hh"
 
 namespace gxbert {
 

@@ -1,6 +1,6 @@
 #include <iostream>
 
-#include "GXBenchmarker.h"
+#include "GXBenchmarker.hh"
 
 using namespace gxbert;
 

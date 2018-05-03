@@ -2,8 +2,8 @@
 #include "VecCore/Timer.h"
 #include "VecRng/RngDefs.h"
 
-#include "GXTrack.h"
-#include "GXTrackHandler.h"
+#include "GXTrack.hh"
+#include "GXTrackHandler.hh"
 
 using namespace gxbert;
 

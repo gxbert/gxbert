@@ -5,8 +5,8 @@
 SIMD/SIMT version of HEP3VECTOR of CLHEP
 */
 
-#include "VectorBase.h"
-#include "VecHepDefs.h"
+#include "VectorBase.hh"
+#include "VecHepDefs.hh"
 //#include "GXGlobal.h"
 #include "VecCore/Common.h"
 

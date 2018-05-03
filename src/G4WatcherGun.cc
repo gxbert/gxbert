@@ -1558,14 +1558,9 @@ void G4WatcherGun::setWatchers() {
 }
 */
 
+// dummy symbol to make compiler happy
+class G4WatcherGun {
+  G4WatcherGun();
+};
 
-
-
-
-
-
-
-
-
-
-
+G4WatcherGun::G4WatcherGun() { ; }
