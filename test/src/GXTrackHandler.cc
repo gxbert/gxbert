@@ -19,7 +19,11 @@ GXTrackHandler::GXTrackHandler()
   fRNG->Initialize();
 }
 
-GXTrackHandler::GXTrackHandler(size_t nTracks) { Allocate(nTracks); }
+GXTrackHandler::GXTrackHandler(size_t nTracks)
+  : GXTrackHandler()
+{
+  Allocate(nTracks);
+}
 
 GXTrackHandler::~GXTrackHandler() { Deallocate(); }
 
