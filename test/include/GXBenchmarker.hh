@@ -16,7 +16,7 @@ enum TestIndex {
 static const char *TestName[kNumberTest] = {
   "ThreeVectorDot     ", 
   "ThreeVectorRotateUz",
-  "LoentzVectorBoost  "
+  "LorentzVectorBoost  "
 };
 
 

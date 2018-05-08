@@ -260,9 +260,12 @@ include_directories(${PROJECT_SOURCE_DIR} include
                                           base/clhep/include 
                                           test/include
                                           vechep/base
+                                          vechep/include
 )
 
+
 file(GLOB _gxbert RELATIVE ${CMAKE_SOURCE_DIR} src/*.cc)
+file(GLOB _gvbert RELATIVE ${CMAKE_SOURCE_DIR} vechep/src/*.cc)
 
 if(GXBERT_CUDA)
 
@@ -279,12 +282,15 @@ set(SRC_CPP_RELATIVE
   base/clhep/src/ThreeVector.cc
   base/clhep/src/ThreeVectorR.cc
   base/clhep/src/ZMinput.cc
+
+  ${_gvbert}
 )
 
 else()
 
 set(SRC_CPP_RELATIVE
 
+  ${_gvbert}
   ${_gxbert}
 
   base/clhep/src/DoubConv.cc
@@ -410,6 +416,7 @@ set(TEST_EXECUTABLES)
 if (NOT GXBERT_CUDA)
   set(TEST_EXECUTABLES ${TEST_EXECUTABLES}
   ${PROJECT_SOURCE_DIR}/test/gxbertTest.cc
+  ${PROJECT_SOURCE_DIR}/test/TestLorentzConvertor.cc
 )
 endif()
 

@@ -66,8 +66,8 @@ public:
   */
 
   //Get
-  VECCORE_ATT_HOST_DEVICE 
-  VECCORE_FORCE_INLINE                       
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
   T& x() { return fp.x(); }                                          
 
   VECCORE_ATT_HOST_DEVICE 
@@ -134,6 +134,10 @@ public:
   VECCORE_ATT_HOST_DEVICE
   VECCORE_FORCE_INLINE
   void Set(const T c) { Set(c, c, c); }
+
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
+  GXThreeVector<T> Vect() { return fp; }
 
   VECCORE_ATT_HOST_DEVICE
   VECCORE_FORCE_INLINE
@@ -391,10 +395,10 @@ LorentzVector<T>& LorentzVector<T>::BoostZ(T bbeta)
 
 
 #define LORENTZVECTOR_BINARY_OP(OPERATOR, ASSIGNMENT)                                         \
-template <typename T, typename ScalarT>                                                       \
+template <typename T, typename OtherT>                                                        \
 VECCORE_FORCE_INLINE                                                                          \
 VECCORE_ATT_HOST_DEVICE                                                                       \
-LorentzVector<T> operator OPERATOR(const LorentzVector<T> &lhs, const LorentzVector<T> &rhs)  \
+LorentzVector<T> operator OPERATOR(const LorentzVector<T> &lhs, const LorentzVector<OtherT> &rhs)  \
 {                                                                                             \
   LorentzVector<T> result(lhs);                                                               \
   result ASSIGNMENT rhs;                                                                      \
