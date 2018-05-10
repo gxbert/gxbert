@@ -13,15 +13,96 @@
 
 using namespace gxbert;
 
+//.. default globals
+constexpr double pmass = 938.272013;  // proton mass in MeV
+int debugLevel   = 0;
+int nReps        = 1;
+int nEvents      = 1024*64;
+double kinEnergy = 1.3E+3; // in MeV
+
+void RunG4LorentzConvertorTimer(GXTrack_v const& soaBullets, GXTrack_v const& soaTargets)
+{
+  //==== Reference: G4LorentzConvertor functionalities
+  double g4sumEscm = 0.;
+  double g4sumEkin = 0.;
+  double g4sumP2 = 0.;
+  G4LorentzConvertor g4conv;
+  G4LorentzVector lorvec;
+  g4conv.setVerbose(debugLevel);
+
+  Timer<nanoseconds> timer;
+  timer.Start();
+  for(size_t irep = 0; irep < nReps; ++irep) {
+    g4sumEscm = g4sumEkin = g4sumP2 = 0.;
+    for(size_t i = 0; i < nEvents; ++i) {
+      soaTargets.getFourMomentum(i, lorvec);
+      g4conv.setTarget(lorvec);
+
+      soaBullets.getFourMomentum(i, lorvec);
+      g4conv.setBullet(lorvec);
+
+      g4conv.toTheCenterOfMass();
+      g4sumEscm += g4conv.getTotalSCMEnergy();
+      g4sumEkin += g4conv.getKinEnergyInTheTRS();
+
+      G4LorentzVector plab = g4conv.backToTheLab(lorvec);
+      g4sumP2 += plab.mag2();
+    }
+  }
+  double g4Elapsed = timer.Elapsed();
+
+  std::cerr<<"GXBert results: "
+	   <<"  sumEscm = "<< g4sumEscm
+	   <<"\t  sumEkin = "<< g4sumEkin
+	   <<"\t  sumP2 = "<< g4sumP2
+	   <<"\t CPUtime = "<< g4Elapsed / nEvents / nReps
+	   <<"\n";
+}
+
+
+template <typename Real_v>
+void RunGXLorentzConvertorTimer(const char* testname, GXTrack_v const& soaBullets, GXTrack_v const& soaTargets)
+{
+  int vsize = vecCore::VectorSize<Real_v>();
+  Real_v sumEscm = 0.;
+  Real_v sumEkin = 0.;
+  Real_v sumP2 = 0.;
+  GXLorentzConvertor<Real_v> conv;
+  conv.setVerbose(debugLevel);
+
+  LorentzVector<Real_v> fourvec;
+  Timer<nanoseconds> timer;
+  timer.Start();
+  for(size_t irep = 0; irep < nReps; ++irep) {
+    sumEscm = sumEkin = sumP2 = 0.;
+    for(size_t i = 0; i < nEvents; i += vsize) {
+      soaTargets.getFourMomentum(i, fourvec);
+      conv.setTarget(fourvec);
+
+      soaBullets.getFourMomentum(i, fourvec);
+      conv.setBullet(fourvec);
+
+      conv.toTheCenterOfMass();
+      sumEscm += conv.getTotalSCMEnergy();
+      sumEkin += conv.getKinEnergyInTheTRS();
+
+      LorentzVector<Real_v> plab = conv.backToTheLab(fourvec);
+      sumP2 += plab.Mag2();
+    }
+  }
+  double elapsed = timer.Elapsed();
+
+  std::cerr<< testname <<" results: "
+	   <<   "sumEscm = "<< vecCore::ReduceAdd(sumEscm)
+	   <<"\t sumEkin = "<< vecCore::ReduceAdd(sumEkin)
+	   <<"\t sumP2 = "  << vecCore::ReduceAdd(sumP2)
+	   <<"\t CPUtime = "<< elapsed / nEvents / nReps
+	   <<"\n";
+}
+
+
 int main(int argc, char* argv[]) {
 
-  int debugLevel = 0;
-  constexpr double pmass = 938.272013;  // proton mass in MeV
-
-  //.. default run with a fixed target and energy
-  double kinEnergy = 1.3E+3; // in MeV
-  int nEvents   = 1024*64;
-  int nReps = 1;
   if(argc >= 2) kinEnergy  = atof(argv[1]);
   if(argc >= 3) nEvents = atoi(argv[2]);
   if(argc >= 4) nReps = atoi(argv[3]);
@@ -77,7 +158,6 @@ int main(int argc, char* argv[]) {
 	   <<"\t  sumP2 = "<< g4sumP2
 	   <<"\t CPUtime = "<< g4Elapsed / nEvents / nReps
 	   <<"\n";
-
 
   //=== Templated converter in scalar mode
   double gsSumEscm = 0.;
@@ -196,7 +276,17 @@ int main(int argc, char* argv[]) {
 	   <<"\t  sumEkin = "<< vecCore::ReduceAdd(glSumEkin)
 	   <<"\t  sumP2 = "<< vecCore::ReduceAdd(glSumP2)
 	   <<"\t CPUtime = "<< glElapsed / nEvents / nReps
-	   <<"\n";
+	   <<"\n\n\n";
+
+  // Using function calls for benchmarks
+  RunG4LorentzConvertorTimer(soaBullets, soaTargets);
+
+  // benchmarks templated on types
+  RunGXLorentzConvertorTimer<double>("double", soaBullets, soaTargets);
+  RunGXLorentzConvertorTimer<vecCore::backend::VcVector::Double_v>("Double_v", soaBullets, soaTargets);
+
+  RunGXLorentzConvertorTimer<float>("float", soaBullets, soaTargets);
+  //RunGXLorentzConvertorTimer<vecCore::backend::VcVector::Float_v>("Double_v", soaBullets, soaTargets);
 
   //.. cleanup
   delete bulletHandler;
