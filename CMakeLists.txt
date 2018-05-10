@@ -416,7 +416,7 @@ set(TEST_EXECUTABLES)
 if (NOT GXBERT_CUDA)
   set(TEST_EXECUTABLES ${TEST_EXECUTABLES}
   ${PROJECT_SOURCE_DIR}/test/gxbertTest.cc
-  ${PROJECT_SOURCE_DIR}/test/TestLorentzConvertor.cc
+  ${PROJECT_SOURCE_DIR}/test/LorentzConvertorBenchmark.cc
 )
 endif()
 

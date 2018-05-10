@@ -4,6 +4,7 @@
 #include "stddef.h"
 #include "GXThreeVector.hh"
 #include "LorentzVector.hh"
+#include "G4LorentzVector.hh"
 
 /**
  * GXTrack: A utility struct of input/output data for unit/benchmark tests
@@ -40,16 +41,26 @@ struct GXTrack_v {
   double *m;
 
   template <typename Real_v>
-  void getThreeMomentum(size_t i, GXThreeVector<Real_v> &out) const { out.Set(*(px + i), *(py + i), *(pz + i)); }
+  void getThreeMomentum(size_t i, GXThreeVector<Real_v> &out) const { out.Set(*(Real_v*)(px + i), *(Real_v*)(py + i), *(Real_v*)(pz + i)); }
 
   template <typename Real_v>
-  GXThreeVector<Real_v> getThreeMomentum(size_t i) const { return GXThreeVector<Real_v>(*(px+i), *(py+i), *(pz+i)); }
+  GXThreeVector<Real_v> getThreeMomentum(size_t i) const { return GXThreeVector<Real_v>(*(Real_v*)(px+i), *(Real_v*)(py+i), *(Real_v*)(pz+i)); }
 
   template <typename Real_v>
-  void getFourMomentum(size_t i, LorentzVector<Real_v> &out) const { out.Set(*(px + i), *(py + i), *(pz + i), *(E + i)); }
+  void getFourMomentum(size_t i, LorentzVector<Real_v> &out) const { out.Set(*(Real_v*)(px + i), *(Real_v*)(py + i), *(Real_v*)(pz + i), *(Real_v*)(E + i) + *(Real_v*)(m + i)); }
 
   template <typename Real_v>
-  LorentzVector<Real_v> getFourMomentum(size_t i) const { return LorentzVector<Real_v>(*(px+i), *(py+i), *(pz+i), *(E+i)); }
+  LorentzVector<Real_v> getFourMomentum(size_t i) const { return LorentzVector<Real_v>(*(Real_v*)(px+i), *(Real_v*)(py+i), *(Real_v*)(pz+i), *(Real_v*)(E+i) + *(Real_v*)(m+i)); }
+
+  // for CLHEP compatibility
+  void getFourMomentum(size_t i, G4LorentzVector &out) const
+  {
+    out.setX(*(px + i));
+    out.setY(*(py + i));
+    out.setZ(*(pz + i));
+    out.setT(*(E + i) + *(m + i));
+  }
+
 };
 
 } // end namespace gxbert

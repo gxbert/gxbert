@@ -141,21 +141,25 @@ public:
 
   VECCORE_ATT_HOST_DEVICE
   VECCORE_FORCE_INLINE
+  const GXThreeVector<T> Vect() const { return fp; }
+
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
   void SetVect(const GXThreeVector<T> &p) { fp = p; }
 
   VECCORE_ATT_HOST_DEVICE
   VECCORE_FORCE_INLINE
-  void SetVectMag(const GXThreeVector<T> &spatial, T magnitude) 
-  { 
+  void SetVectMag(const GXThreeVector<T> &spatial, T mass)
+  {
     SetVect(spatial);
-    SetT(math::Sqrt(magnitude * magnitude + spatial * spatial));
+    SetT(math::Sqrt(mass * mass + spatial.Mag2()));
   }
 
   VECCORE_ATT_HOST_DEVICE
   VECCORE_FORCE_INLINE
-  void SetVectM(const GXThreeVector<T> &spatial, T magnitude) 
-  { 
-    SetVecMag(spatial,magnitude);
+  void SetVectM(const GXThreeVector<T> &spatial, T mass)
+  {
+    SetVecMag(spatial, mass);
   }
 
   //Properties
@@ -224,7 +228,7 @@ public:
   //boost
   VECCORE_ATT_HOST_DEVICE 
   VECCORE_FORCE_INLINE
-  GXThreeVector<T> BoostVector() 
+  GXThreeVector<T> BoostVector() const
   {
     return fp/fE;
   } 

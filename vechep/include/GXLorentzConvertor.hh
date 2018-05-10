@@ -11,6 +11,7 @@
 #include "GXTrack.hh"
 #include "GXThreeVector.hh"
 #include "GXHadronicException.hh"
+#include "VecCore/VecCore"
 
 using std::cerr;
 
@@ -20,9 +21,8 @@ template <typename Real_v>
 class GXLorentzConvertor {
 
 private: 
-  static constexpr Real_v small = 1.0e-10;
-
   int verboseLevel;
+  static constexpr double small = 1.0e-10;
   LorentzVector<Real_v> bullet_mom;
   LorentzVector<Real_v> target_mom;
 
@@ -39,11 +39,15 @@ private:
 public:
   GXLorentzConvertor() {}
 
-  GXLorentzConvertor(const LorentzVector<Real_v>& bmom, Real_v bmass, 
+  GXLorentzConvertor(const LorentzVector<Real_v>& bmom, Real_v bmass,
    		     const LorentzVector<Real_v>& tmom, Real_v tmass);
 
-  GXLorentzConvertor(const GXTrack_v &bullet, 
-		     const GXTrack_v &target);
+  GXLorentzConvertor(const GXTrack &bullet,
+  		     const GXTrack &target)
+  {
+    setBullet(bullet);
+    setTarget(target);
+  }
 
   void setVerbose(int vb=0) { verboseLevel = vb; }
 
@@ -63,7 +67,7 @@ public:
     target_mom.t() = E;
   }
 
-  void setBullet(const GXTrack_v &bullet)
+  void setBullet(const GXTrack &bullet)
   {
     bullet_mom.x() = (Real_v*)bullet.px;
     bullet_mom.y() = (Real_v*)bullet.py;
@@ -71,7 +75,7 @@ public:
     bullet_mom.t() = (Real_v*)bullet.E;
   }
 
-  void setTarget(const GXTrack_v &target)
+  void setTarget(const GXTrack &target)
   {
     target_mom.x() = (Real_v*)target.px;
     target_mom.y() = (Real_v*)target.py;
@@ -79,8 +83,8 @@ public:
     target_mom.t() = (Real_v*)target.E;
   }
 
-  void setBullet(const GXTrack_v *bullet) { setBullet(*bullet); }
-  void setTarget(const GXTrack_v *target) { setTarget(*target); }
+  void setBullet(const GXTrack *bullet) { setBullet(*bullet); }
+  void setTarget(const GXTrack *target) { setTarget(*target); }
 
   // Use correct four-vectors as input
   void setBullet(const LorentzVector<Real_v>& bmom) {
@@ -95,12 +99,12 @@ public:
 
   // These functions "repair" input 4-vectors using specified mass
   void setBullet(const LorentzVector<Real_v>& bmom, Real_v bmass) {
-    bullet_mom.setVectM(bmom.Vect(), bmass);
+    bullet_mom.SetVectMag(bmom.Vect(), bmass);
     if (verboseLevel > 3) printBullet();
   }
   
   void setTarget(const LorentzVector<Real_v>& tmom, Real_v tmass) {
-    target_mom.setVectM(tmom.Vect(), tmass);
+    target_mom.SetVectMag(tmom.Vect(), tmass);
     if (verboseLevel > 3) printTarget();
   }
 
@@ -116,7 +120,7 @@ public:
     Real_v pvsq = v2 - valong*valong;  // velocity perp to scm_momentum
     if (verboseLevel > 3) cerr << " pvsq=" << pvsq << "\n";
 
-    degenerated = (pvsq < small);
+    degenerated = (pvsq < (Real_v)small);
     if (verboseLevel > 2 && !vecCore::MaskEmpty(degenerated)) 
       cerr << " degenerated case (already along Z): pvsq=" << pvsq <<" small="<< small <<"\n"; 
 
@@ -169,11 +173,18 @@ public:
 
     if (verboseLevel > 3)
       cerr << " at rest: px " << mom.x() << " py " << mom.y() << " pz "
-	     << mom.z() << " e " << mom.e() << "\n"
+	     << mom.z() << " e " << mom.t() << "\n"
 	     << " v2 " << v2 << "\n";
 
     LorentzVector<Real_v> mom1 = mom;
-    if (v2 > small) mom1.boost(velocity);
+    mom1.Boost(velocity);
+
+    // use one of the next two options
+    auto undo = v2 <= (Real_v)small;
+    vecCore::MaskedAssign(mom1.x(), undo, mom.x());
+    vecCore::MaskedAssign(mom1.y(), undo, mom.y());
+    vecCore::MaskedAssign(mom1.z(), undo, mom.z());
+    vecCore::MaskedAssign(mom1.t(), undo, mom.t());
 
     if (verboseLevel > 3)
       cerr << " at lab: px " << mom1.x() << " py " << mom1.y() << " pz "
@@ -194,7 +205,7 @@ public:
 
     LorentzVector<Real_v> bmom = bullet_mom;
     bmom.Boost(-target_mom.BoostVector());
-    return bmom.e()-bmom.m();
+    return bmom.t()-bmom.Mag();
   }
 
   Real_v getTotalSCMEnergy() const { return ecm_tot; }
@@ -229,7 +240,7 @@ public:
       GXThreeVector<Real_v> vscm = velocity - valong*scm_direction;
       GXThreeVector<Real_v> vxcm = scm_direction.cross(velocity);
 
-      if (vscm.Mag() > small && vxcm.Mag() > small) {	// Double check
+      if (vscm.Mag() > (Real_v)small && vxcm.Mag() > (Real_v)small) {	// Double check
 	if (verboseLevel > 3) {
 	  cerr << " reference z axis " << scm_direction
 	       << " vscm " << vscm << " vxcm " << vxcm << "\n";
@@ -272,14 +283,14 @@ public:
 
     LorentzVector<Real_v> mom_rot = mom;
 
-    if (vperp > small) {
+    if (vperp > (Real_v)small) {
       if (verboseLevel > 2)
 	cerr << " rotating to align with first z axis " << "\n";
 
       GXThreeVector<Real_v> vmom1 = velocity - pv*mom1_dir;
       GXThreeVector<Real_v> vxm1  = mom1_dir.cross(velocity);
 
-      if (vmom1.mag() > small && vxm1.mag() > small) {	// Double check
+      if (vmom1.mag() > (Real_v)small && vxm1.mag() > (Real_v)small) {	// Double check
 	if (verboseLevel > 3) {
 	  cerr << " first z axis " << mom1_dir << "\n"
 	       << " vmom1 " << vmom1 << " vxm1 " << vxm1 << "\n";
@@ -312,16 +323,16 @@ public:
 	   << " degenerated? " << degenerated << "\n";
     }
 
-    if (v2 < small && !vecCore::MaskFull(degenerated))
+    if (v2 < (Real_v)small && !vecCore::MaskFull(degenerated))
       throw GXHadronicException(__FILE__, __LINE__, "GXLorentzConvertor::reflectionNeeded - return value undefined");
 
     if (verboseLevel > 2) {
       cerr << " reflection across XY is"
-	   << ((v2>=small && (!vecCore::MaskFull(degenerated) || scm_momentum.z()<0.0))?"":" NOT")
+	   << ((v2>=(Real_v)small && (!vecCore::MaskFull(degenerated) || scm_momentum.z()<0.0))?"":" NOT")
 	   << " needed" << "\n";
     }
 
-    return (v2>=small && (!vecCore::MaskFull(degenerated) || scm_momentum.z()<0.0));
+    return (v2>=(Real_v)small && (!vecCore::MaskFull(degenerated) || scm_momentum.z()<0.0));
   }
 
   vecCore::Mask_v<Real_v> trivial() const { return degenerated; }
