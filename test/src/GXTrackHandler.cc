@@ -12,7 +12,7 @@ namespace gxbert {
 
 
 GXTrackHandler::GXTrackHandler() 
-  : fNumberOfTracks(0), fTrack_aos(0), fBuffer(0) 
+  : fNumberOfTracks(0), fTrack_aos(0), fBuffer(0), fMass(0.)
 {
   // Scalar MRG32k3a
   fRNG = new  vecRng::cxx::MRG32k3a<ScalarBackend>;
@@ -122,7 +122,6 @@ void GXTrackHandler::GenerateRandomTracks(size_t nTracks, double minP, double ma
   Reallocate(nTracks);
 
   // constants - move to a header file
-  double const mass = 938.272013;  //proton_mass_c2* MeV;
   double const pi = 3.14159265358979323846;
   double const ecalRmim = 1290.;
   double const ecalRmax = 1520.;
@@ -166,10 +165,43 @@ void GXTrackHandler::GenerateRandomTracks(size_t nTracks, double minP, double ma
     (fTrack_soa.px)[i] = fTrack_aos[i].px = p * sintheta * cosphi;
     (fTrack_soa.py)[i] = fTrack_aos[i].py = p * sintheta * sinphi;
     (fTrack_soa.pz)[i] = fTrack_aos[i].pz = p * costheta;
-    (fTrack_soa.E)[i] = fTrack_aos[i].E = p*p/(sqrt(p*p + mass*mass) + mass);
+    (fTrack_soa.E)[i] = fTrack_aos[i].E = p*p/(sqrt(p*p + fMass*fMass) + fMass);
 
     (fTrack_soa.q)[i] = fTrack_aos[i].q = 1.0;
-    (fTrack_soa.m)[i] = fTrack_aos[i].m = mass;
+    (fTrack_soa.m)[i] = fTrack_aos[i].m = fMass;
+  }
+}
+
+  // note: momentum range in MeV units!!!
+void GXTrackHandler::GenerateTracksAlongSameDirection(size_t nTracks, double *posdir, double minP, double maxP)
+{
+  // make sure input direction vector is a unit vector
+  assert(posdir[3]*posdir[3] + posdir[4]*posdir[4] + posdir[5]*posdir[5] - 1.0 < 1.0e-9);
+
+  Reallocate(nTracks);
+
+  fTrack_soa.size = fNumberOfTracks;
+  for (size_t i = 0; i < fNumberOfTracks; ++i) {
+    double p = maxP;
+    if (minP < maxP) p = minP + (maxP - minP) * std::log(Random());
+
+    (fTrack_soa.x)[i] = fTrack_aos[i].x = posdir[0];
+    (fTrack_soa.y)[i] = fTrack_aos[i].y = posdir[1];
+    (fTrack_soa.z)[i] = fTrack_aos[i].z = posdir[2];
+    (fTrack_soa.t)[i] = fTrack_aos[i].t = 0.;
+
+    (fTrack_soa.px)[i] = fTrack_aos[i].px = p * posdir[3];
+    (fTrack_soa.py)[i] = fTrack_aos[i].py = p * posdir[4];
+    (fTrack_soa.pz)[i] = fTrack_aos[i].pz = p * posdir[5];
+    (fTrack_soa.E)[i] = fTrack_aos[i].E = p*p/(sqrt(p*p + fMass*fMass) + fMass);
+
+    (fTrack_soa.q)[i] = fTrack_aos[i].q = 1.0;
+    (fTrack_soa.m)[i] = fTrack_aos[i].m = fMass;
+    if (i == 0) {
+      double Ekin = fTrack_aos[i].E;
+      double Etot = Ekin + fMass;
+      std::cerr<<"GXTracksHandler: i="<< i <<'/'<< fNumberOfTracks <<": "<< fTrack_aos[i].x <<" "<< fTrack_aos[i].y <<" "<< fTrack_aos[i].z <<" "<< fTrack_aos[i].px <<" "<< fTrack_aos[i].py <<" "<< fTrack_aos[i].pz  <<" Ek="<< Ekin <<" Etot="<< Etot <<"\n";
+    }
   }
 }
 

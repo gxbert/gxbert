@@ -49,7 +49,7 @@ int main(int argc , char* const argv[] ) {
    mNucleus.insert( std::pair< std::string , GXNucleus* > ("Al", new GXNucleus(  27 , 13) ) );
    mNucleus.insert( std::pair< std::string , GXNucleus* > ("Fe", new GXNucleus(  56 , 26) ) );
    mNucleus.insert( std::pair< std::string , GXNucleus* > ("In", new GXNucleus( 115 , 49) ) );
-   mNucleus.insert( std::pair< std::string , GXNucleus* > ("Pb", new GXNucleus( 209 , 82) ) );
+   mNucleus.insert( std::pair< std::string , GXNucleus* > ("Pb", new GXNucleus( 208 , 82) ) );
 
    std::vector<GXParticleDefinition*> v_PD;
    v_PD.push_back( GXProton::Proton() );
@@ -78,6 +78,7 @@ int main(int argc , char* const argv[] ) {
    //GXDynamicParticle* dp = new GXDynamicParticle( pd , G4ThreeVector(0,0,1) , energy[ie]*CLHEP::GeV );
    //GXHadProjectile projectile(*dp);
    GXHadProjectile projectile( pd , energy*CLHEP::GeV );
+   std::cerr<<" gxbert bullet: 4mom=("<< projectile.fourMomentum.x() <<"; "<< projectile.fourMomentum.y() <<"; "<< projectile.fourMomentum.z() <<"; "<< projectile.fourMomentum.t() <<") and mass="<< projectile.fourMomentum.mag() <<"\n";
 
    //prepair container for secondary neutrons
    //                           ke      z:mu

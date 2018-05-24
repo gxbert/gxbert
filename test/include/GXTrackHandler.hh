@@ -21,6 +21,8 @@ public:
   void Allocate(size_t nTracks);
   void Deallocate();
   void Reallocate(size_t nTracks);
+  void SetMass(double mass) { fMass = mass; }
+
   double Random();
   void SetRandomStream(long streamId);
 
@@ -28,6 +30,9 @@ public:
   GXTrack_v &GetSoATracks() { return fTrack_soa; };
 
   void GenerateRandomTracks(size_t nTracks, double minP = 1., double maxP = 1E+4);
+
+  // generate nTracks at a given position + direction given by posdir[6], with 3-mom/GeV in range (minP, maxP)
+  void GenerateTracksAlongSameDirection(size_t nTracks, double* posdir, double minP = 1., double maxP = 1E+4);
 
   // utility functions
   void SortAoSTracksByEnergy(GXTrack *AoS, size_t nTracks);
@@ -43,6 +48,7 @@ private:
   GXTrack *fTrack_aos;
   GXTrack_v fTrack_soa;
   char *fBuffer;
+  double fMass; // mass to be used for tracks generated (all tracks of the same type)
 
   vecRng::MRG32k3a<ScalarBackend> *fRNG;
   

@@ -308,6 +308,7 @@ G4bool GXCascadeInterface::IsApplicable(const GXParticleDefinition* aPD) const {
 GXHadFinalState* 
 GXCascadeInterface::ApplyYourself(const GXHadProjectile& aTrack, 
 				  GXNucleus& theNucleus) {
+#ifdef G4CASCADE_DEBUG_INTERFACE
   if (verboseLevel)
     G4cout << " >>> GXCascadeInterface::ApplyYourself" << G4endl;
 
@@ -317,7 +318,6 @@ GXCascadeInterface::ApplyYourself(const GXHadProjectile& aTrack,
 	   << aTrack.GetKineticEnergy() << G4endl;
   }
 
-#ifdef G4CASCADE_DEBUG_INTERFACE
   static G4int counter(0);
   counter++;
   G4cerr << "Reaction number "<< counter << " "
@@ -325,9 +325,10 @@ GXCascadeInterface::ApplyYourself(const GXHadProjectile& aTrack,
 	 << aTrack.GetKineticEnergy() << " MeV" << G4endl;
 #endif
 
-  if (!randomFile.empty()) {		// User requested random-seed capture
+  // User requested random-seed capture
+  if (!randomFile.empty()) {
     if (verboseLevel>1) 
-      G4cout << " Saving random engine state to " << randomFile << G4endl;
+      std::cerr << " Saving random engine state to " << randomFile <<"\n";
     CLHEP::HepRandom::saveEngineStatus(randomFile.c_str());
   }
 
@@ -362,10 +363,12 @@ GXCascadeInterface::ApplyYourself(const GXHadProjectile& aTrack,
     output->reset();
     collider->collide(bullet, target, *output);
     balance->collide(bullet, target, *output);
-    
+
     numberOfTries++;
     /* Loop checking 08.06.2015 MHK */
   } while ( isHydrogen ? retryInelasticProton() : retryInelasticNucleus() );
+  static int ievt = 0;
+  std::cerr<<"***** Event "<< ievt++ <<" Ntries="<< numberOfTries <<" Final state: "<< output->numberOfOutgoingParticles() <<" hadrons + "<< output->numberOfOutgoingNuclei() <<" nuclei\n";
 
   // Null event if unsuccessful
   if (numberOfTries >= maximumTries) {
