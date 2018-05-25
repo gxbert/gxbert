@@ -285,7 +285,7 @@ int main(int argc, char* argv[]) {
   RunGXLorentzConvertorTimer<double>("double", soaBullets, soaTargets);
   RunGXLorentzConvertorTimer<vecCore::backend::VcVector::Double_v>("Double_v", soaBullets, soaTargets);
 
-  RunGXLorentzConvertorTimer<float>("float", soaBullets, soaTargets);
+  //RunGXLorentzConvertorTimer<float>("float", soaBullets, soaTargets);
   //RunGXLorentzConvertorTimer<vecCore::backend::VcVector::Float_v>("Double_v", soaBullets, soaTargets);
 
   //.. cleanup
