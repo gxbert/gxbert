@@ -90,9 +90,9 @@ void RunG4InuclColliderTimer(GXTrack_v const& soaBullets, GXTrack_v const& soaTa
   Timer<nanoseconds> timer;
   timer.Start();
   int numberOfTries = 0;
-  for(size_t irep = 0; irep < nReps; ++irep) {
+  for(int irep = 0; irep < nReps; ++irep) {
     g4sumEscm = g4sumEkin = g4sumP2 = 0.;
-    for(size_t i = 0; i < nEvents; ++i) {
+    for(int i = 0; i < nEvents; ++i) {
       soaBullets.getFourMomentum(i, lorvec);
       bullet.fill(lorvec, G4InuclParticleNames::proton);
 
