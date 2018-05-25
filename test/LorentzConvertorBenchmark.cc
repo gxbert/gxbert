@@ -32,9 +32,9 @@ void RunG4LorentzConvertorTimer(GXTrack_v const& soaBullets, GXTrack_v const& so
 
   Timer<nanoseconds> timer;
   timer.Start();
-  for(size_t irep = 0; irep < nReps; ++irep) {
+  for(int irep = 0; irep < nReps; ++irep) {
     g4sumEscm = g4sumEkin = g4sumP2 = 0.;
-    for(size_t i = 0; i < nEvents; ++i) {
+    for(int i = 0; i < nEvents; ++i) {
       soaTargets.getFourMomentum(i, lorvec);
       g4conv.setTarget(lorvec);
 
@@ -73,9 +73,9 @@ void RunGXLorentzConvertorTimer(const char* testname, GXTrack_v const& soaBullet
   LorentzVector<Real_v> fourvec;
   Timer<nanoseconds> timer;
   timer.Start();
-  for(size_t irep = 0; irep < nReps; ++irep) {
+  for(int irep = 0; irep < nReps; ++irep) {
     sumEscm = sumEkin = sumP2 = 0.;
-    for(size_t i = 0; i < nEvents; i += vsize) {
+    for(int i = 0; i < nEvents; i += vsize) {
       soaTargets.getFourMomentum(i, fourvec);
       conv.setTarget(fourvec);
 
@@ -133,9 +133,9 @@ int main(int argc, char* argv[]) {
   g4conv.setVerbose(debugLevel);
 
   timer.Start();
-  for(size_t irep = 0; irep < nReps; ++irep) {
+  for(int irep = 0; irep < nReps; ++irep) {
     g4sumEscm = g4sumEkin = g4sumP2 = 0.;
-    for(size_t i = 0; i < nEvents; ++i) {
+    for(int i = 0; i < nEvents; ++i) {
       soaTargets.getFourMomentum(i, lorvec);
       g4conv.setTarget(lorvec);
 
@@ -168,9 +168,9 @@ int main(int argc, char* argv[]) {
 
   LorentzVector<double> fourvec;
   timer.Start();
-  for(size_t irep = 0; irep < nReps; ++irep) {
+  for(int irep = 0; irep < nReps; ++irep) {
     gsSumEscm = gsSumEkin = gsSumP2 = 0.;
-    for(size_t i = 0; i < nEvents; i++) {
+    for(int i = 0; i < nEvents; i++) {
       soaTargets.getFourMomentum(i, fourvec);
       gsconv.setTarget(fourvec);
 
@@ -209,9 +209,9 @@ int main(int argc, char* argv[]) {
 
   LorentzVector<Real_v> simd4vec;
   timer.Start();
-  for(size_t irep = 0; irep < nReps; ++irep) {
+  for(int irep = 0; irep < nReps; ++irep) {
     gxSumEscm = gxSumEkin = gxSumP2 = 0.;
-    for(size_t i = 0; i < nEvents; i += vsize) {
+    for(int i = 0; i < nEvents; i += vsize) {
       soaTargets.getFourMomentum(i, simd4vec);
       gxconv.setTarget(simd4vec);
 
@@ -242,7 +242,7 @@ int main(int argc, char* argv[]) {
   Real_v glSumEkin = 0.;
   Real_v glSumP2 = 0.;
   timer.Start();
-  for(size_t irep = 0; irep < nReps; ++irep) {
+  for(int irep = 0; irep < nReps; ++irep) {
     glSumEscm = glSumEkin = glSumP2 = 0.;
     for (int i = 0; i < nEvents; i += vsize) {
       Load(px, &soaTargets.px[i]);
