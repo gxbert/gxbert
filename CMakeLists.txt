@@ -418,6 +418,7 @@ if (NOT GXBERT_CUDA)
   ${PROJECT_SOURCE_DIR}/test/gxbertTest.cc
   ${PROJECT_SOURCE_DIR}/test/LorentzConvertorBenchmark.cc
   ${PROJECT_SOURCE_DIR}/test/InuclColliderBenchmark.cc
+  ${PROJECT_SOURCE_DIR}/test/ElemParticleColliderBenchmark.cc
 )
 endif()
 
