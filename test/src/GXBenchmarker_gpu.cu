@@ -1,6 +1,6 @@
-#include "GXThreeVector.h"
-#include "LorentzVector.h"
-#include "GXTrack.h"
+#include "GXThreeVector.hh"
+#include "LorentzVector.hh"
+#include "GXTrack.hh"
 
 #include "VecRng/RngDefs.h"
 

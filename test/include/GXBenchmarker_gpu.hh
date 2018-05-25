@@ -1,7 +1,7 @@
 #ifndef GXBENCHMARKER_GPU_H
 #define GXBENCHMARKER_GPU_H 1
 
-#include "GXTrack.h"
+#include "GXTrack.hh"
 #include "VecRng/RngDefs.h"
 
 namespace gxbert {

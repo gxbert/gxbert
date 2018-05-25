@@ -1,4 +1,4 @@
-#include "GXCurand.h"
+#include "GXCurand.hh"
 
 #include <iostream>
 
