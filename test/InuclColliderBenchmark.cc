@@ -74,12 +74,17 @@ bool isOutputInvalid(G4InuclParticle const &bullet, G4CollisionOutput const &out
 	 );
 }
 
-//==== Reference: G4InuclCollider functionalities
+//
+//================================= Reference: G4InuclCollider functionalities ==================
+//
 void RunG4InuclColliderTimer(GXTrack_v const& soaBullets, GXTrack_v const& soaTargets, G4CollisionOutput &output)
 {
-  double g4sumEscm = 0.;
-  double g4sumEkin = 0.;
-  double g4sumP2 = 0.;
+  double nHadrons = 0.;
+  double nNuclei = 0.;
+  double nNeutrons = 0.;
+  double nProtons = 0.;
+  double nPhotons = 0.;
+  double nOthers = 0.;
 
   G4InuclCollider collider;
   collider.setVerboseLevel(debugLevel);
@@ -91,7 +96,7 @@ void RunG4InuclColliderTimer(GXTrack_v const& soaBullets, GXTrack_v const& soaTa
   timer.Start();
   int numberOfTries = 0;
   for(int irep = 0; irep < nReps; ++irep) {
-    g4sumEscm = g4sumEkin = g4sumP2 = 0.;
+    nHadrons = nNuclei = nNeutrons = nProtons = nPhotons = nOthers = 0;
     for(int i = 0; i < nEvents; ++i) {
       soaBullets.getFourMomentum(i, lorvec);
       bullet.fill(lorvec, G4InuclParticleNames::proton);
@@ -109,21 +114,37 @@ void RunG4InuclColliderTimer(GXTrack_v const& soaBullets, GXTrack_v const& soaTa
 	numberOfTries++;
       } while ( numberOfTries <= 20 && isOutputInvalid(bullet, output) );
       cerr<<"***** Event "<< i <<" Ntries="<< numberOfTries <<" Final state: "<< output.numberOfOutgoingParticles() <<" hadrons + "<< output.numberOfOutgoingNuclei() <<" nuclei\n";
+      nHadrons += output.numberOfOutgoingParticles();
+      nNuclei += output.numberOfOutgoingNuclei();
+      const std::vector<G4InuclElementaryParticle>& outParticles = output.getOutgoingParticles();
+      std::vector<const G4InuclElementaryParticle>::const_iterator ipart = outParticles.begin(), iend = outParticles.end();
+      for( ; ipart != iend; ++ipart) {
+       	if (ipart->type() == G4InuclParticleNames::neutron) ++nNeutrons; //??? suspended...
+       	else if (ipart->type() == G4InuclParticleNames::proton) ++nProtons; //??? suspended...
+       	else if (ipart->type() == G4InuclParticleNames::photon) ++nPhotons; //??? suspended...
+	else ++nOthers;
+      }
     }
   }
   double g4Elapsed = timer.Elapsed();
 
   std::cerr<<"GXBert results: "
-	   <<"  sumEscm = "<< g4sumEscm
-	   <<"\t  sumEkin = "<< g4sumEkin
-	   <<"\t  sumP2 = "<< g4sumP2
-	   <<"\t CPUtime = "<< g4Elapsed / nEvents / nReps
+	   <<"  nHadrons="<< nHadrons
+	   <<"\tnNuclei="<< nNuclei
+	   <<"\tnNeutrons="<< nNeutrons
+	   <<"\tnProtons="<< nProtons
+	   <<"\tnPhotons="<< nPhotons
+	   <<"\tnOthers="<< nOthers
+	   <<"\tCPUtime="<< g4Elapsed / nEvents / nReps
 	   <<"\n";
 }
 
 /*
+//
+//=====================================  VECTORIZED testing version  ========================
+//
 template <typename Real_v>
-void RunGXInuclColliderTimer(const char* testname, GXTrack_v const& soaBullets, GXTrack_v const& soaTargets)
+void RunGXInuclColliderTimer(const char* testname, GXTrack_v const& soaBullets, GXTrack_v const& soaTargets, G4CollisionOutput &output)
 {
   int vsize = vecCore::VectorSize<Real_v>();
   Real_v sumEscm = 0.;
@@ -163,6 +184,7 @@ void RunGXInuclColliderTimer(const char* testname, GXTrack_v const& soaBullets, 
 }
 */
 
+
 int main(int argc, char* argv[]) {
 
   if (argc >= 2) debugLevel = atoi(argv[1]);
@@ -187,13 +209,9 @@ int main(int argc, char* argv[]) {
 
   //.. prepare targets
   GXTrackHandler *targetHandler = new GXTrackHandler(nEvents);
-  targetHandler->SetMass( 207.976636 );  // proton mass in GeV
+  targetHandler->SetMass( 207.976636 );  // Pb-208 nucleus mass in GeV
   targetHandler->GenerateTracksAlongSameDirection(nEvents, posdir, 0., 0.);
   GXTrack_v &soaTargets = targetHandler->GetSoATracks();
-  double nucleusMass = G4InuclNuclei(0.,208,82,0.).getNucleiMass();
-  for(int i=0; i<nEvents; ++i) {
-    soaTargets.E[i] = nucleusMass;
-  }
   
   // Using function calls for benchmarks
   G4CollisionOutput output;

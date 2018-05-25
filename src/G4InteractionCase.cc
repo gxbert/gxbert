@@ -70,4 +70,6 @@ void G4InteractionCase::set(G4InuclParticle* part1,
     bullet = part1;
     target = part2;
   }
+  //std::cerr<<"*** G4InterCase: bullet:"; bullet->print(std::cerr); std::cerr<<"\n";
+  //std::cerr<<"*** G4InterCase: target:"; target->print(std::cerr); std::cerr<<"\n";
 }
