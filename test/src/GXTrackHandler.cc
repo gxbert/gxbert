@@ -12,7 +12,7 @@ namespace gxbert {
 
 
 GXTrackHandler::GXTrackHandler() 
-  : fNumberOfTracks(0), fTrack_aos(0), fBuffer(0), fMass(0.)
+  : fNumberOfTracks(0), fTrack_aos(0), fBuffer(0), fMass(938.272013) // proton mass by default
 {
   // Scalar MRG32k3a
   fRNG = new  vecRng::cxx::MRG32k3a<ScalarBackend>;

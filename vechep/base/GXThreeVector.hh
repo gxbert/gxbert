@@ -347,9 +347,9 @@ VECCORE_FORCE_INLINE
 VECCORE_ATT_HOST_DEVICE
 bool operator==(GXThreeVector<T> const &lhs, GXThreeVector<T> const &rhs)
 {
-  return math::Abs(lhs.x() - rhs.x()) < 0. && 
-         math::Abs(lhs.y() - rhs.y()) < 0. && 
-         math::Abs(lhs.z() - rhs.z()) < 0. ;
+  return math::Abs(lhs.x() - rhs.x()) <= 0. &&
+         math::Abs(lhs.y() - rhs.y()) <= 0. &&
+         math::Abs(lhs.z() - rhs.z()) <= 0. ;
 }
 
 template <typename T>
