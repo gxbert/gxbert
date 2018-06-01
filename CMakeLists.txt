@@ -415,10 +415,8 @@ endif()
 set(TEST_EXECUTABLES)
 if (NOT GXBERT_CUDA)
   set(TEST_EXECUTABLES ${TEST_EXECUTABLES}
-  ${PROJECT_SOURCE_DIR}/test/gxbertTest.cc
-  ${PROJECT_SOURCE_DIR}/test/LorentzConvertorBenchmark.cc
-  ${PROJECT_SOURCE_DIR}/test/InuclColliderBenchmark.cc
-  ${PROJECT_SOURCE_DIR}/test/ElemParticleColliderBenchmark.cc
+    ${PROJECT_SOURCE_DIR}/test/gxbertTest.cc
+    ${PROJECT_SOURCE_DIR}/test/TestInuclElementaryParticle.cc
 )
 endif()
 
@@ -426,6 +424,7 @@ if (GXBERT_VECTEST)
   set(TEST_EXECUTABLES ${TEST_EXECUTABLES}
     ${PROJECT_SOURCE_DIR}/test/gvbertTest.cc
     ${PROJECT_SOURCE_DIR}/test/benchmark.cc
+    ${PROJECT_SOURCE_DIR}/test/LorentzConvertorBenchmark.cc
   ) 
 endif()
 
