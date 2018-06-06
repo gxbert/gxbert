@@ -148,14 +148,15 @@ class GXParticleDefinition
       G4int    GetPDGEncoding() const { return thePDGEncoding; }
       G4int    GetAntiPDGEncoding() const { return theAntiPDGEncoding; }
       void     SetAntiPDGEncoding(G4int aEncoding);
-
  
       G4int    GetQuarkContent(G4int flavor) const;
       G4int    GetAntiQuarkContent(G4int flavor) const;
         // Returns the number of quark with flavor contained in this particle. 
         // The value of flavor is assigned as follows 
         // 1:d, 2:u, 3:s, 4:c, 5:b, 6:t
- 
+
+      G4int    GetStrangeness() const { return GetQuarkContent(3) - GetAntiQuarkContent(3); }
+
       G4bool   IsShortLived() const { return fShortLivedFlag; }
 
       G4bool   GetPDGStable() const; 
