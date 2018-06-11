@@ -417,6 +417,7 @@ if (NOT GXBERT_CUDA)
   set(TEST_EXECUTABLES ${TEST_EXECUTABLES}
     ${PROJECT_SOURCE_DIR}/test/gxbertTest.cc
     ${PROJECT_SOURCE_DIR}/test/TestInuclElementaryParticle.cc
+    ${PROJECT_SOURCE_DIR}/test/TestInteractionCase.cc
 )
 endif()
 
