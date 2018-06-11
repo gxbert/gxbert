@@ -1,6 +1,6 @@
 //
-// File:    TestBox.cpp
-// Purpose: Unit tests for the box
+// File:    TestInuclElementaryParticle.cpp
+// Purpose: Unit tests for the vectorized class GXInuclElementaryParticle
 //
 
 //-- ensure asserts are compiled in

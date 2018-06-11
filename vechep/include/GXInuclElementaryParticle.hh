@@ -8,13 +8,7 @@
 
 #include "GXInuclParticle.hh"
 
-//#include "VecCore/VecCore"
-//#include "IntFor.hh"
 #include "ApproxEqual.hh"
-#include "GXThreeVector.hh"
-#include "LorentzVector.hh"
-#include "G4NucleiModel.hh"
-#include "GXParticleDefinition.hh"
 #include "G4InuclParticleNames.hh"
 
 //#include "VecRng/MRG32k3a.h"
@@ -167,8 +161,12 @@ public:
   // comparison
   VECCORE_ATT_HOST_DEVICE
   VECCORE_FORCE_INLINE
-  vecCore::Mask_v<T> operator==(const GXInuclElementaryParticle<T>& right)
+  vecCore::Mask_v<T> operator==(const GXInuclElementaryParticle<T>& right) const
   {
+    // std::cerr<<"GXInuclEP::oper==(): types: "<< iType <<' '<< right.iType<<"\n";
+    // std::cerr<<"GXInuclEP::oper==(): fDir: "<< BaseClass::fDir <<' '<< right.fDir<<"\n";
+    // std::cerr<<"GXInuclEP::oper==(): kinEnergs: "<< BaseClass::fkinEnergy <<' '<< right.fkinEnergy<<"\n";
+    // std::cerr<<"GXInuclEP::oper==(): modelIDs: "<< BaseClass::fModelID <<' '<< right.fModelID <<"\n";
     return (iType == right.iType
 	    && BaseClass::fDir == right.fDir
 	    && ApproxEqual(BaseClass::fkinEnergy, right.fkinEnergy)
@@ -178,7 +176,7 @@ public:
   
   VECCORE_ATT_HOST_DEVICE
   VECCORE_FORCE_INLINE
-  vecCore::Mask_v<T> operator!=(const GXInuclElementaryParticle<T>& right)
+  vecCore::Mask_v<T> operator!=(const GXInuclElementaryParticle<T>& right) const
   {
     return ! (this->operator==(right));
   }
@@ -301,10 +299,11 @@ public:
 
   VECCORE_ATT_HOST_DEVICE
   VECCORE_FORCE_INLINE
-  void print(std::ostream& os) const
+  void print(std::ostream& os) const override
   {
-    os << "\n" << " Particle: " << getDefinition(type())->GetParticleName()
-       << " type=" << type() << " mass=" << getParticleMass()
+    os << "\n";
+    //if(vecCore::VectorSize<T>()==1) os << " Particle: " << getDefinition(type())->GetParticleName();
+    os << " type=" << type() << " mass=" << getParticleMass()
        << " ekin=" << this->getKineticEnergy();
   }
 };
@@ -435,6 +434,7 @@ static GXParticleDefinition const* getDefinition(int ityp)
 
   return 0;
 }
+
 
 template <typename T>
 std::ostream &operator<<(std::ostream &os, GXInuclElementaryParticle<T> const& trk)

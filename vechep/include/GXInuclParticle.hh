@@ -6,8 +6,6 @@
 #ifndef GXBERT_GXInuclParticle_H
 #define GXBERT_GXInuclParticle_H
 
-//#include "VecCore/VecCore"
-//#include "IntFor.hh"
 #include "ApproxEqual.hh"
 #include "GXThreeVector.hh"
 #include "LorentzVector.hh"
@@ -46,7 +44,7 @@ inline namespace GXBERT_IMPL_NAMESPACE {
 template <typename T>
 class GXInuclParticle {
 
-  using Bool_v = vecCore::Mask_v<T>;
+using Bool_v = vecCore::Mask_v<T>;
 
 protected:
   GXThreeVector<T> fDir;
@@ -158,6 +156,10 @@ public:
   VECCORE_ATT_HOST_DEVICE
   VECCORE_FORCE_INLINE
   virtual T getParticleMass() const = 0;
+
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
+  virtual void print(std::ostream& os) const = 0;
 };
 
 } // end GXBERT_IMPL_NAMESPACE
