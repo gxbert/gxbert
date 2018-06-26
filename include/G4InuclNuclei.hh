@@ -61,7 +61,6 @@
 #include "G4ExitonConfiguration.hh"
 
 class GXFragment;
-class GXParticleDefinition;
 //TK for GXBERT
 //class G4V3DNucleus;
 

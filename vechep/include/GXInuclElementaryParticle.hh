@@ -41,7 +41,7 @@
 #include "G4UnboundPN.hh"
 #include "G4Dineutron.hh"
 #include <iostream>
-#include <strstream>
+#include <sstream>
 
 using namespace G4InuclParticleNames;
 
@@ -150,7 +150,7 @@ public:
   // assignment operator
   VECCORE_ATT_HOST_DEVICE
   VECCORE_FORCE_INLINE
-  G4InuclElementaryParticle& operator=(const GXInuclElementaryParticle<T>& right)
+  GXInuclElementaryParticle& operator=(const GXInuclElementaryParticle<T>& right)
   {
     this->setMomentumDirection(right.getMomentumDirection());
     this->setModel( right.getModel() );
@@ -440,8 +440,8 @@ template <typename T>
 std::ostream &operator<<(std::ostream &os, GXInuclElementaryParticle<T> const& trk)
 {
   auto vsize = vecCore::VectorSize<T>();
-  std::strstream names;
-  std::strstream masses;
+  std::stringstream names;
+  std::stringstream masses;
   if (vsize > 1) {
     auto ityp = trk.type();
     for (int i = 0; i < vsize; ++i) {

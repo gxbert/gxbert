@@ -49,6 +49,7 @@
 #include "globals.hh"
 #include "G4LorentzVector.hh"
 #include "GXDynamicParticle.hh"
+#include "GXParticleDefinition.hh"
 
 class G4InuclParticle {
 public:
@@ -146,7 +147,10 @@ protected:
   //  Special constructors for subclasses to set particle type correctly
   explicit G4InuclParticle(const GXParticleDefinition* pd,
 			   Model model=DefaultModel)
-    : modelId(model) { setDefinition(pd); }
+    : modelId(model)
+  {
+    setDefinition(pd);
+  }
 
   // FIXME: Bertini code doesn't pass valid 4-vectors, so force mass value
   //	    from supplied PartDefn, with required unit conversions

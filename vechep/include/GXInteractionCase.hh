@@ -12,6 +12,7 @@
 #include "globals.hh"
 #include "GXInuclParticle.hh"
 #include "GXInuclElementaryParticle.hh"
+#include <sstream>
 
 namespace gxbert {
 
@@ -131,8 +132,8 @@ template <typename T>
 std::ostream &operator<<(std::ostream &os, typename gxbert::GXInteractionCase<T> const& intcase)
 {
   auto vsize = vecCore::VectorSize<T>();
-  std::strstream tnames, bnames;
-  std::strstream tmasses, bmasses;
+  std::stringstream tnames, bnames;
+  std::stringstream tmasses, bmasses;
 
   GXInuclElementaryParticle<T> const* bhad = dynamic_cast<GXInuclElementaryParticle<T> const*>(intcase.getBullet());
   GXInuclElementaryParticle<T> const* thad = dynamic_cast<GXInuclElementaryParticle<T> const*>(intcase.getTarget()); 

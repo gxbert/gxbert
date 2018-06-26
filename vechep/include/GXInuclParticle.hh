@@ -9,14 +9,13 @@
 #include "ApproxEqual.hh"
 #include "GXThreeVector.hh"
 #include "LorentzVector.hh"
-#include "G4NucleiModel.hh"
+//#include "G4NucleiModel.hh"
 #include "GXParticleDefinition.hh"
 #include "G4InuclParticleNames.hh"
 
 //#include "VecRng/MRG32k3a.h"
 
-#include <iostream>
-#include <strstream>
+//#include <iostream>
 
 using namespace G4InuclParticleNames;
 
@@ -90,7 +89,7 @@ public:
   { }
 
   // assignment operation is fully defined in derived classes
-  G4InuclParticle& operator=(const GXInuclParticle<T>& right) = delete;
+  GXInuclParticle& operator=(const GXInuclParticle<T>& right) = delete;
 
   // comparison operations are fully defined in derived classes
   vecCore::Mask_v<T> operator==(const GXInuclParticle<T>& right)
