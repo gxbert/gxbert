@@ -159,7 +159,7 @@ public:
   VECCORE_FORCE_INLINE
   void SetVectM(const GXThreeVector<T> &spatial, T mass)
   {
-    SetVecMag(spatial, mass);
+    SetVectMag(spatial, mass);
   }
 
   //Properties
@@ -185,11 +185,11 @@ public:
 
   VECCORE_ATT_HOST_DEVICE
   VECCORE_FORCE_INLINE
-  T Phi() const { return math::ATan2(fp.fy, fp.fx); }
+  T Phi() const { return math::ATan2(fp.y(), fp.x()); }
 
   VECCORE_ATT_HOST_DEVICE
   VECCORE_FORCE_INLINE
-  T Theta() const { return math::ACos(fp.fz / Mag()); }
+  T Theta() const { return math::ACos(fp.z() / Mag()) ; }
 
   // Rotates
   VECCORE_ATT_HOST_DEVICE 
