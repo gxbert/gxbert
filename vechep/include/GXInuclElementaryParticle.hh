@@ -83,7 +83,11 @@ public:
 
   VECCORE_ATT_HOST_DEVICE
   VECCORE_FORCE_INLINE
-  void setType(Index<T> const& type) { iType = type; }
+  void setType(Index<T> const& type)
+  {
+    iType = type;
+    setParticleMass( type );
+  }
 
   VECCORE_ATT_HOST_DEVICE
   VECCORE_FORCE_INLINE
@@ -91,7 +95,15 @@ public:
 
   VECCORE_ATT_HOST_DEVICE
   VECCORE_FORCE_INLINE
+  int getType(int i) const { return Get(iType,i); }
+
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
   Index<T> type() const { return iType; }
+
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
+  int type(int i) const { return Get(iType,i); }
 
   VECCORE_ATT_HOST_DEVICE
   VECCORE_FORCE_INLINE
@@ -249,6 +261,17 @@ public:
 
   VECCORE_ATT_HOST_DEVICE
   VECCORE_FORCE_INLINE
+  bool allSameType() const {
+    // Can use as a bool (!=0 ==> true)
+    bool result(true);
+    int type0 = Get(iType, 0);
+    for (size_t i = 0; i < VectorSize<T>(); ++i)
+      result = result & (type0 = Get(iType, i));
+    return result;
+  }
+
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
   Index_v<T> getStrangeness() const { return getStrangeness(type()); }
 
   VECCORE_ATT_HOST_DEVICE
@@ -262,14 +285,19 @@ public:
 
   VECCORE_ATT_HOST_DEVICE
   VECCORE_FORCE_INLINE
-  virtual T getParticleMass() const override
+  virtual void setParticleMass(Index_v<T> const& itype) override
   {
-    T result;
-    for (size_t i = 0; i < VectorSize<T>(); ++i) {
-      auto pd = getDefinition(Get(type(), i));
-      Set(result, i, (pd ? pd->GetPDGMass() : 0.0));
+    if (VectorSize<T>() == 1) {
+      this->setMass( getDefinition(Get(itype,0)) -> GetPDGMass() );
     }
-    return result;
+    else {
+      T mass;
+      for (size_t i = 0; i < VectorSize<T>(); ++i) {
+	auto pd = getDefinition(Get(type(), i));
+	Set(mass, i, (pd ? pd->GetPDGMass() : 0.0));
+      }
+      this->setMass( mass );
+    }
   }
 
   // Overwrite data structure (avoids creating/copying temporaries)
@@ -305,7 +333,7 @@ public:
   {
     os << "\n";
     //if(vecCore::VectorSize<T>()==1) os << " Particle: " << getDefinition(type())->GetParticleName();
-    os << " type=" << type() << " mass=" << getParticleMass()
+    os << " type=" << type() << " mass=" << this->mass()
        << " ekin=" << this->getKineticEnergy();
   }
 };

@@ -39,7 +39,6 @@ inline namespace GXBERT_IMPL_NAMESPACE {
 	       NonEquilib, Equilib, Fissioner, BigBanger, PreCompound,
 	       Coalescence };
 
-
 template <typename T>
 class GXInuclParticle {
 
@@ -48,6 +47,7 @@ using Bool_v = vecCore::Mask_v<T>;
 protected:
   GXThreeVector<T> fDir;
   T fkinEnergy;
+  T fMass;
   Model fModelID;
 
 public:
@@ -129,24 +129,65 @@ public:
 
   VECCORE_ATT_HOST_DEVICE
   VECCORE_FORCE_INLINE
-  GXThreeVector<T> const& getMomentumDirection(GXThreeVector<T> const& momentum) const
-  {
-    return fDir;
-  }
-
-  VECCORE_ATT_HOST_DEVICE
-  VECCORE_FORCE_INLINE
-  GXThreeVector<T>& getMomentumDirection(GXThreeVector<T> const& momentum)
-  {
-    return fDir;
-  }
-
-  VECCORE_ATT_HOST_DEVICE
-  VECCORE_FORCE_INLINE
   void setMomentumDirection(GXThreeVector<T> const& momentum)
   {
     fDir = momentum;
     assert( vecCore::MaskFull( ApproxEqual( momentum.Mag2(), T(1.0)) ) );
+  }
+
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
+  void setMomentum(LorentzVector<T> const& lorvec)
+  {
+    fDir = lorvec.Vect().Unit();
+    setTotalEnergy( lorvec.E() );
+  }
+
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
+  GXThreeVector<T> const& getMomentumDirection() const
+  {
+    return fDir;
+  }
+
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
+  T getMomModule() const
+  {
+    return vecCore::math::Sqrt(fkinEnergy * ( fkinEnergy + T(2.0) * fMass));
+  }
+
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
+  GXThreeVector<T> getMomentum() const
+  {
+    return getMomModule() * fDir;
+  }
+
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
+  LorentzVector<T> getFourMomentum() const
+  {
+    LorentzVector<T> temp;
+    T momValue = getMomModule();
+    temp.Set( momValue * fDir.x(), momValue * fDir.y(), momValue * fDir.z(), fkinEnergy + fMass );
+    return temp;
+  }
+
+protected:
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
+  GXThreeVector<T>& getMomentumDirection()
+  {
+    return fDir;
+  }
+
+public:
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
+  Model getModel() const
+  {
+    return fModelID;
   }
 
   VECCORE_ATT_HOST_DEVICE
@@ -156,9 +197,24 @@ public:
     fModelID = model;
   }
 
+  /// retrieves PDG masses based on particle types provided as argument
   VECCORE_ATT_HOST_DEVICE
   VECCORE_FORCE_INLINE
-  virtual T getParticleMass() const = 0;
+  virtual void setParticleMass(Index_v<T> const& itype) = 0;
+
+  /// Mass setter
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
+  void setMass(T const& mass) { fMass = mass; }
+
+  /// Mass getters
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
+  T const& getParticleMass() const { return fMass; }
+
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
+  T const& mass() const { return fMass; }
 
   VECCORE_ATT_HOST_DEVICE
   VECCORE_FORCE_INLINE

@@ -10,6 +10,7 @@
 #include "LorentzVector.hh"
 #include "GXTrack.hh"
 #include "GXThreeVector.hh"
+#include "GXInuclParticle.hh"
 #include "GXHadronicException.hh"
 #include "VecCore/VecCore"
 
@@ -106,6 +107,20 @@ public:
   VECCORE_ATT_HOST_DEVICE
   VECCORE_FORCE_INLINE
   void setTarget(const GXTrack *target) { setTarget(*target); }
+
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
+  void setBullet(GXInuclParticle<Real_v> const& bullet)
+  {
+    bullet_mom = bullet.getFourMomentum();
+  }
+
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
+  void setTarget(GXInuclParticle<Real_v> const& target)
+  {
+    target_mom = target.getFourMomentum();
+  }
 
   // Use correct four-vectors as input
   VECCORE_ATT_HOST_DEVICE
