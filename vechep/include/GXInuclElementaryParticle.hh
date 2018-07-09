@@ -50,6 +50,8 @@ namespace gxbert {
 inline namespace GXBERT_IMPL_NAMESPACE {
 
 // these are defined later in this file (should be moved to their own file?)
+VECCORE_ATT_HOST_DEVICE
+VECCORE_FORCE_INLINE
 static GXParticleDefinition const* getDefinition(int ityp);
 //static int type(const GXParticleDefinition *pd);
 
@@ -202,11 +204,11 @@ public:
 
   VECCORE_ATT_HOST_DEVICE
   VECCORE_FORCE_INLINE
-    Bool_v isElectron() const { return Bool_v(G4InuclParticleNames::isElectron(type())); }
+  Bool_v isElectron() const { return Bool_v(G4InuclParticleNames::isElectron(type())); }
 
   VECCORE_ATT_HOST_DEVICE
   VECCORE_FORCE_INLINE
-    Bool_v isNeutrino() const { return Bool_v(G4InuclParticleNames::isNeutrino(type())); }
+  Bool_v isNeutrino() const { return Bool_v(G4InuclParticleNames::isNeutrino(type())); }
 
   VECCORE_ATT_HOST_DEVICE
   VECCORE_FORCE_INLINE
@@ -218,7 +220,7 @@ public:
 
   VECCORE_ATT_HOST_DEVICE
   VECCORE_FORCE_INLINE
-    Bool_v antinucleon() const { return Bool_v(G4InuclParticleNames::antinucleon(type())); }
+  Bool_v antinucleon() const { return Bool_v(G4InuclParticleNames::antinucleon(type())); }
 
   VECCORE_ATT_HOST_DEVICE
   VECCORE_FORCE_INLINE

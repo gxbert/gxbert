@@ -15,7 +15,6 @@ SIMD/SIMT version of LORENTZVECTOR of CLHEP
 
 namespace gxbert {
 inline namespace GXBERT_IMPL_NAMESPACE {
-  //inline namespace VECCORE_IMPL_NAMESPACE {
 
 template <typename T>
 class LorentzVector : VectorBase
@@ -147,6 +146,7 @@ public:
   VECCORE_FORCE_INLINE
   void SetVect(const GXThreeVector<T> &p) { fp = p; }
 
+  // Careful: use of Sqrt() makes it slow.
   VECCORE_ATT_HOST_DEVICE
   VECCORE_FORCE_INLINE
   void SetVectMag(const GXThreeVector<T> &spatial, T mass)
@@ -320,17 +320,19 @@ public:
 #undef LORENTZVECTOR_ASSIGNMENT_OP
 };
 
-template <typename T>                                       
-VECCORE_ATT_HOST_DEVICE 
+template <typename T>
+VECCORE_ATT_HOST_DEVICE
 VECCORE_FORCE_INLINE
 LorentzVector<T>& LorentzVector<T>::Boost(T bx, T by, T bz)
 {
-  T b2 = bx*bx + by*by + bz*bz;
-  T ggamma = 1.0 / math::Sqrt(1.0 - b2);
-  T bp = bx*x() + by*y() + bz*z();
+  const T kZero(0.0);
+  const T kOne(1.0);
+  const T b2 = bx*bx + by*by + bz*bz;
+  const T ggamma = kOne / math::Sqrt(kOne - b2);
+  const T bp = bx*x() + by*y() + bz*z();
 
-  Mask_v<T> positive = (b2 > 0.);
-  T gamma2 =  Blend(positive,(ggamma - 1.0)/b2, static_cast<T>(0.0));
+  Mask_v<T> positive = (b2 > kZero);
+  const T gamma2 =  Blend(positive,(ggamma - kOne)/b2, kZero);
 
   SetX(x() + gamma2*bp*bx + ggamma*bx*t());
   SetY(y() + gamma2*bp*by + ggamma*by*t());
@@ -383,15 +385,17 @@ VECCORE_ATT_HOST_DEVICE
 VECCORE_FORCE_INLINE
 LorentzVector<T>& LorentzVector<T>::BoostZ(T bbeta)
 {
-  T b2 = bbeta*bbeta;
+  const T kZero(0.0);
+  const T kOne(1.0);
+  const T b2 = bbeta*bbeta;
 
   //check beta >= 1 (speed of light): no boost done along z
   Mask_v<T> ge_c = (b2 >= 1);
-  bbeta = Blend(ge_c, 0.0, bbeta);
-  T ggamma = Blend(ge_c, 1.0, math::Sqrt(1./(1-b2)));
+  bbeta = Blend(ge_c, kZero, bbeta);
+  const T ggamma = Blend(ge_c, kOne, math::Sqrt(kOne / (kOne - b2)));
 
-  T tt = fE;
-  fE = ggamma*(fE + bbeta*fp.GetZ());
+  const T tt = fE;
+  fE = ggamma * (fE + bbeta*fp.GetZ());
   fp.SetZ(ggamma*(fp.GetZ() + bbeta*tt));
 
   return *this;
@@ -437,10 +441,11 @@ VECCORE_FORCE_INLINE
 VECCORE_ATT_HOST_DEVICE
 bool operator==(LorentzVector<T> const &lhs, LorentzVector<T> const &rhs)
 {
-  return math::Abs(lhs.x() - rhs.x()) < 0. && 
-         math::Abs(lhs.y() - rhs.y()) < 0. && 
-         math::Abs(lhs.z() - rhs.z()) < 0. && 
-         math::Abs(lhs.t() - rhs.t()) < 0. ;
+  T kZero(0.0);
+  return math::Abs(lhs.x() - rhs.x()) < kZero &&
+         math::Abs(lhs.y() - rhs.y()) < kZero &&
+         math::Abs(lhs.z() - rhs.z()) < kZero &&
+         math::Abs(lhs.t() - rhs.t()) < kZero ;
 }
 
 template <typename T>

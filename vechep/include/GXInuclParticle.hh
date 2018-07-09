@@ -89,9 +89,13 @@ public:
   { }
 
   // assignment operation is fully defined in derived classes
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
   GXInuclParticle& operator=(const GXInuclParticle<T>& right) = delete;
 
   // comparison operations are fully defined in derived classes
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
   vecCore::Mask_v<T> operator==(const GXInuclParticle<T>& right)
   {
     assert(false);

@@ -37,11 +37,17 @@ private:
   vecCore::Mask_v<Real_v> degenerated;
 
 public:
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
   GXLorentzConvertor() {}
 
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
   GXLorentzConvertor(const LorentzVector<Real_v>& bmom, Real_v bmass,
    		     const LorentzVector<Real_v>& tmom, Real_v tmass);
 
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
   GXLorentzConvertor(const GXTrack &bullet,
   		     const GXTrack &target)
   {
@@ -49,8 +55,12 @@ public:
     setTarget(target);
   }
 
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
   void setVerbose(int vb=0) { verboseLevel = vb; }
 
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
   void setBullet(Real_v const* px, Real_v const* py, Real_v const* pz, Real_v const* E)
   {
     bullet_mom.x() = px;
@@ -59,6 +69,8 @@ public:
     bullet_mom.t() = E;
   }
 
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
   void setTarget(Real_v const* px, Real_v const* py, Real_v const* pz, Real_v const* E)
   {
     target_mom.x() = px;
@@ -67,6 +79,8 @@ public:
     target_mom.t() = E;
   }
 
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
   void setBullet(const GXTrack &bullet)
   {
     bullet_mom.x() = (Real_v*)bullet.px;
@@ -75,6 +89,8 @@ public:
     bullet_mom.t() = (Real_v*)bullet.E;
   }
 
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
   void setTarget(const GXTrack &target)
   {
     target_mom.x() = (Real_v*)target.px;
@@ -83,32 +99,47 @@ public:
     target_mom.t() = (Real_v*)target.E;
   }
 
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
   void setBullet(const GXTrack *bullet) { setBullet(*bullet); }
+
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
   void setTarget(const GXTrack *target) { setTarget(*target); }
 
   // Use correct four-vectors as input
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
   void setBullet(const LorentzVector<Real_v>& bmom) {
     bullet_mom = bmom;
     if (verboseLevel > 3) printBullet();
   }
 
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
   void setTarget(const LorentzVector<Real_v>& bmom) {
     target_mom = bmom;
     if (verboseLevel > 3) printTarget();
   }
 
   // These functions "repair" input 4-vectors using specified mass
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
   void setBullet(const LorentzVector<Real_v>& bmom, Real_v bmass) {
     bullet_mom.SetVectMag(bmom.Vect(), bmass);
     if (verboseLevel > 3) printBullet();
   }
   
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
   void setTarget(const LorentzVector<Real_v>& tmom, Real_v tmass) {
     target_mom.SetVectMag(tmom.Vect(), tmass);
     if (verboseLevel > 3) printTarget();
   }
 
   // Common calculations needed after a boost
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
   void fillKinematics() {
     ecm_tot = (target_mom+bullet_mom).Mag();
 
@@ -131,6 +162,8 @@ public:
   }
 
   // Select reference frame for boosts, rotations, etc.
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
   void toTheCenterOfMass()
   {
     if (verboseLevel > 2)
@@ -149,6 +182,8 @@ public:
     fillKinematics();
   }
   
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
   void toTheTargetRestFrame()
   {
     if (verboseLevel > 2)
@@ -166,6 +201,8 @@ public:
     fillKinematics();
   }
 
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
   LorentzVector<Real_v> backToTheLab(const LorentzVector<Real_v>& mom) const
   {
     if (verboseLevel > 2)
@@ -194,10 +231,17 @@ public:
   }
 
   // Four-vectors of bullet and target in last chosen reference frame
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
   const LorentzVector<Real_v>& getBullet() const { return bullet_mom; }
+
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
   const LorentzVector<Real_v>& getTarget() const { return target_mom; }
  
   // Bullet kinematics in target rest frame (LAB frame, usually)
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
   Real_v getKinEnergyInTheTRS() const
   {
     if (verboseLevel > 2)
@@ -208,9 +252,16 @@ public:
     return bmom.t()-bmom.Mag();
   }
 
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
   Real_v getTotalSCMEnergy() const { return ecm_tot; }
+
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
   Real_v getSCMMomentum() const { return scm_momentum.rho(); }
 
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
   Real_v getTRSMomentum() const
   {
     if (verboseLevel > 2)
@@ -335,6 +386,8 @@ public:
     return (v2>=(Real_v)small && (!vecCore::MaskFull(degenerated) || scm_momentum.z()<0.0));
   }
 
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
   vecCore::Mask_v<Real_v> trivial() const { return degenerated; }
 
   // Reporting functions for diagnostics
