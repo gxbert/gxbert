@@ -426,6 +426,7 @@ if (GXBERT_VECTEST)
     ${PROJECT_SOURCE_DIR}/test/gvbertTest.cc
     ${PROJECT_SOURCE_DIR}/test/benchmark.cc
     ${PROJECT_SOURCE_DIR}/test/LorentzConvertorBenchmark.cc
+    ${PROJECT_SOURCE_DIR}/test/ElemParticleColliderBenchmark.cc
   ) 
 endif()
 
