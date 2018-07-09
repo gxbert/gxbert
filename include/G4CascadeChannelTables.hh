@@ -58,6 +58,10 @@ public:
   // Arguments are individual G4InuclElementaryParticle types
   static const G4CascadeChannel* GetTable(G4int had1, G4int had2);
 
+  static bool hasValidTableFor(G4int state) {
+    return theInstance->tables.count(state) > 0;
+  }
+
   // Convenience functions for diagnostic output
   static void Print(std::ostream& os=G4cout);
   static void PrintTable(G4int initialState, std::ostream& os=G4cout);

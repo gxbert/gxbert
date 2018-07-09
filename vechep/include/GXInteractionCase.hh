@@ -12,6 +12,7 @@
 #include "globals.hh"
 #include "GXInuclParticle.hh"
 #include "GXInuclElementaryParticle.hh"
+#include "G4CascadeChannelTables.hh"
 #include <sstream>
 
 namespace gxbert {
@@ -109,6 +110,22 @@ public:
 
   VECCORE_ATT_HOST_DEVICE
   VECCORE_FORCE_INLINE
+  Bool_v hasValidTable() const
+  {
+    size_t vsize = VectorSize<T>();
+    if (vsize == 1) {
+      return G4CascadeChannelTables::hasValidTableFor(fCase);
+    }
+    else {
+      Bool_v result(false);
+      for (size_t i = 0; i < vsize; ++i)
+	Set(result, i, G4CascadeChannelTables::hasValidTableFor(Get(fCase, i)));
+      return result;
+    }
+  }
+
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
   Bool_v twoNuclei() const  { return match(-2); }
 
   VECCORE_ATT_HOST_DEVICE
@@ -126,10 +143,9 @@ public:
 };
 
 
-
 //=== Debugging helpers
 template <typename T>
-std::ostream &operator<<(std::ostream &os, typename gxbert::GXInteractionCase<T> const& intcase)
+std::ostream &operator<<(std::ostream &os, GXInteractionCase<T> const& intcase)
 {
   auto vsize = vecCore::VectorSize<T>();
   std::stringstream tnames, bnames;
