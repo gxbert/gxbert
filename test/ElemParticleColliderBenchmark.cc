@@ -239,10 +239,10 @@ int main(int argc, char* argv[]) {
   GXTrack_v &soaBullets = bulletHandler->GetSoATracks();
   printf("Number of tracks = %d at Ekin=%f GeV and pMom=%f GeV\n", soaBullets.size, kinEnergy, pmom);
 
-  //.. prepare targets
+  //.. prepare targets at ~rest
   GXTrackHandler *targetHandler = new GXTrackHandler(nEvents);
   targetHandler->SetMass( 0.938272013 );  // proton mass in GeV
-  targetHandler->GenerateTracksAlongSameDirection(nEvents, posdir, 0., 0.);
+  targetHandler->GenerateTracksAlongSameDirection(nEvents, posdir, 0.001, 0.001);
   GXTrack_v &soaTargets = targetHandler->GetSoATracks();
   // for(int i=0; i<nEvents; ++i) {
   //   soaTargets.E[i] = 0.; // kinEnergy

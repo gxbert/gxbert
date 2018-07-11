@@ -54,15 +54,28 @@ public:
 
   // ===== Accumulate contents of lists =====
 
-  void reset();		// Empties lists for new event
+  // Empties lists for new event
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
+  void reset() {
+    //outgoingNuclei.clear();
+    outgoingParticles.clear();
+    //recoilFragments.clear();
+    eex_rest = 0.;
+    on_shell = false;
+  }
 
   void add(const GXCollisionOutput& right);	// Merge complete objects
 
-  void addOutgoingParticle(const GXInuclElementaryParticle<double>& particle) {
+  void addOutgoingParticle(const GXInuclElementaryParticle<double>& particle)
+  {
     outgoingParticles.push_back(particle);
   }
 
-  void addOutgoingParticles(const std::vector<GXInuclElementaryParticle<double>>& particles);
+  void addOutgoingParticles(const std::vector<GXInuclElementaryParticle<double>>& particles)
+  {
+    outgoingParticles.insert(outgoingParticles.end(), particles.begin(), particles.end());
+  }
 
   // void addOutgoingNucleus(const G4InuclNuclei& nuclei) {
   //   outgoingNuclei.push_back(nuclei);

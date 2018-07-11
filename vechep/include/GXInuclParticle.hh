@@ -121,11 +121,11 @@ public:
 
   VECCORE_ATT_HOST_DEVICE
   VECCORE_FORCE_INLINE
-  void setTotalEnergy(T const& etot) { fkinEnergy = etot - getParticleMass(); }
+  void setTotalEnergy(T const& etot) { fkinEnergy = etot - fMass; }
 
   VECCORE_ATT_HOST_DEVICE
   VECCORE_FORCE_INLINE
-  T getTotalEnergy() const { return fkinEnergy + getParticleMass(); }
+  T getTotalEnergy() const { return fkinEnergy + fMass; }
 
   VECCORE_ATT_HOST_DEVICE
   VECCORE_FORCE_INLINE

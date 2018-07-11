@@ -170,6 +170,7 @@ public:
     this->setModel( right.getModel() );
     this->setKineticEnergy( right.fkinEnergy );
     iType = right.iType;
+    return *this;
   }
 
   // comparison

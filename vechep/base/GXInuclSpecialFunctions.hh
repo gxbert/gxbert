@@ -108,6 +108,22 @@ namespace GXInuclSpecialFunctions {
     return gxbert::cxx::GXRandom::RNG().Uniform<Backend>();
   } 
 
+  template <typename T>
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
+  T inuclRndm()
+  {
+    return gxbert::cxx::GXRandom::RNG().Uniform<VectorBackend>();
+  }
+
+  template <>
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
+  double inuclRndm<double>()
+  {
+    return gxbert::cxx::GXRandom::RNG().Uniform<ScalarBackend>();
+  }
+
   // randomPHI
   template <class Backend>
   VECCORE_ATT_HOST_DEVICE
@@ -117,6 +133,15 @@ namespace GXInuclSpecialFunctions {
     return CLHEP::twopi * inuclRndm<Backend>();
   } 
 
+  // randomPHI
+  template <typename T>
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
+  T randomPHI()
+  {
+    return CLHEP::twopi * inuclRndm<T>();
+  }
+
   // randomCOS_SIN
   template <class Backend>
   std::pair<typename Backend::Double_v, typename Backend::Double_v> randomCOS_SIN() 
@@ -124,6 +149,13 @@ namespace GXInuclSpecialFunctions {
     using Double_v = typename VectorBackend::Double_v;
     Double_v CT = 1.0 - 2.0 * inuclRndm<Backend>();
     return std::pair<Double_v, Double_v>(CT, math::Sqrt(1.0 - CT*CT));
+  }
+
+  template <typename T>
+  std::pair<T, T> randomCOS_SIN()
+  {
+    T costh = 1.0 - 2.0 * inuclRndm<T>();
+    return std::pair<T,T>(costh, math::Sqrt(1.0 - costh * costh));
   }
 
   // randomGauss
@@ -171,7 +203,7 @@ namespace GXInuclSpecialFunctions {
   template <class Backend>
   VECCORE_ATT_HOST_DEVICE
   LorentzVector<typename Backend::Double_v> generateWithRandomAngles(typename Backend::Double_v p, 
-                                                                     typename Backend::Double_v mass) 
+                                                                     typename Backend::Double_v mass = Backend::Double_v(0.0))
   {
     using Double_v = typename Backend::Double_v;
 
@@ -182,6 +214,26 @@ namespace GXInuclSpecialFunctions {
 
     GXThreeVector<Double_v> pvec;
     LorentzVector<Double_v> momr;
+
+    pvec.Set(pt*math::Cos(phi), pt*math::Sin(phi), p*COS_SIN.first);
+    momr.SetVectM(pvec, mass);
+
+    return momr;
+  }
+
+  // generateWithRandomAngles
+  template <typename T>
+  VECCORE_ATT_HOST_DEVICE
+  LorentzVector<T> generateWithRandomAnglesNew(T const& p,
+					       T const& mass = T(0.0))
+  {
+    std::pair<T, T> COS_SIN = randomCOS_SIN<T>();
+
+    T phi = randomPHI<T>();
+    T pt = p * COS_SIN.second;
+
+    GXThreeVector<T> pvec;
+    LorentzVector<T> momr;
 
     pvec.Set(pt*math::Cos(phi), pt*math::Sin(phi), p*COS_SIN.first);
     momr.SetVectM(pvec, mass);
