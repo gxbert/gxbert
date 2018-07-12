@@ -5,6 +5,12 @@
 
 namespace gxbert {
 
+static const char *TestName[kNumberTest] = {
+  "ThreeVectorDot     ",
+  "ThreeVectorRotateUz",
+  "LorentzVectorBoost  "
+};
+
 GXBenchmarker::GXBenchmarker()
     : fNtracks(4992), fRepetitions(1), // fVerbosity(1),
       fMinP(1E+4), fMaxP(1E+4)

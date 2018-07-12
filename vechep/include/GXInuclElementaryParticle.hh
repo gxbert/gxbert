@@ -475,7 +475,7 @@ std::ostream &operator<<(std::ostream &os, GXInuclElementaryParticle<T> const& t
   std::stringstream masses;
   if (vsize > 1) {
     auto ityp = trk.type();
-    for (int i = 0; i < vsize; ++i) {
+    for (size_t i = 0; i < vsize; ++i) {
       if (i > 0) {
 	names <<"; ";
 	masses <<"; ";

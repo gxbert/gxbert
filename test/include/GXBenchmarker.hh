@@ -13,11 +13,11 @@ enum TestIndex {
   kNumberTest 
 };
 
-static const char *TestName[kNumberTest] = {
-  "ThreeVectorDot     ", 
-  "ThreeVectorRotateUz",
-  "LorentzVectorBoost  "
-};
+// static const char *TestName[kNumberTest] = {
+//   "ThreeVectorDot     ",
+//   "ThreeVectorRotateUz",
+//   "LorentzVectorBoost  "
+// };
 
 
 class GXTrackHandler;

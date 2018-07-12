@@ -32,8 +32,8 @@ using std::cerr;
 
 //.. default globals
 constexpr double pmass = 0.938272013;  // proton mass in GeV
-int nReps        = 1;
-int nEvents      = 16; // 1024*64;
+size_t nReps     = 1;
+size_t nEvents   = 16; // 1024*64;
 double kinEnergy = 1.500; // in GeV
 
 int debugLevel   = 0;
@@ -127,7 +127,7 @@ void RunG4ElementaryParticleCollider(GXTrack_v const& soaBullets, GXTrack_v cons
       cerr<<"***** Event "<< i <<" Ntries="<< numberOfTries <<" Final state: "<< output.numberOfOutgoingParticles() <<" hadrons + "<< output.numberOfOutgoingNuclei() <<" nuclei\n";
       nHadrons += output.numberOfOutgoingParticles();
       const std::vector<G4InuclElementaryParticle>& outParticles = output.getOutgoingParticles();
-      std::vector<const G4InuclElementaryParticle>::const_iterator ipart = outParticles.begin(), iend = outParticles.end();
+      std::vector<G4InuclElementaryParticle>::const_iterator ipart = outParticles.begin(), iend = outParticles.end();
       for( ; ipart != iend; ++ipart) {
        	if (ipart->type() == G4InuclParticleNames::neutron) ++nNeutrons; //??? suspended...
        	else if (ipart->type() == G4InuclParticleNames::proton) ++nProtons; //??? suspended...

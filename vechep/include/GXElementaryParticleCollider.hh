@@ -105,12 +105,12 @@ public:
     }
 
     // Keep track of lanes for which no cascading is needed
-    int vsize = vecCore::VectorSize<T>();
+    const size_t vsize = vecCore::VectorSize<T>();
     done = done | ( particle1->isNeutrino() || particle2->isNeutrino() );
 
     // Check if input is homogeneous -- redundant!?
     Index_v<T> hadcase = interCase.hadrons();
-    int case0 = Get(hadcase, 0);
+    const size_t case0 = Get(hadcase, 0);
     bool allsame(true);
     for (size_t i = 1; i < vsize; ++i) {
       allsame &= (case0 == Get(hadcase, i));
@@ -287,7 +287,7 @@ private:
   VECCORE_FORCE_INLINE
   void fillOutgoingMasses()
   {
-    int mult = particle_kinds.size();
+    size_t mult = particle_kinds.size();
     masses.resize(mult,0.);
     masses2.resize(mult,0.);		// Allows direct [i] setting
 
