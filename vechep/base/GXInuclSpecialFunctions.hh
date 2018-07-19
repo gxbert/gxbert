@@ -131,7 +131,7 @@ namespace GXInuclSpecialFunctions {
   typename Backend::Double_v randomPHI() 
   { 
     return CLHEP::twopi * inuclRndm<Backend>();
-  } 
+  }
 
   // randomPHI
   template <typename T>
@@ -142,8 +142,10 @@ namespace GXInuclSpecialFunctions {
     return CLHEP::twopi * inuclRndm<T>();
   }
 
-  // randomCOS_SIN
+  // randomCOS_SIN - warning: only positive sine values returned -> OK only for polar angles!
   template <class Backend>
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
   std::pair<typename Backend::Double_v, typename Backend::Double_v> randomCOS_SIN() 
   {
     using Double_v = typename VectorBackend::Double_v;
@@ -151,7 +153,10 @@ namespace GXInuclSpecialFunctions {
     return std::pair<Double_v, Double_v>(CT, math::Sqrt(1.0 - CT*CT));
   }
 
+  // randomCOS_SIN - warning: only positive sine values returned -> OK only for polar angles!
   template <typename T>
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
   std::pair<T, T> randomCOS_SIN()
   {
     T costh = 1.0 - 2.0 * inuclRndm<T>();
@@ -161,6 +166,7 @@ namespace GXInuclSpecialFunctions {
   // randomGauss
   template <class Backend>
   VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
   typename Backend::Double_v randomGauss(typename Backend::Double_v sigma) 
   {
      /*
@@ -181,6 +187,7 @@ namespace GXInuclSpecialFunctions {
   // generateWithFixedTheta
   template <class Backend>
   VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
   LorentzVector<typename Backend::Double_v> generateWithFixedTheta(typename Backend::Double_v ct, 
                                                                    typename Backend::Double_v p, 
                                                                    typename Backend::Double_v mass) 
@@ -219,6 +226,7 @@ namespace GXInuclSpecialFunctions {
   // generateWithRandomAngles
   template <class Backend>
   VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
   LorentzVector<typename Backend::Double_v> generateWithRandomAngles(typename Backend::Double_v p, 
                                                                      typename Backend::Double_v mass = Backend::Double_v(0.0))
   {
@@ -241,6 +249,7 @@ namespace GXInuclSpecialFunctions {
   // generateWithRandomAngles
   template <typename T>
   VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
   LorentzVector<T> generateWithRandomAnglesNew(T const& p,
 					       T const& mass = T(0.0))
   {
