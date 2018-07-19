@@ -109,6 +109,15 @@ public:
   VECCORE_FORCE_INLINE
   void Set(const T c) { Set(c, c, c); }
 
+  // A faster way to set x,y,z, compared to using r,theta,phi arguments, which usually require an Acos(costh) call to get Theta
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
+  void SetMagCosThPhi(const T mag, const T costh, const T phi)
+  {
+    const T perpMag = mag * math::Sqrt(1.0 - costh * costh);
+    Set( perpMag * math::Cos(phi), perpMag * math::Sin(phi), mag * costh);
+  }
+
   //Properties
   VECCORE_ATT_HOST_DEVICE
   VECCORE_FORCE_INLINE
@@ -207,16 +216,16 @@ public:
 #define THREEVECTOR_ASSIGNMENT_OP(OPERATOR)                     \
   VECCORE_ATT_HOST_DEVICE                                       \
   VECCORE_FORCE_INLINE                                          \
-  GXThreeVector<T> &operator OPERATOR(const GXThreeVector<T> &p)    \
+  GXThreeVector<T> &operator OPERATOR(const GXThreeVector<T> &p)\
   {                                                             \
     fx OPERATOR p.fx; 						\
     fy OPERATOR p.fy;                                           \
     fz OPERATOR p.fz;                                           \
     return *this;                                               \
-  }                                                              \
+  }                                                             \
   VECCORE_ATT_HOST_DEVICE                                       \
   VECCORE_FORCE_INLINE                                          \
-  GXThreeVector<T> &operator OPERATOR(const T &c)                 \
+  GXThreeVector<T> &operator OPERATOR(const T &c)               \
   {                                                             \
     fx OPERATOR c; 						\
     fy OPERATOR c;                                              \
@@ -332,8 +341,8 @@ VECCORE_FORCE_INLINE                                                            
 VECCORE_ATT_HOST_DEVICE                                                                  \
 GXThreeVector<T> operator OPERATOR(const ScalarT lhs, GXThreeVector<T> const &rhs)	 \
 {                                                                                        \
-  GXThreeVector<T> result(lhs);                                                          \
-  result ASSIGNMENT rhs;                                                                 \
+  GXThreeVector<T> result(rhs);                                                          \
+  result ASSIGNMENT lhs;                                                                 \
   return result;                                                                         \
 }
 THREEVECTOR_BINARY_OP(+, +=)

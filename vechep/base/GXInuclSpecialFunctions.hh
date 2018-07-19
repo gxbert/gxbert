@@ -199,6 +199,23 @@ namespace GXInuclSpecialFunctions {
     return momr;
   }
 
+  template <typename T>
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
+  LorentzVector<T> generateWithFixedTheta(T const& costh, T const& p, T const& mass)
+  {
+    const T phi = randomPHI<T>();
+    const T pt = p * math::Sqrt(math::Abs(1.0 - costh * costh));
+
+    GXThreeVector<T> pvec;
+    LorentzVector<T> momr;
+
+    pvec.Set(pt*math::Cos(phi), pt*math::Sin(phi), p*costh);
+    momr.SetVectMag(pvec, mass);
+
+    return momr;
+  }
+
   // generateWithRandomAngles
   template <class Backend>
   VECCORE_ATT_HOST_DEVICE

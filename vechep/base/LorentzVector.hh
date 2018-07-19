@@ -162,6 +162,15 @@ public:
     SetVectMag(spatial, mass);
   }
 
+  // A faster way to set x,y,z, compared to using r,theta,phi arguments, which usually require an Acos(costh) call to get Theta
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
+  void SetMagCosThPhi(const T mag, const T costh, const T phi, T mass)
+  {
+    fp.SetMagCosThPhi(mag, costh, phi);
+    SetT(math::Sqrt(mass * mass + fp.Mag2()));
+  }
+
   //Properties
   VECCORE_ATT_HOST_DEVICE
   VECCORE_FORCE_INLINE
@@ -378,7 +387,7 @@ LorentzVector<T>& LorentzVector<T>::BoostY(T bbeta)
   fp.SetY(ggamma*(fp.GetY() + bbeta*tt));
 
   return *this;
-} 
+}
 
 template <typename T>                                       
 VECCORE_ATT_HOST_DEVICE 

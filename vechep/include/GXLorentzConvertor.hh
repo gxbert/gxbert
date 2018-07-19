@@ -163,7 +163,7 @@ public:
 
     v2 = velocity.Mag2();
 
-    Real_v pvsq = v2 - valong*valong;  // velocity perp to scm_momentum
+    Real_v pvsq = v2 - valong * valong;  // velocity perp to scm_momentum
     if (verboseLevel > 3) cerr << " pvsq=" << pvsq << "\n";
 
     degenerated = (pvsq < (Real_v)small);
@@ -303,8 +303,8 @@ public:
       if (verboseLevel > 2)
 	cerr << " rotating to align with reference z axis " << "\n";
 
-      GXThreeVector<Real_v> vscm = velocity - valong*scm_direction;
-      GXThreeVector<Real_v> vxcm = scm_direction.cross(velocity);
+      GXThreeVector<Real_v> vscm = velocity - valong * scm_direction;
+      GXThreeVector<Real_v> vxcm = scm_direction.Cross(velocity);
 
       if (vscm.Mag() > (Real_v)small && vxcm.Mag() > (Real_v)small) {	// Double check
 	if (verboseLevel > 3) {
@@ -340,7 +340,7 @@ public:
     }
 
     GXThreeVector<Real_v> mom1_dir = mom1.Vect().Unit();
-    Real_v pv = velocity.dot(mom1_dir);
+    Real_v pv = velocity.Dot(mom1_dir);
 
     Real_v vperp = v2 - pv*pv;		// velocity perpendicular to mom1
     if (verboseLevel > 3) {
@@ -354,19 +354,20 @@ public:
 	cerr << " rotating to align with first z axis " << "\n";
 
       GXThreeVector<Real_v> vmom1 = velocity - pv*mom1_dir;
-      GXThreeVector<Real_v> vxm1  = mom1_dir.cross(velocity);
+      GXThreeVector<Real_v> vxm1  = mom1_dir.Cross(velocity);
 
-      if (vmom1.mag() > (Real_v)small && vxm1.mag() > (Real_v)small) {	// Double check
+      const Real_v small2 = small*small;
+      if (vmom1.Mag2() > small2 && vxm1.Mag2() > small2) {	// Double check
 	if (verboseLevel > 3) {
 	  cerr << " first z axis " << mom1_dir << "\n"
 	       << " vmom1 " << vmom1 << " vxm1 " << vxm1 << "\n";
 	}
       
-	mom_rot.SetVect(mom.x()*vmom1.unit() + mom.y()*vxm1.unit() +
+	mom_rot.SetVect(mom.x()*vmom1.Unit() + mom.y()*vxm1.Unit() +
 			mom.z()*mom1_dir );
       }
       else {
-	if (verboseLevel) 
+	if (verboseLevel)
 	  cerr << ">>> GXLorentzVector::rotate zero with !degenerated" << "\n";
       }
     }
