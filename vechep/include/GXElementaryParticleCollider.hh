@@ -6,10 +6,8 @@
 #ifndef GXELEMENTARY_PARTICLE_COLLIDER_HH
 #define GXELEMENTARY_PARTICLE_COLLIDER_HH
 
-#include "G4CascadeColliderBase.hh"
-#include "G4CascadeFinalStateGenerator.hh"
-#include "G4CascadeInterpolator.hh"
-#include "G4CascadeChannelTables.hh"
+//#include "G4CascadeColliderBase.hh"
+//#include "G4CascadeInterpolator.hh"
 #include "G4CascadeParameters.hh"
 #include "G4NucleiModel.hh"
 #include "LorentzVector.hh"
@@ -22,6 +20,10 @@
 #include "GXParticleLargerEkin.hh"
 #include "GXCollisionOutput.hh"
 #include "GXInuclSpecialFunctions.hh"
+#include "GXCascadeFinalStateGenerator.hh"
+
+#include "G4CascadeChannelTables.hh"
+#include "G4CascadeChannel.hh"
 
 #include <vector>
 #include <iostream>
@@ -47,11 +49,11 @@ private:
   Index_v<T> nucleusZ;
 
   //.. Utility class to generate final-state kinematics
-  G4CascadeFinalStateGenerator fsGenerator;
+  GXCascadeFinalStateGenerator<T> fsGenerator;
 
   //.. Internal buffers for lists of secondaries
   std::vector<GXInuclElementaryParticle<T>> particles;
-  //std::vector<LorentzVector<T>> scm_momenta;
+  std::vector<LorentzVector<T>> scm_momentums;
   std::vector<T> masses;
   std::vector<T> masses2;
   std::vector<Int_v> particle_kinds;
@@ -239,7 +241,7 @@ private:
 
   Int_v generateMultiplicity(Int_v const& is, T const& ekin) const;
 
-  void generateOutgoingPartTypes(int is, int mult, T& ekin);
+  void generateOutgoingPartTypes(Int_v is, Int_v mult, T& ekin);
 
   void generateSCMfinalState(T& ekin, T& etot_scm,
 			     GXInuclElementaryParticle<T> const* particle1,
@@ -319,18 +321,50 @@ private:
 
 template <typename T>
 Index_v<T> GXElementaryParticleCollider<T>::generateMultiplicity(Int_v const& hadPairs, T const& ekin) const
-{/*
+{
+  Int_v mult(0);
+
+  const G4CascadeChannel* xsecTable;
+  size_t vsize = vecCore::VectorSize<T>();
+  int lastPair = -999;
+  for (size_t i =0; i < vsize; ++i) {
+    double laneEkin = Get(ekin, i);
+    int lanePair    = Get(hadPairs, i);
+    if (lanePair != lastPair) {
+      xsecTable = G4CascadeChannelTables::GetTable(lanePair);
+      lastPair = lanePair;
+    }
+    if (xsecTable) {
+      Set(mult, i, xsecTable->getMultiplicity(laneEkin));
+    }
+    else {
+      std::cerr << " G4ElementaryParticleCollider: Unknown interaction channel "
+	<< lanePair << " - multiplicity not generated.\n";
+    }
+  }
+
+  if(verboseLevel > 3) {
+    std::cerr << " G4ElementaryParticleCollider::generateMultiplicity: "
+      << " multiplicity = " << mult <<"\n";
+  }
+
+  return mult;
+}
+
+/* // GL Note: I tried to push vectorization into xsecTable->GetMultiplicity(ekin), but got "virtual template methods not allowed" problems
+template <typename T>
+Index_v<T> GXElementaryParticleCollider<T>::generateMultiplicity(Int_v const& hadPairs, T const& ekin) const
+{
   Int_v zero(0);
   Int_v mul = zero;
 
   int i = 0;
   size_t vsize = vecCore::VectorSize<T>();
   while ( i < vsize || vecCore::MaskFull(mul > 0) ) {
-    if Get(mul, i);
     int nextLane = Find(mul, 0);         // find lane where multiplicity has not yet been drawn
-    int nextPair = Get(hadPairs, next);  // get hadron pair in that lane
+    int nextPair = Get(hadPairs, nextLane);  // get hadron pair in that lane
 
-    const G4CascadeChannel* xsecTable = G4CascadeChannelTables::GetTable(nextPair);
+    const GXCascadeChannel* xsecTable = GXCascadeChannelTables::GetTable(nextPair);
     if (xsecTable) {
       const Int_v temp = xsecTable->getMultiplicity(ekin);
       vecCore::MaskedAssign( mul, hadPairs == nextPair, temp); // update all lanes as appropriate
@@ -343,12 +377,48 @@ Index_v<T> GXElementaryParticleCollider<T>::generateMultiplicity(Int_v const& ha
   }
 
   if(verboseLevel > 3){
-    G4cout << " G4ElementaryParticleCollider::generateMultiplicity: "  
-           << " multiplicity = " << mul << G4endl; 
+    std::cerr << " G4ElementaryParticleCollider::generateMultiplicity: "
+    << " multiplicity = " << mul <<"\n";
   }
 
   return mul;
- */
+}
+*/
+
+template <typename T>
+void GXElementaryParticleCollider<T>::
+generateOutgoingPartTypes(Int_v hadPairs, Int_v mult, T& ekin)
+{
+  particle_kinds.clear();	// Initialize buffer for generation
+
+  const G4CascadeChannel* xsecTable;
+  size_t vsize = vecCore::VectorSize<T>();
+  int lastPair = -999;
+  for (size_t i =0; i < vsize; ++i) {
+    double laneEkin = Get(ekin, i);
+    int lanePair    = Get(hadPairs, i);
+    std::vector<int> tempKinds; // TODO: should pre-allocate (call resize())
+    size_t nkinds = particle_kinds.size();
+    for (size_t ikind = 0; ikind < nkinds; ++ikind) {
+      int kk = Get(particle_kinds[ikind], i);
+      if (kk > 0) tempKinds.push_back(kk);
+      else --nkinds;
+    }
+    tempKinds.resize(nkinds);
+    if (lanePair != lastPair) {
+      xsecTable = G4CascadeChannelTables::GetTable(lanePair);
+      lastPair = lanePair;
+    }
+    if (xsecTable) {
+      xsecTable->getOutgoingParticleTypes(tempKinds, nkinds, laneEkin);
+    }
+    else {
+      std::cerr << " GXElementaryParticleCollider: Unknown interaction channel "
+	<< lanePair << " - outgoing kinds not generated.\n";
+    }
+  }
+
+  return;
 }
 
 template <typename T>
@@ -356,7 +426,6 @@ void GXElementaryParticleCollider<T>::generateSCMfinalState(T& ekin, T& etot_scm
 							    GXInuclElementaryParticle<T> const* particle1,
 							    GXInuclElementaryParticle<T> const* particle2)
 {
-  /*
   constexpr int itry_max = 10;
 
   if (verboseLevel > 2) {
@@ -372,14 +441,14 @@ void GXElementaryParticleCollider<T>::generateSCMfinalState(T& ekin, T& etot_scm
   if (verboseLevel > 3) std::cerr << " is " << is <<"\n";
 
   Int_v multiplicity = 0;
-  Bool_v generate    = true;
+  Bool_v goodStates  = true;
 
   // Initialize buffers for this event
   particles.clear();
   particle_kinds.clear();
 
   int itry = 0;
-  while (generate && itry++ < itry_max) {
+  while (!vecCore::MaskFull(goodStates) && itry++ < itry_max) {
 
     // Generate list of final-state particles
     multiplicity = generateMultiplicity(is, ekin);
@@ -387,23 +456,21 @@ void GXElementaryParticleCollider<T>::generateSCMfinalState(T& ekin, T& etot_scm
     generateOutgoingPartTypes(is, multiplicity, ekin);
     if (particle_kinds.empty()) {
       if (verboseLevel > 3) {
-	G4cout << " generateOutgoingPartTypes failed mult " << multiplicity
-	       << G4endl;
+	cerr << " generateOutgoingPartTypes failed mult " << multiplicity <<"\n";
       }
       continue;
     }
 
     fillOutgoingMasses();	// Fill mass buffer from particle types
 
-    // Attempt to produce final state kinematics
+    //.. Attempt to produce final state kinematics
     fsGenerator.Configure(particle1, particle2, particle_kinds);
-    generate = !fsGenerator.Generate(etot_scm, masses, scm_momentums);
+    goodStates = fsGenerator.Generate(etot_scm, masses, scm_momentums);
   }	// while (generate) 
 
   if (itry >= itry_max) {		// Unable to generate valid final state
     if (verboseLevel > 2)
-      G4cout << " generateSCMfinalState failed " << itry << " attempts"
-	     << G4endl;
+      std::cerr << " generateSCMfinalState failed " << itry << " attempts\n";
     return;
   }
 
@@ -412,14 +479,13 @@ void GXElementaryParticleCollider<T>::generateSCMfinalState(T& ekin, T& etot_scm
   particles.resize(multiplicity);		// Preallocate buffer
   for (G4int i=0; i<multiplicity; i++) {
     particles[i].fill(scm_momentums[i], particle_kinds[i],
-		      G4InuclParticle::EPCollider);
+		      gxbert::EPCollider);
   }
 
   if (verboseLevel > 3) {
-    G4cout << " <<< G4ElementaryParticleCollider::generateSCMfinalState"
-	   << G4endl;
+    std::cerr << " <<< G4ElementaryParticleCollider::generateSCMfinalState.\n";
   }
-  */
+
   return;	// Particles buffer filled
 }
 
@@ -491,7 +557,8 @@ void GXElementaryParticleCollider<T>::generateSCMpionNAbsorption(T& etot_scm,
 
   T pmod = vecCore::math::Sqrt((a * a - masses2[0] * mRecoil2) / esq_scm);
   //LorentzVector<T> mom1 = gxbert::GXInuclSpecialFunctions::generateWithRandomAngles<VectorBackend>(pmod, masses[0]);
-  LorentzVector<T> mom1 = gxbert::GXInuclSpecialFunctions::generateWithRandomAnglesNew<T>(pmod, masses[0]);
+  LorentzVector<T> mom1 = GXInuclSpecialFunctions::generateWithRandomAnglesNew<T>(pmod, masses[0]);
+  //LorentzVector<T> mom1 = generateWithRandomAnglesNew<T>(pmod, masses[0]);  // compilation error: no template named 'gener...glesNew'
 
   if (verboseLevel > 3) {
     cerr << " outgoing type " << outType << " recoiling on nuclear mass "
@@ -507,7 +574,7 @@ void GXElementaryParticleCollider<T>::generateSCMpionNAbsorption(T& etot_scm,
   }
 
   // Fill only the ejected nucleon
-  particles[0].fill(mom1, particle_kinds[0], gxbert::EPCollider);
+  particles[0].fill(mom1, particle_kinds[0], EPCollider);
 }
 
 // initialize verboseLevel

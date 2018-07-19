@@ -304,4 +304,5 @@ int main(int argc, char* argv[]) {
   //.. cleanup
   delete bulletHandler;
   delete targetHandler;
+  return 0;
 }
