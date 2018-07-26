@@ -418,6 +418,7 @@ if (NOT GXBERT_CUDA)
     ${PROJECT_SOURCE_DIR}/test/gxbertTest.cc
     ${PROJECT_SOURCE_DIR}/test/TestInuclElementaryParticle.cc
     ${PROJECT_SOURCE_DIR}/test/TestInteractionCase.cc
+    ${PROJECT_SOURCE_DIR}/test/TestPowVec.cc
 )
 endif()
 

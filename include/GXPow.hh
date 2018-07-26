@@ -112,6 +112,7 @@ class GXPow
     G4double maxA;
     G4double maxA2;
     G4double maxAexp;
+    G4double fOneOverLog10;
 
     std::vector<G4double> ener;
     std::vector<G4double> logen;
@@ -225,12 +226,12 @@ inline G4double GXPow::logX(G4double x) const
 
 inline G4double GXPow::log10Z(G4int Z) const
 {
-  return lz[Z]/lz[10];
+  return lz[Z] * fOneOverLog10;
 }
 
 inline G4double GXPow::log10A(G4double A) const
 {
-  return logX(A)/lz[10];
+  return logX(A) * fOneOverLog10;
 }
 
 inline G4double GXPow::expA(G4double A) const

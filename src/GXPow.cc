@@ -63,7 +63,7 @@ GXPow* GXPow::GetInstance()
 
 GXPow::GXPow()
   : onethird(1.0/3.0), max2(5)
-{  
+{
   const G4int maxZ = 512; 
   const G4int maxZfact = 170; 
 
@@ -106,6 +106,8 @@ GXPow::GXPow()
     logf += lz[i];
     logfact[i] = logf;
   }
+
+  fOneOverLog10 = 1.0 / lz[10];
 }
 
 // -------------------------------------------------------------------
