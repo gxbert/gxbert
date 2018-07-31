@@ -77,6 +77,7 @@ class GXPow
     inline G4double logZ(G4int Z) const;
     inline G4double logA(G4double A) const;
     inline G4double logX(G4double x) const;
+    inline G4double logBase(G4double x) const;
 
     // Fast computation of log10(Z)
     //
@@ -101,8 +102,6 @@ class GXPow
   private:
 
     GXPow();
-
-    inline G4double logBase(G4double x) const;
 
     static GXPow* fpInstance;
 

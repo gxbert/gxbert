@@ -53,7 +53,6 @@ inline namespace GXBERT_IMPL_NAMESPACE {
 VECCORE_ATT_HOST_DEVICE
 VECCORE_FORCE_INLINE
 static GXParticleDefinition const* getDefinition(int ityp);
-//static int type(const GXParticleDefinition *pd);
 
 template <typename T>
 class GXInuclElementaryParticle : public GXInuclParticle<T> {
@@ -63,10 +62,6 @@ public:
 
   using BaseClass = GXInuclParticle<T>;
   using BaseClass::BaseClass;
-  // using BaseClass::setModel;
-  // using BaseClass::getKineticEnergy;
-  // using BaseClass::setKineticEnergy;
-  // using BaseClass::setMomentumDirection;
 
 private:
   Index_v<T> iType;
