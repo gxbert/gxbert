@@ -73,14 +73,14 @@ public:
 
   // Fast computation of Z^1/3
   //
-  //VECCORE_ATT_HOST_DEVICE VECCORE_FORCE_INLINE T Z13(gxbert::Int64_v Z) const;
-  GXBERT_UNARY_FUNCTION(Z13, Z13, gxbert::Int64_v)
+  //VECCORE_ATT_HOST_DEVICE VECCORE_FORCE_INLINE T Z13(gxbert::Int_v Z) const;
+  GXBERT_UNARY_FUNCTION(Z13, Z13, gxbert::Int_v)
   GXBERT_UNARY_FUNCTION(A13, A13, T)
 
   //VECCORE_ATT_HOST_DEVICE VECCORE_FORCE_INLINE T A13(T A) const;
 
   /// Fast computation of Z^2/3
-  VECCORE_ATT_HOST_DEVICE VECCORE_FORCE_INLINE T Z23(gxbert::Int64_v Z) const
+  VECCORE_ATT_HOST_DEVICE VECCORE_FORCE_INLINE T Z23(gxbert::Int_v Z) const
   {
     T x = Z13(Z);
     return x*x;
@@ -95,9 +95,9 @@ public:
 
   // Fast computation of log(Z)
   //
-  // VECCORE_ATT_HOST_DEVICE VECCORE_FORCE_INLINE T logZ(gxbert::Int64_v Z) const;
+  // VECCORE_ATT_HOST_DEVICE VECCORE_FORCE_INLINE T logZ(gxbert::Int_v Z) const;
   // VECCORE_ATT_HOST_DEVICE VECCORE_FORCE_INLINE T logX(T x) const;
-  GXBERT_UNARY_FUNCTION(LogZ, logZ, gxbert::Int64_v)
+  GXBERT_UNARY_FUNCTION(LogZ, logZ, gxbert::Int_v)
   GXBERT_UNARY_FUNCTION(LogX, logX, T)
 
   VECCORE_ATT_HOST_DEVICE VECCORE_FORCE_INLINE T LogA(T A) const
@@ -114,9 +114,9 @@ public:
 
   // Fast computation of log10(Z)
   //
-  // VECCORE_ATT_HOST_DEVICE VECCORE_FORCE_INLINE T log10Z(gxbert::Int64_v Z) const;
+  // VECCORE_ATT_HOST_DEVICE VECCORE_FORCE_INLINE T log10Z(gxbert::Int_v Z) const;
   // VECCORE_ATT_HOST_DEVICE VECCORE_FORCE_INLINE T log10A(T A) const;
-  GXBERT_UNARY_FUNCTION(Log10Z, log10Z, gxbert::Int64_v)
+  GXBERT_UNARY_FUNCTION(Log10Z, log10Z, gxbert::Int_v)
   GXBERT_UNARY_FUNCTION(Log10A, log10A, T)
 
   // Fast computation of exp(X)
@@ -126,8 +126,8 @@ public:
 
   // Fast computation of pow(Z,X)
   //
-  //VECCORE_ATT_HOST_DEVICE VECCORE_FORCE_INLINE T powZ(gxbert::Int64_v Z, T y) const;
-  GXBERT_BINARY_FUNCTION(PowZ, powZ, gxbert::Int64_v, T)
+  //VECCORE_ATT_HOST_DEVICE VECCORE_FORCE_INLINE T powZ(gxbert::Int_v Z, T y) const;
+  GXBERT_BINARY_FUNCTION(PowZ, powZ, gxbert::Int_v, T)
 
   VECCORE_ATT_HOST_DEVICE VECCORE_FORCE_INLINE T PowA(T A, T y) const
   {
@@ -137,14 +137,14 @@ public:
 
   //template <typename T1>
   //VECCORE_ATT_HOST_DEVICE VECCORE_FORCE_INLINE T PowN(T x, T1 n) const;
-  GXBERT_BINARY_FUNCTION(PowN, powN, T, gxbert::Int64_v)
+  GXBERT_BINARY_FUNCTION(PowN, powN, T, gxbert::Int_v)
 
   // Fast factorial
   //
-  // VECCORE_ATT_HOST_DEVICE VECCORE_FORCE_INLINE T factorial(gxbert::Int64_v Z) const;
-  // VECCORE_ATT_HOST_DEVICE VECCORE_FORCE_INLINE T logfactorial(gxbert::Int64_v Z) const;
-  GXBERT_UNARY_FUNCTION(Factorial,    factorial,    gxbert::Int64_v)
-  GXBERT_UNARY_FUNCTION(LogFactorial, logfactorial, gxbert::Int64_v)
+  // VECCORE_ATT_HOST_DEVICE VECCORE_FORCE_INLINE T factorial(gxbert::Int_v Z) const;
+  // VECCORE_ATT_HOST_DEVICE VECCORE_FORCE_INLINE T logfactorial(gxbert::Int_v Z) const;
+  GXBERT_UNARY_FUNCTION(Factorial,    factorial,    gxbert::Int_v)
+  GXBERT_UNARY_FUNCTION(LogFactorial, logfactorial, gxbert::Int_v)
 
 private:
 

@@ -19,19 +19,17 @@ int main()
 
   // testing low integers
   for(int i = 0; i < nvals; ++i) {
-    double x = inuclRndm<double>();
+    double x = 2.*inuclRndm<double>();
     int n = round(16 * inuclRndm<double>() - 8);
-    //gxbert::Int64_s nn(n);
-    long int nn(n);
-    double oldres = oldpow->powN(x,n);
-    double newres = newpow->PowN<long int>(x,nn);
+    double oldres = oldpow->powN(x, n);
+    double newres = newpow->PowN(x, n);
     if (i<20) {
       std::cerr<<"=== TestPowVec(i<20): "<< i <<' '<< x <<' '<< n <<' '<< oldres <<' '<< newres <<' '<<' '<< newres-oldres <<'\n';
     }
     assert( ApproxEqual(newres, oldres) );
   }
 
-  // vectorized version
+  /// vectorized version
   GXPowVec<Real_v> const* vecpow = GXPowVec<Real_v>::GetInstance();
 
   // quick-and-dirty benchmark
@@ -44,12 +42,12 @@ int main()
   double *x = (double*)_mm_malloc(memSizeAlloc, 64);  // align by 64 bits
   assert(x);
 
-  long *n = (long*)_mm_malloc(memSizeAlloc, 64);
+  int *n = (int*)_mm_malloc(memSizeAlloc, 64);
   assert(n);
 
   // fill with random values (vectorized)
   for(int i = 0; i < nvals; ++i) {
-    x[i] = 20. * inuclRndm<double>();
+    x[i] = 2. * inuclRndm<double>();
     n[i] = round(16 * inuclRndm<double>() - 8);
   }
 
@@ -62,8 +60,7 @@ int main()
     xsum = 0.;
     for(size_t i = 0; i < nvals; ++i) {
       xval = oldpow->powN(x[i], n[i]);
-      xsum += xval;
-      std::cerr<<" orig bench: "<< i <<' '<< x[i] <<' '<< n[i] <<'\t'<< xval <<'\t'<<xsum <<"\n";
+      std::cerr<<" orig bench: "<< i <<' '<< x[i] <<' '<< n[i] <<'\t'<< xval <<"\n";
     }
   }
   double origElapsed = timer.Elapsed();
@@ -100,14 +97,14 @@ int main()
   // benchmark - vectorized
   Real_v vecx, vecsum;
   Real_v const* vx = (Real_v*)x;
-  Int64_v const* vn = (Int64_v*)n;
+  Int_v const* vn = (Int_v*)n;
   timer.Start();
   for(int irep = 0; irep < nReps; ++irep) {
     scsum = 0.;
     for(size_t i = 0; i < nvals/vsize; i += vsize) {
       vecx = vecpow->PowN(vx[i], vn[i]);
       vecsum += vecx;
-      std::cerr<<" scalar bench: "<< i <<' '<< vx[i] <<' '<< vn[i] <<'\t'<< vecx <<'\t'<< vecsum <<"\n";
+      std::cerr<<" vector bench: "<< i <<' '<< vx[i] <<' '<< vn[i] <<'\t'<< vecx <<'\t'<< vecsum <<"\n";
     }
   }
   double vectorElapsed = timer.Elapsed();
