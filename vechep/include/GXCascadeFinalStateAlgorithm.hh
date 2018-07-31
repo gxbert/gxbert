@@ -81,11 +81,11 @@ protected:
 
   void FillDirThreeBody(T initialMass,
 			const std::vector<T>& masses,
-			std::vector<LorentzVector<T>>& finalState);
+			std::vector<LorentzVector<T>>& finalState, Bool_v mult3);
 
   void FillDirManyBody(T initialMass,
 		       const std::vector<T>& masses,
-		       std::vector<LorentzVector<T>>& finalState);
+		       std::vector<LorentzVector<T>>& finalState, Bool_v multHi);
 
   T GenerateCosTheta(int ptype, T pmod) const;
 
@@ -94,7 +94,7 @@ protected:
 			const std::vector<T>& masses,
 			std::vector<LorentzVector<T>>& finalState);
 
-  T BetaKopylov(Index_v<T> K) const;	// Copied from G4HadPhaseSpaceKopylov
+  T BetaKopylov(size_t K) const;	// Copied from G4HadPhaseSpaceKopylov
 
 private:
   const G4VMultiBodyMomDst* momDist;	// Buffers for selected distributions
@@ -201,8 +201,9 @@ FillMagnitudes(T initialMass, const std::vector<T>& masses) {
 
     T eleft = initialMass;
 
-    int i;	// For access outside of loop
-    for (i=0; i < multiplicity-1; i++) {
+    size_t i;	// For access outside of loop
+    size_t maxmult = vecCore::ReduceMax(multiplicity);
+    for (i=0; i < maxmult-1; ++i) {
       pmod = momDist->GetMomentum(kinds[i], bullet_ekin);
 
       if (pmod < small) break;
@@ -219,7 +220,7 @@ FillMagnitudes(T initialMass, const std::vector<T>& masses) {
       modules[i] = pmod;
     }
 
-    if (i < multiplicity-1) continue;	// Failed to generate full kinematics
+    if (i < maxmult-1) continue;	// Failed to generate full kinematics
 
     T plast = eleft * eleft - masses.back()*masses.back();
     if (GetVerboseLevel() > 2) std::cerr << " plast ** 2 " << plast <<"\n";
@@ -272,30 +273,38 @@ FillDirections(T initialMass, const std::vector<T>& masses,
     std::cerr << " >>> " << GetName() << "::FillDirections.\n";
 
   finalState.clear();			// Initialization and sanity check
-  if ((int)modules.size() != multiplicity) return;
+  size_t maxmult = vecCore::ReduceMax(multiplicity);
+  finalState.resize(maxmult);
+
+  // test
+  if (modules.size() != maxmult) {
+    std::cerr << " >>> " << GetName() << "::FillDirections() error: modules.size() != maxmult!\n";
+    return; // ??? FIXME
+  }
 
   // Different order of processing for three vs. N body
-  if (!vecCore::MaskEmpty(multiplicity == 3))
-    FillDirThreeBody(initialMass, masses, finalState);
-  if (!vecCore::MaskEmpty(multiplicity > 3))
-    FillDirManyBody(initialMass, masses, finalState);
+   Bool_v mult3 = (multiplicity == 3);
+  Bool_v multHi = (multiplicity > 3);
+  if (!vecCore::MaskEmpty(mult3))
+    FillDirThreeBody(initialMass, masses, finalState, mult3);
+  if (!vecCore::MaskEmpty(multHi))
+    FillDirManyBody(initialMass, masses, finalState, multHi);
 }
 
 
 template <typename T>
 void GXCascadeFinalStateAlgorithm<T>::
 FillDirThreeBody(T initialMass, const std::vector<T>& masses,
-		 std::vector<LorentzVector<T>>& finalState)
+		 std::vector<LorentzVector<T>>& finalState, Bool_v mult3)
 {
   if (GetVerboseLevel() > 1) {
     std::cerr << " >>> " << GetName() << "::FillDirThreeBody\n";
   }
 
-  finalState.resize(3);
-
   T costh = GenerateCosTheta(kinds[2], modules[2]);
-  finalState[2] = generateWithFixedTheta(costh, modules[2], masses[2]);
-  finalState[2] = toSCM.rotate(finalState[2]);	// Align target axis
+  // FIXME: should use a local LorVector here instead of finalstate[2]?
+  vecCore::MaskedAssign(finalState[2], mult3, generateWithFixedTheta(costh, modules[2], masses[2]));
+  vecCore::MaskedAssign(finalState[2], mult3, toSCM.rotate(finalState[2]));	// Align target axis
 
   // Generate direction of first particle
   costh = -0.5 * (modules[2]*modules[2] + modules[0]*modules[0] -
@@ -323,7 +332,7 @@ FillDirThreeBody(T initialMass, const std::vector<T>& masses,
 template <typename T>
 void GXCascadeFinalStateAlgorithm<T>::
 FillDirManyBody(T initialMass, const std::vector<T>& masses,
-		std::vector<LorentzVector<T>>& finalState)
+		std::vector<LorentzVector<T>>& finalState, Bool_v multHi)
 {
   if (GetVerboseLevel()>1) {
     std::cerr << " >>> " << GetName() << "::FillDirManyBody\n";
@@ -512,7 +521,7 @@ FillUsingKopylov(T initialMass,
 
   finalState.clear();
 
-  size_t N = masses.size();  // FIXME for different sizes per lane!
+  size_t N = masses.size();
   finalState.resize(N);
 
   T zero(0.0);
@@ -555,24 +564,24 @@ FillUsingKopylov(T initialMass,
 
 template <typename T>
 T GXCascadeFinalStateAlgorithm<T>::
-BetaKopylov(Index_v<T> K) const
+BetaKopylov(size_t K) const
 {
   GXPowVec<T>* g4pow = GXPowVec<T>::GetInstance();
 
-  Index_v<T> N = 3 * K - 5;
+  Index_v<T> N(3 * K - 5);
   const T xN( N );
   const T one(1.0);
 
   // original: Fmax = std::sqrt(g4pow->powN(xN/(xN+1.),N)/(xN+1.)); 
   const T oneOverXnPlus1 = one / (xN + one);
-  const T Fmax = math::Sqrt(g4pow->powN(xN * oneOverXnPlus1, N) * oneOverXnPlus1); 
+  const T Fmax = math::Sqrt(g4pow->PowN(xN * oneOverXnPlus1, N) * oneOverXnPlus1); 
 
   // Loop checking 08.06.2015 MHK
   T F, chi;
   vecCore::Mask_v<T> done(false);
   do {
     vecCore::MaskedAssign( chi, !done, inuclRndm<T>());
-    vecCore::MaskedAssign( F, !done, math::Sqrt(g4pow->powN(chi,N) * (one - chi)));
+    vecCore::MaskedAssign( F, !done, math::Sqrt(g4pow->PowN(chi,N) * (one - chi)));
     done = (Fmax * inuclRndm<T>() < F);
   } while ( !vecCore::MaskFull(done) );
   return chi;

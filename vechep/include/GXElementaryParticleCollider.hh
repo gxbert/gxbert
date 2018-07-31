@@ -476,10 +476,10 @@ void GXElementaryParticleCollider<T>::generateSCMfinalState(T& ekin, T& etot_scm
 
   // Store generated momenta into outgoing particles
 
-  particles.resize(multiplicity);		// Preallocate buffer
-  for (G4int i=0; i<multiplicity; i++) {
-    particles[i].fill(scm_momentums[i], particle_kinds[i],
-		      gxbert::EPCollider);
+  size_t maxmult = vecCore::ReduceMax(multiplicity);
+  particles.resize(maxmult);		// Preallocate buffer
+  for (size_t i=0; i<maxmult; i++) {
+    particles[i].fill(scm_momentums[i], particle_kinds[i], gxbert::EPCollider);
   }
 
   if (verboseLevel > 3) {
