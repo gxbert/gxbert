@@ -29,19 +29,23 @@ void OriginalLoop(double* x, int* n, size_t imax) {
 }
 
 template <typename Real_T, typename Int_T>
-void SIMDLoop(const char* testname, Real_T const* x, Int_T const* n, size_t nobjs)
+void SIMDLoop(const char* testname, double const* x, int const* n, size_t nobjs)
 {
-  Real_T val, sum;
   GXPowVec<Real_T> const* newpow = GXPowVec<Real_T>::GetInstance();
   std::cerr<<"VectorSizes: "<< VectorSize<Real_T>() <<" and "<< VectorSize<Int_T>() <<"\n";
+
   size_t imax = nobjs / VectorSize<Real_T>();
+  Real_T const* xx = (Real_T const*)x;
+  Int_T  const* nn = (Int_T  const*)n;
+  Real_T val, sum;
+
   timer.Start();
   for(size_t irep = 0; irep < nReps; ++irep) {
     sum = 0.;
     for(size_t i = 0; i < imax; ++i) {
-      val = newpow->PowN(x[i], n[i]);
+      val = newpow->PowN(xx[i], nn[i]);
       sum += val;
-      std::cerr<<"SIMDLoop<"<< testname <<">: "<< i <<' '<< x[i] <<' '<< n[i] <<'\t'<< val <<'\t'<< sum <<"\n";
+      std::cerr<<"SIMDLoop<"<< testname <<">: "<< i <<' '<< xx[i] <<' '<< nn[i] <<'\t'<< val <<'\t'<< sum <<"\n";
     }
   }
   double elapsed = timer.Elapsed();
@@ -83,8 +87,7 @@ int main()
 
   // benchmark - scalar
   SIMDLoop<double,int>("Scalar", x, n, nvals);
-
-  SIMDLoop<Real_v,gxbert::Int_v>("Vector", (Real_v*)x, (gxbert::Int_v*)n, nvals);
+  SIMDLoop<Real_v,gxbert::Int_v>("Vector", x, n, nvals);
 
 
   // benchmark - scalar v2
@@ -95,7 +98,7 @@ int main()
     for(size_t i = 0; i < nvals; ++i) {
       sc2x = newpow->PowN(x[i], n[i]);
       sc2sum += sc2x;
-      std::cerr<<" scalar bench: "<< i <<' '<< x[i] <<' '<< n[i] <<'\t'<< sc2x <<'\t'<< sc2sum <<"\n";
+      std::cerr<<" scalar v2: "<< i <<' '<< x[i] <<' '<< n[i] <<'\t'<< sc2x <<'\t'<< sc2sum <<"\n";
     }
   }
   double scalar2Elapsed = timer.Elapsed();
