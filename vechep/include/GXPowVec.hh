@@ -55,7 +55,7 @@ T F(const T1 &x, const T2 &y) const	      \
   return ret;                                 \
 }
 
-template <typename T>
+template <typename T, typename Int_T>
 class GXPowVec
 {
   using Bool_v = typename vecCore::Mask_v<T>;
@@ -65,22 +65,19 @@ public:
 
   static GXPowVec* GetInstance()
   {
-    if (fpInstance == 0) {
-      fpInstance = new GXPowVec<T>();
-    }
     return fpInstance;
   }
 
   // Fast computation of Z^1/3
   //
-  //VECCORE_ATT_HOST_DEVICE VECCORE_FORCE_INLINE T Z13(gxbert::Int_v Z) const;
-  GXBERT_UNARY_FUNCTION(Z13, Z13, gxbert::Int_v)
+  //VECCORE_ATT_HOST_DEVICE VECCORE_FORCE_INLINE T Z13(Int_T Z) const;
+  GXBERT_UNARY_FUNCTION(Z13, Z13, Int_T)
   GXBERT_UNARY_FUNCTION(A13, A13, T)
 
   //VECCORE_ATT_HOST_DEVICE VECCORE_FORCE_INLINE T A13(T A) const;
 
   /// Fast computation of Z^2/3
-  VECCORE_ATT_HOST_DEVICE VECCORE_FORCE_INLINE T Z23(gxbert::Int_v Z) const
+  VECCORE_ATT_HOST_DEVICE VECCORE_FORCE_INLINE T Z23(Int_T Z) const
   {
     T x = Z13(Z);
     return x*x;
@@ -95,9 +92,9 @@ public:
 
   // Fast computation of log(Z)
   //
-  // VECCORE_ATT_HOST_DEVICE VECCORE_FORCE_INLINE T logZ(gxbert::Int_v Z) const;
+  // VECCORE_ATT_HOST_DEVICE VECCORE_FORCE_INLINE T logZ(Int_T Z) const;
   // VECCORE_ATT_HOST_DEVICE VECCORE_FORCE_INLINE T logX(T x) const;
-  GXBERT_UNARY_FUNCTION(LogZ, logZ, gxbert::Int_v)
+  GXBERT_UNARY_FUNCTION(LogZ, logZ, Int_T)
   GXBERT_UNARY_FUNCTION(LogX, logX, T)
 
   VECCORE_ATT_HOST_DEVICE VECCORE_FORCE_INLINE T LogA(T A) const
@@ -114,9 +111,9 @@ public:
 
   // Fast computation of log10(Z)
   //
-  // VECCORE_ATT_HOST_DEVICE VECCORE_FORCE_INLINE T log10Z(gxbert::Int_v Z) const;
+  // VECCORE_ATT_HOST_DEVICE VECCORE_FORCE_INLINE T log10Z(Int_T Z) const;
   // VECCORE_ATT_HOST_DEVICE VECCORE_FORCE_INLINE T log10A(T A) const;
-  GXBERT_UNARY_FUNCTION(Log10Z, log10Z, gxbert::Int_v)
+  GXBERT_UNARY_FUNCTION(Log10Z, log10Z, Int_T)
   GXBERT_UNARY_FUNCTION(Log10A, log10A, T)
 
   // Fast computation of exp(X)
@@ -126,8 +123,8 @@ public:
 
   // Fast computation of pow(Z,X)
   //
-  //VECCORE_ATT_HOST_DEVICE VECCORE_FORCE_INLINE T powZ(gxbert::Int_v Z, T y) const;
-  GXBERT_BINARY_FUNCTION(PowZ, powZ, gxbert::Int_v, T)
+  //VECCORE_ATT_HOST_DEVICE VECCORE_FORCE_INLINE T powZ(Int_T Z, T y) const;
+  GXBERT_BINARY_FUNCTION(PowZ, powZ, Int_T, T)
 
   VECCORE_ATT_HOST_DEVICE VECCORE_FORCE_INLINE T PowA(T A, T y) const
   {
@@ -137,14 +134,14 @@ public:
 
   //template <typename T1>
   //VECCORE_ATT_HOST_DEVICE VECCORE_FORCE_INLINE T PowN(T x, T1 n) const;
-  GXBERT_BINARY_FUNCTION(PowN, powN, T, gxbert::Int_v)
+  GXBERT_BINARY_FUNCTION(PowN, powN, T, Int_T)
 
   // Fast factorial
   //
-  // VECCORE_ATT_HOST_DEVICE VECCORE_FORCE_INLINE T factorial(gxbert::Int_v Z) const;
-  // VECCORE_ATT_HOST_DEVICE VECCORE_FORCE_INLINE T logfactorial(gxbert::Int_v Z) const;
-  GXBERT_UNARY_FUNCTION(Factorial,    factorial,    gxbert::Int_v)
-  GXBERT_UNARY_FUNCTION(LogFactorial, logfactorial, gxbert::Int_v)
+  // VECCORE_ATT_HOST_DEVICE VECCORE_FORCE_INLINE T factorial(Int_T Z) const;
+  // VECCORE_ATT_HOST_DEVICE VECCORE_FORCE_INLINE T logfactorial(Int_T Z) const;
+  GXBERT_UNARY_FUNCTION(Factorial,    factorial,    Int_T)
+  GXBERT_UNARY_FUNCTION(LogFactorial, logfactorial, Int_T)
 
 private:
 
@@ -152,9 +149,9 @@ private:
 
   ~GXPowVec()
   {
-    if (GXPowVec<T>::fpInstance) {
-      delete GXPowVec<T>::fpInstance;
-      GXPowVec<T>::fpInstance = NULL;
+    if (GXPowVec<T,Int_T>::fpInstance) {
+      delete GXPowVec<T, Int_T>::fpInstance;
+      GXPowVec<T,Int_T>::fpInstance = NULL;
     }
   }
 
@@ -164,18 +161,18 @@ private:
   template <size_t IMAX>
   VECCORE_ATT_HOST_DEVICE VECCORE_FORCE_INLINE T PowLowNLoop(const T xx, Index_v<T> nn) const;
 
-  static GXPowVec<T>* fpInstance;
+  static GXPowVec<T,Int_T>* fpInstance;
 };
 
-template <typename T>
-GXPowVec<T>* GXPowVec<T>::fpInstance = new GXPowVec<T>();
+template <typename T, typename Int_T>
+GXPowVec<T, Int_T>* GXPowVec<T,Int_T>::fpInstance = new GXPowVec<T,Int_T>();
 
 // -------------------------------------------------------------------
 
 // returns pow(x,N) only for lanes with positive nn <= IMAX, and 1.0 otherwise
-template <typename T>
+template <typename T, typename Int_T>
 template <size_t IMAX> // default should be IMAX=8, but default parameter cannot be used here
-VECCORE_ATT_HOST_DEVICE VECCORE_FORCE_INLINE T GXPowVec<T>::
+VECCORE_ATT_HOST_DEVICE VECCORE_FORCE_INLINE T GXPowVec<T,Int_T>::
 PowLowNLoop(const T xx, gxbert::Index_v<T> nn) const
 {
   size_t imax = ReduceMax(nn);
@@ -195,9 +192,9 @@ PowLowNLoop(const T xx, gxbert::Index_v<T> nn) const
 }
 
 /*// IT represents an integer type of same lenght in bits as type T
-template <typename T>
+template <typename T, typename Int_T>
 template <typename IT>
-VECCORE_ATT_HOST_DEVICE VECCORE_FORCE_INLINE T GXPowVec<T>::
+VECCORE_ATT_HOST_DEVICE VECCORE_FORCE_INLINE T GXPowVec<T,Int_T>::
 PowN(T x, IT n) const
 {
   using vecCore::Convert;

@@ -11,11 +11,12 @@ int main()
 {
   using namespace gxbert;
   using namespace gxbert::GXInuclSpecialFunctions;
+  using Int_v = vecCore::backend::VcSimdArray<2>::Int_v;
 
   constexpr int nvals = (2 << 3);
 
-  GXPow            *oldpow = GXPow::GetInstance();
-  GXPowVec<double> const* newpow = GXPowVec<double>::GetInstance();
+  GXPow const* oldpow = GXPow::GetInstance();
+  GXPowVec<double, int> const* newpow = GXPowVec<double,int>::GetInstance();
 
   // testing low integers
   for(int i = 0; i < nvals; ++i) {
@@ -30,7 +31,7 @@ int main()
   }
 
   /// vectorized version
-  GXPowVec<Real_v> const* vecpow = GXPowVec<Real_v>::GetInstance();
+  GXPowVec<Real_v, Int_v> const* vecpow = GXPowVec<Real_v, Int_v>::GetInstance();
 
   // quick-and-dirty benchmark
   using Real_v = VectorBackend::Double_v;

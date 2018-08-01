@@ -566,7 +566,9 @@ template <typename T>
 T GXCascadeFinalStateAlgorithm<T>::
 BetaKopylov(size_t K) const
 {
-  GXPowVec<T>* g4pow = GXPowVec<T>::GetInstance();
+  constexpr size_t vsize = vecCore::VectorSize<T>();
+  using Int_v = typename vecCore::backend::VcSimdArray<vsize>::Int_v;
+  GXPowVec<T,Int_v>* g4pow = GXPowVec<T,Int_v>::GetInstance();
 
   Index_v<T> N(3 * K - 5);
   const T xN( N );

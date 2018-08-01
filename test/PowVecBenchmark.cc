@@ -4,6 +4,7 @@
 #include "ApproxEqual.hh"
 #include "GXInuclSpecialFunctions.hh"
 #include "VecCore/Timer.h"
+#include "VecCore/VecCore"
 
 #include <iostream>
 
@@ -31,8 +32,8 @@ void OriginalLoop(double* x, int* n, size_t imax) {
 template <typename Real_T, typename Int_T>
 void SIMDLoop(const char* testname, double const* x, int const* n, size_t nobjs)
 {
-  GXPowVec<Real_T> const* newpow = GXPowVec<Real_T>::GetInstance();
   std::cerr<<"VectorSizes: "<< VectorSize<Real_T>() <<" and "<< VectorSize<Int_T>() <<"\n";
+  GXPowVec<Real_T,Int_T> const* newpow = GXPowVec<Real_T,Int_T>::GetInstance();
 
   size_t imax = nobjs / VectorSize<Real_T>();
   Real_T const* xx = (Real_T const*)x;
@@ -60,15 +61,15 @@ int main()
 
   constexpr int nvals = (2 << 3);
 
-  GXPowVec<double> const* newpow = GXPowVec<double>::GetInstance();
-  GXPowVec<Real_v> const* vecpow = GXPowVec<Real_v>::GetInstance();
+  using Real_v = VectorBackend::Double_v;
+  constexpr size_t vsize = VectorSize<Real_v>();
+  using Int_v = vecCore::backend::VcSimdArray<vsize>::Int_v;
 
   // quick-and-dirty benchmark
-  using Real_v = VectorBackend::Double_v;
-  size_t vsize = VectorSize<Real_v>();
   // nvals must be a multiple of vsize!
   assert(nvals % vsize == 0);
 
+  std::cerr<<"\n\n PowVec Benchmark: nReps="<< nReps <<" and nvals="<< nvals <<"\n\n";
   unsigned int memSizeAlloc = nvals * sizeof(double);
   double *x = (double*)_mm_malloc(memSizeAlloc, 64);  // align by 64 bits
   assert(x);
@@ -85,12 +86,8 @@ int main()
   // benchmark - original
   OriginalLoop(x, n, nvals);
 
-  // benchmark - scalar
-  SIMDLoop<double,int>("Scalar", x, n, nvals);
-  SIMDLoop<Real_v,gxbert::Int_v>("Vector", x, n, nvals);
-
-
-  // benchmark - scalar v2
+  // benchmark - scalar v0
+  GXPowVec<double, int>    const* newpow = GXPowVec<double,int>::GetInstance();
   double sc2x, sc2sum;
   timer.Start();
   for(size_t irep = 0; irep < nReps; ++irep) {
@@ -105,13 +102,14 @@ int main()
   std::cerr<<"Scalar v2: "<< sc2sum <<' '<< scalar2Elapsed <<"\n";
 
   // benchmark - vectorized
+  GXPowVec<Real_v, Int_v> const* vecpow = GXPowVec<Real_v,Int_v>::GetInstance();
   Real_v vecx, vecsum;
   Real_v const* vx = (Real_v*)x;
   Int_v const* vn = (Int_v*)n;
   timer.Start();
   for(size_t irep = 0; irep < nReps; ++irep) {
     vecsum = 0.;
-    for(size_t i = 0; i < nvals/vsize; i += vsize) {
+    for(size_t i = 0; i < nvals/vsize; ++i) {
       vecx = vecpow->PowN(vx[i], vn[i]);
       vecsum += vecx;
       std::cerr<<" vector bench: "<< i <<' '<< vx[i] <<' '<< vn[i] <<'\t'<< vecx <<'\t'<< vecsum <<"\n";
@@ -124,6 +122,13 @@ int main()
   // if(oldpow) delete oldpow;
   // if(newpow) delete newpow;
   //if(vecpow) delete vecpow;
+
+  // benchmark - scalar
+  SIMDLoop<double, int>("    Scalar", x, n, nvals);
+
+  // benchmark - vector
+  SIMDLoop<Real_v, Int_v>("    Vector", x, n, nvals);
+
 
   //=== display result
   std::cerr<<">>> PowVec tests passed.\n";
