@@ -21,7 +21,6 @@
 #ifndef GXPowVec_hh
 #define GXPowVec_hh 1
 
-//#include "VecCore/VecCore"
 #include "VecHepDefs.hh"
 #include "GXPow.hh"
 #include "GXLog.hh"
@@ -129,7 +128,7 @@ public:
   VECCORE_ATT_HOST_DEVICE VECCORE_FORCE_INLINE T PowA(T A, T y) const
   {
     const T zero(0.0);
-    return vecCore::Blend(A == zero ? zero : expA(y*logX(A)));
+    return vecCore::Blend(A == zero, zero, ExpA(y*LogX(A)));
   }
 
   //template <typename T1>
