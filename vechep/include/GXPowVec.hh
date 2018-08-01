@@ -54,6 +54,16 @@ T F(const T1 &x, const T2 &y) const	      \
   return ret;                                 \
 }
 
+#define GXBERT_BINARY_STDFUNC(F, f, T1, T2)   \
+VECCORE_FORCE_INLINE VECCORE_ATT_HOST_DEVICE  \
+T F(const T1 &x, const T2 &y) const           \
+{                                             \
+  T ret;                                      \
+  for(size_t i = 0; i < fTsize; ++i)          \
+    Set(ret, i, f(Get(x,i), Get(y,i)));       \
+  return ret;                                 \
+}
+
 template <typename T, typename Int_T>
 class GXPowVec
 {
@@ -135,6 +145,11 @@ public:
   //VECCORE_ATT_HOST_DEVICE VECCORE_FORCE_INLINE T PowN(T x, T1 n) const;
   GXBERT_BINARY_FUNCTION(PowN, powN, T, Int_T)
 
+  //.. GL: define a few functions based on std:: library for reference
+  GXBERT_BINARY_STDFUNC(StdPowN, std::pow, T, Int_T)
+  GXBERT_BINARY_STDFUNC(StdPowZ, std::pow, Int_T, T)
+  GXBERT_BINARY_STDFUNC(StdPowA, std::pow, T, T)
+
   // Fast factorial
   //
   // VECCORE_ATT_HOST_DEVICE VECCORE_FORCE_INLINE T factorial(Int_T Z) const;
@@ -157,6 +172,7 @@ private:
   //VECCORE_ATT_HOST_DEVICE VECCORE_FORCE_INLINE T LogBase(T x) const;
   GXBERT_UNARY_FUNCTION(LogBase, logBase, T)
 
+  //.. GL: a first attempt to fully vectorize some of these functions! (effort did not converge yet)
   template <size_t IMAX>
   VECCORE_ATT_HOST_DEVICE VECCORE_FORCE_INLINE T PowLowNLoop(const T xx, Index_v<T> nn) const;
 

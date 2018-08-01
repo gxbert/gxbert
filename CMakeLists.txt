@@ -428,7 +428,9 @@ if (GXBERT_VECTEST)
     ${PROJECT_SOURCE_DIR}/test/benchmark.cc
     ${PROJECT_SOURCE_DIR}/test/LorentzConvertorBenchmark.cc
     ${PROJECT_SOURCE_DIR}/test/ElemParticleColliderBenchmark.cc
-    ${PROJECT_SOURCE_DIR}/test/PowVecBenchmark.cc
+    ${PROJECT_SOURCE_DIR}/test/PowNBenchmark.cc
+    ${PROJECT_SOURCE_DIR}/test/PowZBenchmark.cc
+    ${PROJECT_SOURCE_DIR}/test/PowABenchmark.cc
   ) 
 endif()
 
