@@ -25,6 +25,7 @@ void OriginalLoop(double* a, double* x, size_t imax) {
   double xval, xsum = 0.;
   timer.Start();
   for(size_t irep = 0; irep < nReps; ++irep) {
+    xsum = 0.;
     for(size_t i = 0; i < imax; ++i) {
       xval = oldpow->powA(a[i], x[i]);
       xsum += xval;
@@ -86,14 +87,20 @@ int main()
 
   // fill with random values (vectorized)
   for(int i = 0; i < nvals; ++i) {
-    a[i] = round(510. * inuclRndm<double>() + 1.);
+    a[i] = 510. * inuclRndm<double>() + 1.;
     x[i] = 10. * inuclRndm<double>() - 5.;
   }
 
   // benchmark - original
   OriginalLoop(a, x, nvals);
 
-  // benchmark - scalar v0
+  // benchmark - scalar
+  SIMDLoop<double>("    Scalar", a, x, nvals);
+
+  // benchmark - vector
+  SIMDLoop<Real_v>("    Vector", a, x, nvals);
+
+  // benchmark - scalar type + std:: function
   GXPowVec<double, int>    const* newpow = GXPowVec<double,int>::GetInstance();
   double sc2x, sc2sum;
   timer.Start();
@@ -102,16 +109,16 @@ int main()
     for(size_t i = 0; i < nvals; ++i) {
       sc2x = newpow->StdPowA(a[i], x[i]);
       sc2sum += sc2x;
-      //std::cerr<<" scalar v0 debug: "<< i <<' '<< a[i] <<' '<< x[i] <<'\t'<< sc2x <<'\t'<< sc2sum <<"\n";
+      //std::cerr<<" scalarStd debug: "<< i <<' '<< a[i] <<' '<< x[i] <<'\t'<< sc2x <<'\t'<< sc2sum <<"\n";
     }
   }
   double scalar2Elapsed = timer.Elapsed();
-  std::cerr<<" Scalar v0 PowA(): "<< sc2sum <<' '<< scalar2Elapsed/1000. <<" msec\n";
+  std::cerr<<" ScalarStd PowA(): "<< sc2sum <<' '<< scalar2Elapsed/1000. <<" msec\n";
 
-  // benchmark - vectorized
+  // benchmark - vectorized type + std:: function
   GXPowVec<Real_v, Int_v> const* vecpow = GXPowVec<Real_v,Int_v>::GetInstance();
   Real_v vecx, vecsum;
-  Int_v const* va = (Int_v*)a;
+  Real_v const* va = (Real_v*)a;
   Real_v const* vx = (Real_v*)x;
   timer.Start();
   for(size_t irep = 0; irep < nReps; ++irep) {
@@ -119,17 +126,11 @@ int main()
     for(size_t i = 0; i < nvals/vsize; ++i) {
       vecx = vecpow->StdPowA(va[i], vx[i]);
       vecsum += vecx;
-      //std::cerr<<" vector v0 debug: "<< i <<' '<< va[i] <<' '<< vx[i] <<'\t'<< vecx <<'\t'<< vecsum <<"\n";
+      //std::cerr<<" vectorStd debug: "<< i <<' '<< va[i] <<' '<< vx[i] <<'\t'<< vecx <<'\t'<< vecsum <<"\n";
     }
   }
   double vectorElapsed = timer.Elapsed();
-  std::cerr<<" Vector v0 PowA(): "<< vecCore::ReduceAdd(vecsum) <<' '<< vectorElapsed/1000. <<" msec\n";
-
-  // benchmark - scalar
-  SIMDLoop<double>("    Scalar", a, x, nvals);
-
-  // benchmark - vector
-  SIMDLoop<Real_v>("    Vector", a, x, nvals);
+  std::cerr<<" VectorStd PowA(): "<< vecCore::ReduceAdd(vecsum) <<' '<< vectorElapsed/1000. <<" msec\n";
 
   return 0;
 }
