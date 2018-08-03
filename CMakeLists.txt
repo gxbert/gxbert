@@ -428,6 +428,12 @@ if (GXBERT_VECTEST)
     ${PROJECT_SOURCE_DIR}/test/benchmark.cc
     ${PROJECT_SOURCE_DIR}/test/LorentzConvertorBenchmark.cc
     ${PROJECT_SOURCE_DIR}/test/ElemParticleColliderBenchmark.cc
+    ${PROJECT_SOURCE_DIR}/test/LogABenchmark.cc
+    ${PROJECT_SOURCE_DIR}/test/LogXBenchmark.cc
+    ${PROJECT_SOURCE_DIR}/test/LogZBenchmark.cc
+    ${PROJECT_SOURCE_DIR}/test/Log10ABenchmark.cc
+    ${PROJECT_SOURCE_DIR}/test/Log10ZBenchmark.cc
+    ${PROJECT_SOURCE_DIR}/test/ExpABenchmark.cc
     ${PROJECT_SOURCE_DIR}/test/PowNBenchmark.cc
     ${PROJECT_SOURCE_DIR}/test/PowZBenchmark.cc
     ${PROJECT_SOURCE_DIR}/test/PowABenchmark.cc

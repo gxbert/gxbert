@@ -43,6 +43,16 @@ T F(const T1 &x) const                        \
   return ret;                                 \
 }
 
+#define GXBERT_UNARY_STDFUNC(F, f, T1)        \
+VECCORE_FORCE_INLINE VECCORE_ATT_HOST_DEVICE  \
+T F(const T1 &x) const                        \
+{                                             \
+  T ret;                                      \
+  for(size_t i = 0; i < fTsize; ++i)          \
+    Set(ret, i, f(Get(x,i)));                 \
+  return ret;                                 \
+}
+
 #define GXBERT_BINARY_FUNCTION(F, f, T1, T2)  \
 VECCORE_FORCE_INLINE VECCORE_ATT_HOST_DEVICE  \
 T F(const T1 &x, const T2 &y) const	      \
@@ -146,6 +156,9 @@ public:
   GXBERT_BINARY_FUNCTION(PowN, powN, T, Int_T)
 
   //.. GL: define a few functions based on std:: library for reference
+  GXBERT_UNARY_STDFUNC(StdLog, std::log, T)
+  GXBERT_UNARY_STDFUNC(StdLog10, std::log10, T)
+  GXBERT_UNARY_STDFUNC(StdExp, std::exp, T)
   GXBERT_BINARY_STDFUNC(StdPowN, std::pow, T, Int_T)
   GXBERT_BINARY_STDFUNC(StdPowZ, std::pow, Int_T, T)
   GXBERT_BINARY_STDFUNC(StdPowA, std::pow, T, T)
