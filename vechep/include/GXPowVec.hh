@@ -37,9 +37,8 @@ VECCORE_FORCE_INLINE VECCORE_ATT_HOST_DEVICE  \
 T F(const T1 &x) const                        \
 {                                             \
   T ret;                                      \
-  auto ppow = GXPow::GetInstance();           \
   for(size_t i = 0; i < fTsize; ++i)          \
-    Set(ret, i, ppow->f(Get(x,i)));           \
+    Set(ret, i, fppow->f(Get(x,i)));          \
   return ret;                                 \
 }
 
@@ -58,9 +57,8 @@ VECCORE_FORCE_INLINE VECCORE_ATT_HOST_DEVICE  \
 T F(const T1 &x, const T2 &y) const	      \
 {                                             \
   T ret;                                      \
-  auto ppow = GXPow::GetInstance();           \
   for(size_t i = 0; i < fTsize; ++i)          \
-    Set(ret, i, ppow->f(Get(x,i), Get(y,i))); \
+    Set(ret, i, fppow->f(Get(x,i), Get(y,i)));\
   return ret;                                 \
 }
 
@@ -223,10 +221,14 @@ private:
   VECCORE_ATT_HOST_DEVICE VECCORE_FORCE_INLINE T PowLowNLoop(const T xx, Index_v<T> nn) const;
 
   static GXPowVec<T,Int_T>* fpInstance;
+  static GXPow* fppow;
 };
 
 template <typename T, typename Int_T>
 GXPowVec<T, Int_T>* GXPowVec<T,Int_T>::fpInstance = new GXPowVec<T,Int_T>();
+
+template <typename T, typename Int_T>
+GXPow* GXPowVec<T,Int_T>::fppow = GXPow::GetInstance();
 
 // -------------------------------------------------------------------
 
