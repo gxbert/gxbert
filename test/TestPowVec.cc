@@ -24,7 +24,7 @@ int main()
   using namespace gxbert::GXInuclSpecialFunctions;
   using Int_v = vecCore::backend::VcSimdArray<2>::Int_v;
 
-  constexpr int nvals = (2 << 10);
+  constexpr int nvals = (1 << 11);
   constexpr int maxZ = 512;
 
   GXPow const* oldpow = GXPow::GetInstance();

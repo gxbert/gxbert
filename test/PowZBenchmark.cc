@@ -81,7 +81,7 @@ int main()
   assert(x);
 
   int *z = (int*)_mm_malloc(memSizeAlloc, 64);
-  assert(n);
+  assert(z);
 
   // fill with random values (vectorized)
   for(int i = 0; i < nvals; ++i) {

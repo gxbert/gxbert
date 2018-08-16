@@ -137,8 +137,41 @@ public:
 
   // Fast computation of exp(X)
   //
-  //VECCORE_ATT_HOST_DEVICE VECCORE_FORCE_INLINE T expA(T A) const;
+  GXBERT_UNARY_FUNCTION(ExpZ, expZ, Int_T)
+
   GXBERT_UNARY_FUNCTION(ExpA, expA, T)
+  VECCORE_ATT_HOST_DEVICE VECCORE_FORCE_INLINE T ExpAVec(T A) const
+  {
+    static const T zero(0.0);
+    static const T one(1.0);
+    static const T half(0.5);
+    static const T onethird(1.0/3.0);
+    static const T maxAexp(84.24);
+    //static const Int_T imax = 169;  // round(maxAexp)
+
+    T a(A);
+    vecCore::MaskedAssign(a, A < zero, -A);
+
+    T res(0.0);
+    //auto ppow = GXPow::GetInstance();
+    if (vecCore::MaskFull(a <= maxAexp)) {
+      // Taylor series expansion of order x^3 up to ExpZ(169)
+      T i = math::Round(T(2.0) * a + half);
+      i = math::Min(i, T(169.));
+      T x = a - half * i;
+      res = ExpZ(vecCore::Convert<Int_T,T>(i)) * (one + x * (one + half * x * (one + onethird * x)));
+    }
+    else {
+      // if A > maxAexp, use GXPow::expA(A)
+      for(size_t i = 0; i < fTsize; ++i) {
+	//Set( res, i, ppow->expA( Get(a, i) ) );
+	Set( res, i, GXExp( Get(a, i) ) );
+      }
+    }
+
+    vecCore::MaskedAssign( res, A < zero, T(1.0 / res));
+    return res;
+  }
 
   // Fast computation of pow(Z,X)
   //
@@ -248,6 +281,7 @@ PowN(T x, IT n) const
   }*/
 
 // -------------------------------------------------------------------
+//.. cleanup
 #undef GXBERT_UNARY_FUNCTION
 #undef GXBERT_BINARY_FUNCTION
 

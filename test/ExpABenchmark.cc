@@ -25,11 +25,10 @@ void OriginalLoop(double* x, size_t imax) {
   double xval, xsum = 0.;
   timer.Start();
   for(size_t irep = 0; irep < nReps; ++irep) {
-    xsum = 0.;
     for(size_t i = 0; i < imax; ++i) {
       xval = oldpow->expA(x[i]);
       xsum += xval;
-      //std::cerr<<" original debug: "<< i <<' '<< a[i] <<' '<< x[i] <<'\t'<< xval <<' '<< xsum <<"\n";
+      //std::cerr<<" original debug: "<< i <<' '<< x[i] <<'\t'<< xval <<' '<< xsum <<"\n";
     }
   }
   double elapsed = timer.Elapsed();
@@ -46,14 +45,13 @@ void SIMDLoop(const char* testname, const double *__restrict__ x, size_t nobjs)
   size_t imax = nobjs / VectorSize<Real_T>();
   Real_T const* xx = (Real_T const*)x;
 
-  Real_T val, sum;
+  Real_T val, sum = 0.;
   timer.Start();
   for(size_t irep = 0; irep < nReps; ++irep) {
-    sum = 0.;
     for(size_t i = 0; i < imax; ++i) {
       val = newpow->ExpA(xx[i]);
       sum += val;
-      //std::cerr<<"SIMDLoop<"<< testname <<">: "<< i <<' '<< xx[i] <<' '<< aa[i] <<'\t'<< val <<'\t'<< sum <<"\n";
+      //std::cerr<<"SIMDLoop<"<< testname <<">: "<< i <<' '<< xx[i] <<'\t'<< val <<'\t'<< sum <<"\n";
     }
   }
   double elapsed = timer.Elapsed();
@@ -61,9 +59,33 @@ void SIMDLoop(const char* testname, const double *__restrict__ x, size_t nobjs)
 }
 
 
+template <typename Real_T>
+void SIMDLoopTest(const char* testname, const double *__restrict__ x, size_t nobjs)
+{
+  constexpr size_t vsize = vecCore::VectorSize<Real_T>();
+  using Int_T = typename backend::VcSimdArray<vsize>::Int_v;
+  GXPowVec<Real_T,Int_T> const* newpow = GXPowVec<Real_T,Int_T>::GetInstance();
+
+  size_t imax = nobjs / VectorSize<Real_T>();
+  Real_T const* xx = (Real_T const*)x;
+
+  Real_T val, sum = 0.;
+  timer.Start();
+  for(size_t irep = 0; irep < nReps; ++irep) {
+    for(size_t i = 0; i < imax; ++i) {
+      val = newpow->ExpAVec(xx[i]);  // testing ExpAVec, otherwise identical to SIMDLoop()
+      sum += val;
+      //std::cerr<<"SIMDLoopTest<"<< testname <<">: "<< i <<' '<< xx[i] <<'\t'<< val <<'\t'<< sum <<"\n";
+    }
+  }
+  double elapsed = timer.Elapsed();
+  std::cerr<< testname <<" ExpAVec(): "<< vecCore::ReduceAdd(sum) <<' '<< elapsed/1000 <<" msec\n";
+}
+
+
 int main()
 {
-  constexpr int nvals = (2 << 20);
+  constexpr int nvals = (1 << 21);
 
   using namespace gxbert;
   using namespace gxbert::GXInuclSpecialFunctions;
@@ -83,6 +105,7 @@ int main()
 
   // fill with random values (vectorized)
   for(int i = 0; i < nvals; ++i) {
+    //x[i] = 168. * inuclRndm<double>() + 1.;
     x[i] = 510. * inuclRndm<double>() + 1.;
   }
 
@@ -96,11 +119,18 @@ int main()
   SIMDLoop<Real_v>("    Vector", x, nvals);
 
   // benchmark - scalar type + std:: function
+
+  // benchmark - scalar
+  SIMDLoopTest<double>(" Scalar", x, nvals);
+
+  // benchmark - vector
+  SIMDLoopTest<Real_v>(" Vector", x, nvals);
+
+  // benchmark - scalar type + std:: function
   GXPowVec<double, int>    const* newpow = GXPowVec<double,int>::GetInstance();
-  double sc2x, sc2sum;
+  double sc2x, sc2sum = 0.;
   timer.Start();
   for(size_t irep = 0; irep < nReps; ++irep) {
-    sc2sum = 0.;
     for(size_t i = 0; i < nvals; ++i) {
       sc2x = newpow->StdExp(x[i]);
       sc2sum += sc2x;
@@ -112,11 +142,10 @@ int main()
 
   // benchmark - vectorized type + std:: function
   GXPowVec<Real_v, Int_v> const* vecpow = GXPowVec<Real_v,Int_v>::GetInstance();
-  Real_v vecx, vecsum;
+  Real_v vecx, vecsum = 0.;
   Real_v const* vx = (Real_v*)x;
   timer.Start();
   for(size_t irep = 0; irep < nReps; ++irep) {
-    vecsum = 0.;
     for(size_t i = 0; i < nvals/vsize; ++i) {
       vecx = vecpow->StdExp(vx[i]);
       vecsum += vecx;

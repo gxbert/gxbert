@@ -86,6 +86,7 @@ class GXPow
 
     // Fast computation of exp(X)
     //
+    inline G4double expZ(G4int Z) const;
     inline G4double expA(G4double A) const;
 
     // Fast computation of pow(Z,X)
@@ -231,6 +232,11 @@ inline G4double GXPow::log10Z(G4int Z) const
 inline G4double GXPow::log10A(G4double A) const
 {
   return logX(A) * fOneOverLog10;
+}
+
+inline G4double GXPow::expZ(G4int Z) const
+{
+  return fexp[Z];
 }
 
 inline G4double GXPow::expA(G4double A) const
