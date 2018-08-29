@@ -20,7 +20,7 @@
 #include "GXParticleLargerEkin.hh"
 #include "GXCollisionOutput.hh"
 #include "GXInuclSpecialFunctions.hh"
-#include "GXCascadeFinalStateGenerator.hh"
+//#include "GXCascadeFinalStateGenerator.hh"
 
 #include "G4CascadeChannelTables.hh"
 #include "G4CascadeChannel.hh"
@@ -38,8 +38,10 @@ inline namespace GXBERT_IMPL_NAMESPACE {
 template <typename T>
 class GXElementaryParticleCollider {
 
-  using Int_v  = vecCore::Index_v<T>;
-  using Bool_v = vecCore::Mask_v<T>;
+  // constexpr static size_t sizeT = vecCore::VectorSize<T>();
+  // using Int_v  = typename vecCore::backend::VcSimdArray<sizeT>;
+  using Int_v = vecCore::Index_v<T>;
+  using Bool_v = typename vecCore::Mask_v<T>;
 
 private:
   static int verboseLevel;
@@ -49,7 +51,7 @@ private:
   Index_v<T> nucleusZ;
 
   //.. Utility class to generate final-state kinematics
-  GXCascadeFinalStateGenerator<T> fsGenerator;
+  //GXCascadeFinalStateGenerator<T> fsGenerator;
 
   //.. Internal buffers for lists of secondaries
   std::vector<GXInuclElementaryParticle<T>> particles;
@@ -229,15 +231,15 @@ public:
   void setVerboseLevel(int level) { verboseLevel = level; }
 
   // Decide whether to use G4ElementaryParticleCollider or not
-  virtual vecCore::Mask_v<T> useEPCollider(GXInuclParticle<T> const* bullet,
-					   GXInuclParticle<T> const* target) const
+  virtual bool useEPCollider(GXInuclParticle<T> const* bullet,
+			     GXInuclParticle<T> const* target) const
   {
     return (dynamic_cast<GXInuclElementaryParticle<T> const*>(bullet) &&
 	    dynamic_cast<GXInuclElementaryParticle<T> const*>(target));
   }
 
 
-private:
+  //private:
 
   Int_v generateMultiplicity(Int_v const& is, T const& ekin) const;
 
@@ -320,22 +322,32 @@ private:
 };
 
 template <typename T>
-Index_v<T> GXElementaryParticleCollider<T>::generateMultiplicity(Int_v const& hadPairs, T const& ekin) const
+vecCore::Index_v<T> GXElementaryParticleCollider<T>::
+generateMultiplicity(vecCore::Index_v<T> const& hadPairs, T const& ekin) const
 {
   Int_v mult(0);
+  static bool first = true;
 
   const G4CascadeChannel* xsecTable;
   size_t vsize = vecCore::VectorSize<T>();
   int lastPair = -999;
+  //std::cerr<<" genMult(): vsize="<< vsize <<", lastPair="<< lastPair <<", hadPairs="<< hadPairs <<" and ekin="<< ekin <<"\n";
   for (size_t i =0; i < vsize; ++i) {
     double laneEkin = Get(ekin, i);
     int lanePair    = Get(hadPairs, i);
+    //std::cerr<<" genMult(): i="<< i <<", laneEkin="<< laneEkin <<", lanePair="<< lanePair <<" lastPair="<< lastPair <<"\n";
     if (lanePair != lastPair) {
       xsecTable = G4CascadeChannelTables::GetTable(lanePair);
       lastPair = lanePair;
     }
+    //std::cerr<<" genMult(): xsecTable="<< xsecTable <<", lastPair="<< lastPair <<"\n";
+										 if(first) {
+										   //xsecTable->printTable(std::cerr);
+										   first = false;
+										 }
     if (xsecTable) {
-      Set(mult, i, xsecTable->getMultiplicity(laneEkin));
+      int temp = xsecTable->getMultiplicity(laneEkin);
+      Set(mult, i, temp);
     }
     else {
       std::cerr << " G4ElementaryParticleCollider: Unknown interaction channel "
@@ -432,7 +444,7 @@ void GXElementaryParticleCollider<T>::generateSCMfinalState(T& ekin, T& etot_scm
     std::cerr << ">>> G4ElementaryParticleCollider::generateSCMfinalState\n";
   }
 
-  fsGenerator.SetVerboseLevel(verboseLevel);
+  //fsGenerator.SetVerboseLevel(verboseLevel);
 
   Int_v type1 = particle1->type();
   Int_v type2 = particle2->type();
@@ -464,8 +476,8 @@ void GXElementaryParticleCollider<T>::generateSCMfinalState(T& ekin, T& etot_scm
     fillOutgoingMasses();	// Fill mass buffer from particle types
 
     //.. Attempt to produce final state kinematics
-    fsGenerator.Configure(particle1, particle2, particle_kinds);
-    goodStates = fsGenerator.Generate(etot_scm, masses, scm_momentums);
+    //GLTEMP// fsGenerator.Configure(particle1, particle2, particle_kinds);
+    //GLTEMP// goodStates = fsGenerator.Generate(etot_scm, masses, scm_momentums);
   }	// while (generate) 
 
   if (itry >= itry_max) {		// Unable to generate valid final state

@@ -12,7 +12,7 @@ namespace gxbert {
 
 
 GXTrackHandler::GXTrackHandler() 
-  : fNumberOfTracks(0), fTrack_aos(0), fBuffer(0), fMass(938.272013) // proton mass by default
+  : fNumberOfTracks(0), fTrack_aos(0), fBuffer(0), fMass(0.938272013) // proton mass by default
 {
   // Scalar MRG32k3a
   fRNG = new  vecRng::cxx::MRG32k3a<ScalarBackend>;
@@ -172,7 +172,7 @@ void GXTrackHandler::GenerateRandomTracks(size_t nTracks, double minP, double ma
   }
 }
 
-  // note: momentum range in MeV units!!!
+// note: momentum range in MeV units!!!
 void GXTrackHandler::GenerateTracksAlongSameDirection(size_t nTracks, double *posdir, double minP, double maxP)
 {
   // make sure input direction vector is a unit vector
@@ -183,7 +183,7 @@ void GXTrackHandler::GenerateTracksAlongSameDirection(size_t nTracks, double *po
   fTrack_soa.size = fNumberOfTracks;
   for (size_t i = 0; i < fNumberOfTracks; ++i) {
     double p = maxP;
-    if (minP < maxP) p = minP + (maxP - minP) * std::log(Random());
+    if (minP < maxP) p = minP - (maxP - minP) * std::log(Random());
 
     (fTrack_soa.x)[i] = fTrack_aos[i].x = posdir[0];
     (fTrack_soa.y)[i] = fTrack_aos[i].y = posdir[1];
@@ -197,7 +197,7 @@ void GXTrackHandler::GenerateTracksAlongSameDirection(size_t nTracks, double *po
 
     (fTrack_soa.q)[i] = fTrack_aos[i].q = 1.0;
     (fTrack_soa.m)[i] = fTrack_aos[i].m = fMass;
-    if (i == 0) {
+    if (i < 4) {
       double Ekin = fTrack_aos[i].E;
       double Etot = Ekin + fMass;
       std::cerr<<"GXTracksHandler: i="<< i <<'/'<< fNumberOfTracks <<": "<< fTrack_aos[i].x <<" "<< fTrack_aos[i].y <<" "<< fTrack_aos[i].z <<" "<< fTrack_aos[i].px <<" "<< fTrack_aos[i].py <<" "<< fTrack_aos[i].pz  <<" Ek="<< Ekin <<" Etot="<< Etot <<"\n";

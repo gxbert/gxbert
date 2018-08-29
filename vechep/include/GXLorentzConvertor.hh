@@ -301,22 +301,26 @@ public:
     LorentzVector<Real_v> mom_rot = mom;
     if (!vecCore::MaskEmpty(degenerated)) {
       if (verboseLevel > 2)
-	cerr << " rotating to align with reference z axis " << "\n";
+	cerr << " GXLorentzConvertor::rotate(): rotating to align with reference z axis " << "\n";
 
       GXThreeVector<Real_v> vscm = velocity - valong * scm_direction;
       GXThreeVector<Real_v> vxcm = scm_direction.Cross(velocity);
 
-      if (vscm.Mag() > (Real_v)small && vxcm.Mag() > (Real_v)small) {	// Double check
+      vecCore::Mask_v<Real_v> check = (vscm.Mag() > (Real_v)small && vxcm.Mag() > (Real_v)small);
+      if ( !vecCore::MaskEmpty(check) ) {
 	if (verboseLevel > 3) {
-	  cerr << " reference z axis " << scm_direction
-	       << " vscm " << vscm << " vxcm " << vxcm << "\n";
+	  cerr << " GXLorentzConvertor::rotate(): Reference z axis " << scm_direction << " vscm " << vscm << " vxcm " << vxcm
+	       << "  check="<< check <<"\n";
 	}
-      
-	mom_rot.SetVect(mom.x()*vscm.Unit() + mom.y()*vxcm.Unit() + mom.z()*scm_direction);
+	mom_rot.SetVect(mom.x() * vscm.Unit() + mom.y() * vxcm.Unit() + mom.z() * scm_direction);
+        vecCore::MaskedAssign(mom_rot.x(), !check, mom.x()); // only check==true lanes get side-effect from line above
+        vecCore::MaskedAssign(mom_rot.y(), !check, mom.y()); // only check==true lanes get side-effect from line above
+        vecCore::MaskedAssign(mom_rot.z(), !check, mom.z()); // only check==true lanes get side-effect from line above
+        vecCore::MaskedAssign(mom_rot.t(), !check, mom.t()); // only check==true lanes get side-effect from line above
       }
-      else {
-	if (verboseLevel) 
-	  cerr << ">>> GXLorentzVector::rotate zero with !degenerated" << "\n";
+
+      if (verboseLevel && !vecCore::MaskFull(check)) {
+	cerr << ">>> GXLorentzVector::rotate(mom) zero with !degenerated: check=" << check <<"\n";
       }
     }
 
@@ -331,18 +335,16 @@ public:
   LorentzVector<Real_v> rotate(const LorentzVector<Real_v>& mom1, const LorentzVector<Real_v>& mom) const
   {
     if (verboseLevel > 2)
-      cerr << " >>> GXLorentzConvertor::rotate(GXLorentzVector,GXLorentzVector)"
-	   << "\n";
+      cerr << " >>> GXLorentzConvertor::rotate(GXLorentzVector,GXLorentzVector)\n";
 
     if (verboseLevel > 3) {
-      cerr << " before rotation: px " << mom.x() << " py " << mom.y()
-	   << " pz " << mom.z() << "\n";
+      cerr << " before rotation: pvec=(" << mom.x() << "; " << mom.y() << "; " << mom.z() << ")\n";
     }
 
     GXThreeVector<Real_v> mom1_dir = mom1.Vect().Unit();
     Real_v pv = velocity.Dot(mom1_dir);
 
-    Real_v vperp = v2 - pv*pv;		// velocity perpendicular to mom1
+    Real_v vperp = v2 - pv * pv;		// velocity perpendicular to mom1
     if (verboseLevel > 3) {
       cerr << " vperp " << vperp << " small? " << (vperp <= small) << "\n";
     }
@@ -353,28 +355,32 @@ public:
       if (verboseLevel > 2)
 	cerr << " rotating to align with first z axis " << "\n";
 
-      GXThreeVector<Real_v> vmom1 = velocity - pv*mom1_dir;
+      GXThreeVector<Real_v> vmom1 = velocity - pv * mom1_dir;
       GXThreeVector<Real_v> vxm1  = mom1_dir.Cross(velocity);
 
-      const Real_v small2 = small*small;
-      if (vmom1.Mag2() > small2 && vxm1.Mag2() > small2) {	// Double check
+      const Real_v small2 = small * small;
+      vecCore::Mask_v<Real_v> check = (vmom1.Mag2() > small2 && vxm1.Mag2() > small2);	// Double check
+      if ( !vecCore::MaskEmpty(check) ) {
 	if (verboseLevel > 3) {
-	  cerr << " first z axis " << mom1_dir << "\n"
+	  cerr << " GXLorentzConvertor::rotate(): first z axis " << mom1_dir << "\n"
 	       << " vmom1 " << vmom1 << " vxm1 " << vxm1 << "\n";
 	}
       
-	mom_rot.SetVect(mom.x()*vmom1.Unit() + mom.y()*vxm1.Unit() +
-			mom.z()*mom1_dir );
+	mom_rot.SetVect(mom.x() * vmom1.Unit() + mom.y() * vxm1.Unit() + mom.z() * mom1_dir);
+        vecCore::MaskedAssign(mom_rot.x(), !check, mom.x()); // only check==true lanes get side-effect from line above
+        vecCore::MaskedAssign(mom_rot.y(), !check, mom.y()); // only check==true lanes get side-effect from line above
+        vecCore::MaskedAssign(mom_rot.z(), !check, mom.z()); // only check==true lanes get side-effect from line above
+        vecCore::MaskedAssign(mom_rot.t(), !check, mom.t()); // only check==true lanes get side-effect from line above
       }
-      else {
-	if (verboseLevel)
-	  cerr << ">>> GXLorentzVector::rotate zero with !degenerated" << "\n";
+
+      if (verboseLevel && !vecCore::MaskFull(check)) {
+	  cerr << ">>> GXLorentzVector::rotate(mom1,mom): zero with !degenerated" << "\n";
       }
     }
 
     if (verboseLevel > 3) {
-      cerr << " after rotation: px " << mom_rot.x() << " py " << mom_rot.y()
-	   << " pz " << mom_rot.z() << "\n";
+      cerr << " after rotation: pvec=(" << mom_rot.x() << "; " << mom_rot.y()
+	   << "; " << mom_rot.z() << ")\n";
     }
 
     return mom_rot;

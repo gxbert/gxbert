@@ -108,17 +108,17 @@ private:
     using CLHEP::MeV;
 
     T PSQ = (M0 + M1 + M2) * (M0 + M1 - M2) * (M0 - M1 + M2) * (M0 - M1 - M2);
-    if (PSQ < 0.) {
+    if (!vecCore::MaskEmpty(PSQ < 0.)) {
       std::cerr << GetName() << ":  problem of decay of M(GeV) " << M0/GeV
 		<< " to M1(GeV) " << M1/GeV << " and M2(GeV) " << M2/GeV
 		<< " PSQ(MeV) " << PSQ/MeV << " < 0\n";
 
       // exception only if the problem is numerically significant
-      if (PSQ < -CLHEP::eV) {
+      if (!vecCore::MaskEmpty(PSQ < -CLHEP::eV)) {
 	throw GXHadronicException(__FILE__, __LINE__,"Error in decay kinematics");
       }
 
-      PSQ = 0.;
+      vecCore::MaskedAssign(PSQ, PSQ < 0., T(0.));
     }
 
     return math::Sqrt(PSQ) / (2. * M0);

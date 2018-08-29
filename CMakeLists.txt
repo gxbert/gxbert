@@ -125,6 +125,7 @@ elseif(Intel)
 elseif(Clang OR AppleClang)
   if (APPLE)
     # prefer LLVM's standard C++ library on Mac OS X
+    #    set (GXBERT_CXX_FLAGS "${GXBERT_CXX_FLAGS} -stdlib=libc++ -DG4CASCADE_DEBUG_SAMPLER")
     set (GXBERT_CXX_FLAGS "${GXBERT_CXX_FLAGS} -stdlib=libc++")
   endif()
   set(GXBERT_CXX_FLAGS "${GXBERT_CXX_FLAGS} -Wall -fPIC")
@@ -416,9 +417,11 @@ set(TEST_EXECUTABLES)
 if (NOT GXBERT_CUDA)
   set(TEST_EXECUTABLES ${TEST_EXECUTABLES}
     ${PROJECT_SOURCE_DIR}/test/gxbertTest.cc
-    ${PROJECT_SOURCE_DIR}/test/TestInuclElementaryParticle.cc
     ${PROJECT_SOURCE_DIR}/test/TestInteractionCase.cc
     ${PROJECT_SOURCE_DIR}/test/TestPowVec.cc
+    ${PROJECT_SOURCE_DIR}/test/TestInuclElementaryParticle.cc
+    ${PROJECT_SOURCE_DIR}/test/TestElemParticleCollider.cc
+    ${PROJECT_SOURCE_DIR}/test/TestG4ElemParticleCollider.cc
 )
 endif()
 
@@ -428,6 +431,7 @@ if (GXBERT_VECTEST)
     ${PROJECT_SOURCE_DIR}/test/benchmark.cc
     ${PROJECT_SOURCE_DIR}/test/LorentzConvertorBenchmark.cc
     ${PROJECT_SOURCE_DIR}/test/ElemParticleColliderBenchmark.cc
+    ${PROJECT_SOURCE_DIR}/test/ElemPartMultiplicityBenchmark.cc
     ${PROJECT_SOURCE_DIR}/test/LogABenchmark.cc
     ${PROJECT_SOURCE_DIR}/test/LogXBenchmark.cc
     ${PROJECT_SOURCE_DIR}/test/LogZBenchmark.cc

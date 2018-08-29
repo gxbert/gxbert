@@ -8,13 +8,13 @@
 
 #include "GXVCascadeAlgorithm.hh"
 #include "GXLorentzConvertor.hh"
-#include "G4VTwoBodyAngDst.hh"
 #include "GXInuclSpecialFunctions.hh"
-#include "G4TwoBodyAngularDist.hh"
-#include "G4MultiBodyMomentumDist.hh"
+#include "GXTwoBodyAngularDist.hh"
+#include "GXMultiBodyMomentumDist.hh"
 #include "GXPowVec.hh"
 
-#include "G4VMultiBodyMomDst.hh"
+#include "G4VTwoBodyAngDst.hh"
+//#include "G4VMultiBodyMomDst.hh"
 
 #include <iostream>
 #include <vector>
@@ -24,6 +24,8 @@ namespace gxbert {
 
 inline namespace
 GXBERT_IMPL_NAMESPACE {
+
+class G4VMultiBodyMomentumDist;
 
 using GXInuclSpecialFunctions::inuclRndm;
 
@@ -48,7 +50,7 @@ public:
   // Select appropriate distributions based on interaction
   void Configure(GXInuclElementaryParticle<T>* bullet,
 		 GXInuclElementaryParticle<T>* target,
-		 const std::vector<int>& particle_kinds);
+		 const std::vector<Int_v>& particle_kinds);
 
 protected:
   // Two-body generation uses angular-distribution function
@@ -66,7 +68,7 @@ protected:
 		      GXInuclElementaryParticle<T>* target);
 
   // Select generator based on initial and final state
-  void ChooseGenerators(int is, int fs);
+  void ChooseGenerators(Int_v is, Int_v fs);
 
   // Generate momentum magnitudes and validate for use
   void FillMagnitudes(T initialMass,
@@ -87,7 +89,7 @@ protected:
 		       const std::vector<T>& masses,
 		       std::vector<LorentzVector<T>>& finalState, Bool_v multHi);
 
-  T GenerateCosTheta(int ptype, T pmod) const;
+  T GenerateCosTheta(Int_v ptype, T pmod) const;
 
   // SPECIAL:  Generate N-body phase space using Kopylov algorithm
   void FillUsingKopylov(T initialMass,
@@ -97,11 +99,12 @@ protected:
   T BetaKopylov(size_t K) const;	// Copied from G4HadPhaseSpaceKopylov
 
 private:
-  const G4VMultiBodyMomDst* momDist;	// Buffers for selected distributions
-  const G4VTwoBodyAngDst* angDist;	// Will be NULL for 3+body channels
+  const GXVMultiBodyMomDst* momDist;	// Buffers for selected distributions
+  const G4VTwoBodyAngDst** angDist;	// Will be NULL for 3+body channels
 
   std::vector<Index_v<T>> kinds;	// Copy of particle_kinds list
-  Index_v<T> multiplicity;		// Final state size, for convenience
+  Index_v<T> vmultipl;		        // Final state size, for convenience
+  int multiplicity;
   T bullet_ekin;			// Kinematics needed for distributions
   GXLorentzConvertor<T> toSCM;		// Handles complex rotations/transforms
 
@@ -111,17 +114,19 @@ private:
   static const T maxCosTheta;	// Cut for valid polar angle generation
   static const T oneOverE;	// Numeric value of 1/e for calculations
   static const T small;		// Cut for momentum/kinematics
+  static constexpr size_t fTsize = vecCore::VectorSize<T>();
 };
 
 // Cut-offs and iteration limits for generation
 
 template <typename T>
 const T GXCascadeFinalStateAlgorithm<T>::maxCosTheta = 0.9999;
+
 template <typename T>
 const T GXCascadeFinalStateAlgorithm<T>::oneOverE = 0.3678794;   
+
 template <typename T>
 const T GXCascadeFinalStateAlgorithm<T>::small = 1.e-10;
-
 
 // Constructor and destructor
 
@@ -130,9 +135,12 @@ GXCascadeFinalStateAlgorithm<T>::GXCascadeFinalStateAlgorithm()
   : GXVCascadeAlgorithm<T>("GXCascadeFinalStateAlgorithm")
   , momDist(0)
   , angDist(0)
+  , vmultipl(0)
   , multiplicity(0)
   , bullet_ekin(0.)
-{}
+{
+  angDist = new const G4VTwoBodyAngDst*[fTsize];
+}
 
 template <typename T>
 GXCascadeFinalStateAlgorithm<T>::~GXCascadeFinalStateAlgorithm() { }
@@ -140,8 +148,8 @@ GXCascadeFinalStateAlgorithm<T>::~GXCascadeFinalStateAlgorithm() { }
 template <typename T>
 void GXCascadeFinalStateAlgorithm<T>::SetVerboseLevel(int verbose) {
   GXVCascadeAlgorithm<T>::SetVerboseLevel(verbose);
-  //G4MultiBodyMomentumDist::setVerboseLevel(verbose);
-  G4TwoBodyAngularDist::setVerboseLevel(verbose);
+  //GXMultiBodyMomentumDist::setVerboseLevel(verbose);
+  GXTwoBodyAngularDist<T>::setVerboseLevel(verbose);
   toSCM.setVerbose(verbose);
 }
 
@@ -149,27 +157,59 @@ void GXCascadeFinalStateAlgorithm<T>::SetVerboseLevel(int verbose) {
 
 template <typename T>
 void GXCascadeFinalStateAlgorithm<T>::
-ChooseGenerators(int is, int fs) {
+Configure(GXInuclElementaryParticle<T>* bullet,
+	  GXInuclElementaryParticle<T>* target,
+	  const std::vector<Int_v>& particle_kinds) {
+  if (GetVerboseLevel()>1)
+    std::cerr << " >>> " << GetName() << "::Configure()\n";
+
+  // Identify initial and final state (if two-body) for algorithm selection
+  multiplicity = particle_kinds.size();
+  Int_v is = bullet->type() * target->type();
+  Int_v fs(0);
+  vecCore::MaskedAssign(fs, vmultipl == Index_v<T>(2), particle_kinds[0] * particle_kinds[1]);
+
+  ChooseGenerators(is, fs);
+
+  // Save kinematics for use with distributions
+  SaveKinematics(bullet, target);
+
+  // Save particle types for use with distributions
+  kinds = particle_kinds;
+}
+
+
+template <typename T>
+void GXCascadeFinalStateAlgorithm<T>::
+ChooseGenerators(Int_v is, Int_v fs) {
   if (GetVerboseLevel()>1) 
     std::cerr << " >>> " << GetName() << "::ChooseGenerators"
 	      << " is " << is << " fs " << fs <<"\n";
 
   // Get generators for momentum and angle
   if (G4CascadeParameters::usePhaseSpace()) momDist = 0;
-  else momDist = G4MultiBodyMomentumDist::GetDist(is, multiplicity);
+  else momDist = GXMultiBodyMomentumDist::GetDist(is, vmultipl);
 
-  if (fs > 0 && multiplicity == 2) {
-    int kw = (fs == is) ? 1 : 2;
-    angDist = G4TwoBodyAngularDist::GetDist(is, fs, kw);
-  } else if (multiplicity == 3) {
-    angDist = G4TwoBodyAngularDist::GetDist(is);
-  } else {
-    angDist = 0;
+  for(size_t i = 0; i < fTsize; ++i) {
+    int isi = Get(is,i);
+    int fsi = Get(fs,i);
+    if (fsi > 0 && multiplicity == 2) {
+      int kw = (fsi == isi) ? 1 : 2;
+      angDist[i] = GXTwoBodyAngularDist<T>::GetDist(isi, fsi, kw);
+    } else if (multiplicity == 3) {
+      angDist[i] = GXTwoBodyAngularDist<T>::GetDist(isi);
+    } else {
+      angDist[i] = 0;
+    }
   }
 
   if (GetVerboseLevel()>1) {
-    std::cerr << " " << (momDist ? momDist->GetName().c_str() : "") << " "
-	      << (angDist?angDist->GetName().c_str():"") <<"\n";
+    std::cerr << " momDist: " << (momDist ? momDist->GetName().c_str() : "") << " - angDist: [";
+    for(size_t i = 0; i < fTsize; ++i) {
+      if (i>0) std::cerr <<"; ";
+      std::cerr << (angDist[i] ? angDist[i]->GetName().c_str() : "none") <<"\n";
+    }
+    std::cerr << "]\n";
   }
 }
 
@@ -178,6 +218,7 @@ VECCORE_ATT_HOST_DEVICE
 VECCORE_FORCE_INLINE
 void GXCascadeFinalStateAlgorithm<T>::
 FillMagnitudes(T initialMass, const std::vector<T>& masses) {
+  assert(isHomogeneous(vmultipl));
   if (GetVerboseLevel()>1) 
     std::cerr << " >>> " << GetName() << "::FillMagnitudes\n";
 
@@ -202,7 +243,7 @@ FillMagnitudes(T initialMass, const std::vector<T>& masses) {
     T eleft = initialMass;
 
     size_t i;	// For access outside of loop
-    size_t maxmult = vecCore::ReduceMax(multiplicity);
+    size_t maxmult = multiplicity;
     for (i=0; i < maxmult-1; ++i) {
       pmod = momDist->GetMomentum(kinds[i], bullet_ekin);
 
@@ -273,7 +314,7 @@ FillDirections(T initialMass, const std::vector<T>& masses,
     std::cerr << " >>> " << GetName() << "::FillDirections.\n";
 
   finalState.clear();			// Initialization and sanity check
-  size_t maxmult = vecCore::ReduceMax(multiplicity);
+  size_t maxmult = multiplicity;
   finalState.resize(maxmult);
 
   // test
@@ -283,7 +324,7 @@ FillDirections(T initialMass, const std::vector<T>& masses,
   }
 
   // Different order of processing for three vs. N body
-   Bool_v mult3 = (multiplicity == 3);
+  Bool_v mult3 = (multiplicity == 3);
   Bool_v multHi = (multiplicity > 3);
   if (!vecCore::MaskEmpty(mult3))
     FillDirThreeBody(initialMass, masses, finalState, mult3);
@@ -307,8 +348,7 @@ FillDirThreeBody(T initialMass, const std::vector<T>& masses,
   vecCore::MaskedAssign(finalState[2], mult3, toSCM.rotate(finalState[2]));	// Align target axis
 
   // Generate direction of first particle
-  costh = -0.5 * (modules[2]*modules[2] + modules[0]*modules[0] -
-		  modules[1]*modules[1]) / modules[2] / modules[0];
+  costh = -0.5 * (modules[2]*modules[2] + modules[0]*modules[0] - modules[1]*modules[1]) / modules[2] / modules[0];
 
   if (std::fabs(costh) >= maxCosTheta) {  // Bad kinematics; abort generation
     finalState.clear();
@@ -387,48 +427,65 @@ FillDirManyBody(T initialMass, const std::vector<T>& masses,
 
 template <typename T>
 T GXCascadeFinalStateAlgorithm<T>::
-GenerateCosTheta(int ptype, T pmod) const {
+GenerateCosTheta(Int_v ptype, T pmod) const {
+  constexpr size_t vsize = vecCore::VectorSize<T>();
+  using Int_T = typename vecCore::backend::VcSimdArray<vsize>::Int_v;
+  GXPowVec<T,Int_T>* ppow = GXPowVec<T, Int_T>::GetInstance();
+
   if (GetVerboseLevel() > 2) {
     std::cerr << " >>> " << GetName() << "::GenerateCosTheta " << ptype
 	      << " " << pmod <<"\n";
   }
 
   if (multiplicity == 3) {		// Use distribution for three-body
-    return angDist->GetCosTheta(bullet_ekin, ptype);
+    T result(0.);
+    for(size_t i = 0; i < fTsize; ++i) {
+      double ekin = Get(bullet_ekin, i);
+      int itype = Get(ptype, i);
+      double costhi = angDist[i]->GetCosTheta(ekin, itype);
+      Set(result, i, costhi);
+    }
+    return result;
   }
 
-  // Throw multi-body distribution
-  T p0 = ptype<3 ? 0.36 : 0.25;	// Nucleon vs. everything else
-  T alf = 1.0 / p0 / (p0 - (pmod+p0)*GXExp(-pmod / p0));
+  //.. Throw multi-body distribution
+  // original: G4double p0 = ptype<3 ? 0.36 : 0.25;	// Nucleon vs. everything else
+  T p0(0.36);
+  for(size_t i = 0; i < vsize; ++i) {
+    if(Get(ptype,i) >= 3) Set(p0, i, 0.25);
+  }
 
-  T sinth = 2.0;
+  T alf = T(1.0) / (p0 * (p0 - (pmod + p0) * ppow->ExpAVec(-pmod / p0)));
+  T sinth(2.0);
 
-  G4int itry1 = -1;		/* Loop checking 08.06.2015 MHK */
-  while (std::fabs(sinth) > maxCosTheta && ++itry1 < itry_max) {
+  int itry1 = 0;		/* Loop checking 08.06.2015 MHK */
+  Bool_v done(false);
+  do {
     T s1 = pmod * inuclRndm<T>();
     T s2 = alf * oneOverE * p0 * inuclRndm<T>();
-    T salf = s1 * alf * GXExp(-s1 / p0);
+    T salf = s1 * alf * ppow->ExpAVec(-s1 / p0);
     if (GetVerboseLevel() > 3) {
-      std::cerr << " s1 * alf * GXExp(-s1 / p0) " << salf
-	     << " s2 " << s2 <<"\n";
+      std::cerr << " s1 * alf * GXExp(-s1 / p0) " << salf << " s2 " << s2 <<"\n";
     }
 
-    if (salf > s2) sinth = s1 / pmod;
-  }
+    //if (salf > s2) sinth = s1 / pmod;
+    vecCore::MaskedAssign(sinth, !done && salf > s2, s1 / pmod);
+    done = math::Abs(sinth) <= maxCosTheta;
+  } while (!vecCore::MaskFull(done) && ++itry1 < itry_max);
 
-  if (GetVerboseLevel() > 3)
-    std::cerr << " itry1 " << itry1 << " sinth " << sinth << G4endl;
+  //if (GetVerboseLevel() > 3)
+  std::cerr << "GXCascadeFSAlgorithm: GenerateCosTheta(): itry1=" << itry1 << " sinth=" << sinth <<"\n";
 
   if (itry1 == itry_max) {
     if (GetVerboseLevel() > 2) {
       std::cerr << " high energy angles generation: itry1 " << itry1 <<"\n";;
     }
-    sinth = 0.5 * inuclRndm<T>();
+    vecCore::MaskedAssign(sinth, !done, 0.5 * inuclRndm<T>());
   }
 
   // Convert generated sin(theta) to cos(theta) with random sign
-  T costh = std::sqrt(1.0 - sinth * sinth);
-  if (inuclRndm<T>() > 0.5) costh = -costh;
+  T costh = math::Sqrt(1.0 - sinth * sinth);
+  vecCore::MaskedAssign(costh, inuclRndm<T>() > 0.5, -costh);
 
   return costh;
 }
@@ -452,8 +509,12 @@ GenerateTwoBody(T initialMass, std::vector<T> const& masses,
     // Generate momentum vector in CMS for back-to-back particles
     const T pscm = this->TwoBodyMomentum(initialMass, masses[0], masses[1]);
 
-    const T costh = angDist ? angDist->GetCosTheta(bullet_ekin, pscm)
-      : (2. * inuclRndm<T>() - 1.);
+    T costh(2.);
+    for(size_t i = 0; i < fTsize; ++i) {
+      // GL.. to be fully vectorized eventually
+      double costhi = angDist[i] ? angDist[i]->GetCosTheta(Get(bullet_ekin,i), Get(pscm,i)) : (2. * inuclRndm<double>() - 1.);
+      Set(costh, i, costhi);
+    }
 
     //mom.setRThetaPhi(pscm, Acos(costh), this->UniformPhi());
     mom.SetMagCosThPhi(pscm, costh, this->UniformPhi());
@@ -502,7 +563,7 @@ GenerateMultiBody(T initialMass, const std::vector<T>& masses,
   }
 
   int itry = -1;		/* Loop checking 08.06.2015 MHK */
-  while (!done && ++itry < itry_max) {
+  while (!vecCore::MaskFull(done) && ++itry < itry_max) {
     FillMagnitudes(initialMass, masses);
     FillDirections(initialMass, masses, finalState);
     done |= (T(finalState.size()) == multiplicity);

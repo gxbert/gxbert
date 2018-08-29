@@ -56,12 +56,15 @@ G4CascadeFunctions<DATA,SAMP>::G4CascadeFunctions() : SAMP() {}
 template <class DATA, class SAMP>
 G4int G4CascadeFunctions<DATA,SAMP>::getMultiplicity(G4double ke) const {
   // Use pointer comparison to see whether tot is just a ref to sum)
+  //  std::cerr<<"G4CascFuctions::getMult(): data.aName="<< *(&DATA::data.name) <<", data.sum="<< &DATA::data.sum <<" and data.tot="<< &DATA::data.tot <<" and ke="<< ke <<"\n";
   if (&DATA::data.sum != &DATA::data.tot) {
     G4double summed = this->findCrossSection(ke, DATA::data.sum); 
     G4double total  = this->findCrossSection(ke, DATA::data.tot);
+    //std::cerr<<"G4CascFuctions::getMult(): summed="<< summed <<" and total="<< total <<", calling data.maxMultiplicity()...\n";
     if (G4InuclSpecialFunctions::inuclRndm() > summed/total) return DATA::data.maxMultiplicity();
   }
 
+  //std::cerr<<"G4CascFuctions::getMult(): calling G4CascadeSampler::findMultiplicity()..., ke="<< ke <<"\n";
   return this->findMultiplicity(ke, DATA::data.multiplicities);
 }
 

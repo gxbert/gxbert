@@ -69,6 +69,19 @@ To Convert(const From& x)
   return result;
 }
 
+template <typename T>
+VECCORE_FORCE_INLINE
+VECCORE_ATT_HOST_DEVICE
+bool isHomogeneous(const T& x)
+{
+  size_t vsize = vecCore::VectorSize<T>();
+  if (vsize == 1) return true;
+  auto x0 = Get(x, 0);
+  for(size_t i = 1; i < vsize; ++i)
+    if (Get(x, i) != x0) return false;
+  return true;
+}
+
 } 
 
 #if defined(GXBERT_CUDA)

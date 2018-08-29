@@ -9,12 +9,18 @@ SIMD/SIMT version of G4InuclSpecialFunctions.hh/cc
 #include "GXThreeVector.hh"
 #include "LorentzVector.hh"
 #include "GXRandom.hh"
+#include "GXPowVec.hh"
 #include "CLHEP/Units/SystemOfUnits.h"
 
 namespace gxbert {
 inline namespace GXBERT_IMPL_NAMESPACE {
 
 namespace GXInuclSpecialFunctions {
+
+  template <typename T>
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
+  T randomInuclPowers(const T& ekin, const double (&coeff)[4][4]);
 
   // csNN
   template <class Backend>
@@ -265,6 +271,31 @@ namespace GXInuclSpecialFunctions {
     momr.SetVectM(pvec, mass);
 
     return momr;
+  }
+
+  template <typename T>
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
+  T randomInuclPowers(const T& ekin, const double (&coeff)[4][4])
+  {
+    GXPowVec<T,Index_v<T>>* pPow = GXPowVec<T,Index_v<T>>::GetInstance();
+    T S = inuclRndm<T>();		// Random fraction for expansion
+
+    double C;
+    double PQ=0.;
+    T V, PR(0.);
+    for (int i=0; i<4; i++) {
+      V = 0.0;
+      for (int k=0; k<4; k++) {
+	C = coeff[i][k];
+	V += C * pPow->PowN(ekin, Index_v<T>(k));
+      }
+
+      PQ += V;
+      PR += V * pPow->PowN(S, Index_v<T>(i));
+    }
+
+    return math::Sqrt(S) * (PR + (1-PQ)*(S*S*S*S));
   }
 
 } // end namespace G4InuclSpecialFunctions

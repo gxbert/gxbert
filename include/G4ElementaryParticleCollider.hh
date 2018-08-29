@@ -62,7 +62,6 @@
 
 #include "G4CascadeColliderBase.hh"
 #include "G4CascadeFinalStateGenerator.hh"
-#include "G4CascadeInterpolator.hh"
 #include "G4InuclElementaryParticle.hh"
 #include "G4LorentzVector.hh"
 #include <iosfwd>
@@ -83,7 +82,11 @@ public:
     nucleusA = a; nucleusZ = z;
   }
 
+// for testing mode, functions must be public
+#ifdef NDEBUG
 private:
+#endif
+
   G4int generateMultiplicity(G4int is, G4double ekin) const;
 
   void generateOutgoingPartTypes(G4int is, G4int mult, G4double ekin);

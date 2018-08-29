@@ -121,7 +121,6 @@
 #include "G4MultiBodyMomentumDist.hh"
 #include "G4NucleiModel.hh"
 #include "G4ParticleLargerEkin.hh"
-#include "G4TwoBodyAngularDist.hh"
 #include "G4VMultiBodyMomDst.hh"
 #include "G4VTwoBodyAngDst.hh"
 //#include "Randomize.hh"
@@ -272,7 +271,7 @@ G4ElementaryParticleCollider::generateMultiplicity(G4int is,
   G4int mul = 0;
 
   const G4CascadeChannel* xsecTable = G4CascadeChannelTables::GetTable(is);
-
+  //std::cerr<<" is="<< is <<", xsecTable="<< xsecTable <<"\n";
   if (xsecTable) mul = xsecTable->getMultiplicity(ekin);
   else {
     G4cerr << " G4ElementaryParticleCollider: Unknown interaction channel "
