@@ -190,10 +190,12 @@ void RunGXElemParticleMultiplicity(const char* testname, GXTrack_v const& soaBul
 
 int main(int argc, char* argv[]) {
 
-  if (argc >= 2) debugLevel = atoi(argv[1]);
-  if (argc >= 3) nEvents = atoi(argv[2]);
-  if (argc >= 4) nReps = atoi(argv[3]);
-  if (argc >= 5) kinEnergy  = atof(argv[4]); // energy in GeV
+  std::cerr<<"\n*** Usage: "<< argv[0] <<" [debugLevel [nEvents [nReps [kinEnergy [debugLevel]..]\n\n";
+
+  if (argc >= 2) nEvents = atoi(argv[1]);
+  if (argc >= 3) nReps = atoi(argv[2]);
+  if (argc >= 4) kinEnergy  = atof(argv[3]); // energy in GeV
+  if (argc >= 5) debugLevel = atoi(argv[4]);
 
   const double etot = kinEnergy + pmass;
   double pmom = sqrt(etot * etot - pmass * pmass);

@@ -340,11 +340,12 @@ generateMultiplicity(vecCore::Index_v<T> const& hadPairs, T const& ekin) const
       xsecTable = G4CascadeChannelTables::GetTable(lanePair);
       lastPair = lanePair;
     }
+
     //std::cerr<<" genMult(): xsecTable="<< xsecTable <<", lastPair="<< lastPair <<"\n";
-										 if(first) {
-										   //xsecTable->printTable(std::cerr);
-										   first = false;
-										 }
+    if(first) {
+      //xsecTable->printTable(std::cerr);
+      first = false;
+    }
     if (xsecTable) {
       int temp = xsecTable->getMultiplicity(laneEkin);
       Set(mult, i, temp);
