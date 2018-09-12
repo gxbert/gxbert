@@ -151,7 +151,6 @@ void RunG4ElementaryParticleCollider(GXTrack_v const& soaBullets, GXTrack_v cons
 template <typename Real_v>
 void RunGXElementaryParticleCollider(const char* testname, GXTrack_v const& soaBullets, GXTrack_v const& soaTargets, GXCollisionOutput &output)
 {
-  int nHadrons = 0;
   int nNeutrons = 0;
   int nProtons = 0;
   int nPhotons = 0;
@@ -167,13 +166,18 @@ void RunGXElementaryParticleCollider(const char* testname, GXTrack_v const& soaB
   vecCore::Index_v<Real_v> counter(0);
   //int numberOfTries = 0;
 
+  // allocate buffer for multiplicity array
+  size_t intsize = sizeof(vecCore::Index_v<Real_v>);
+  vecCore::Index_v<Real_v>* pMult = (vecCore::Index_v<Real_v>*)_mm_malloc(nEvents*intsize, 64);
+  //long pMult[nEvents];
+
   timer.Start();
   for(size_t irep = 0; irep < nReps; ++irep) {
-    for(size_t i = 0; i < nEvents; i += vsize) {
-      soaBullets.getFourMomentum(i, lorvec);
+    for(size_t iv = 0, i = 0; iv < nEvents; ++i, iv += vsize) {
+      soaBullets.getFourMomentum(iv, lorvec);
       bullets.fill(lorvec, G4InuclParticleNames::proton);
 
-      soaTargets.getFourMomentum(i, lorvec);
+      soaTargets.getFourMomentum(iv, lorvec);
       targets.fill(lorvec, G4InuclParticleNames::neutron);
 
       GXInuclElementaryParticle<Real_v> const* pbullets = dynamic_cast<GXInuclElementaryParticle<Real_v> const*>(&bullets);
@@ -182,15 +186,25 @@ void RunGXElementaryParticleCollider(const char* testname, GXTrack_v const& soaB
       // std::cerr<<"\n=== GXInuclEP-targets: "<< *ptargets <<"\n";
 
       // build a vectorized EP collider
-      GXElementaryParticleCollider<Real_v> vecCollider;
-      //std::cerr<<"useEPCollider<Real_v>(bullets,targtes): "<< vecCollider.useEPCollider(pbullets, ptargets) <<"\n";
-      // assert(vecCollider.useEPCollider(pbullets, ptargets));
-      // assert(vecCollider.useEPCollider(ptargets, pbullets));
+      //std::cerr<<"useEPCollider<Real_v>(bullets,targtes): "<< collider.useEPCollider(pbullets, ptargets) <<"\n";
+      // assert(collider.useEPCollider(pbullets, ptargets));
+      // assert(collider.useEPCollider(ptargets, pbullets));
 
       auto initStateVec = pbullets->type() * ptargets->type();
       Real_v ekinVec = bullets.getKineticEnergy();
-      auto multipl = vecCollider.generateMultiplicity(initStateVec, ekinVec);
+      //auto multipl = collider.generateMultiplicity(initStateVec, ekinVec);
+      auto multipl = collider.generateMultiplicity(initStateVec, ekinVec);
       counter += multipl;
+      pMult[i] = multipl;
+
+      collider.generateOutgoingPartTypes(initStateVec, multipl, ekinVec);
+      collider.fillOutgoingMasses();
+    }
+
+    _mm_free(pMult);
+
+    // only needed for vectorized mode
+    //collider.rebasketizeByMultiplicity(nEvents, pMult, &bullets, &targets);
 
       //not ready yet for full collisions...
       /*
@@ -219,7 +233,7 @@ void RunGXElementaryParticleCollider(const char* testname, GXTrack_v const& soaB
       //  else ++nOthers;
       // }
       */
-    }
+    //}
   }
   double elapsed = timer.Elapsed();
 

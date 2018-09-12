@@ -125,7 +125,7 @@ elseif(Intel)
 elseif(Clang OR AppleClang)
   if (APPLE)
     # prefer LLVM's standard C++ library on Mac OS X
-    #    set (GXBERT_CXX_FLAGS "${GXBERT_CXX_FLAGS} -stdlib=libc++ -DG4CASCADE_DEBUG_SAMPLER")
+    #set (GXBERT_CXX_FLAGS "${GXBERT_CXX_FLAGS} -stdlib=libc++ -DG4CASCADE_DEBUG_SAMPLER")
     set (GXBERT_CXX_FLAGS "${GXBERT_CXX_FLAGS} -stdlib=libc++")
   endif()
   set(GXBERT_CXX_FLAGS "${GXBERT_CXX_FLAGS} -Wall -fPIC")

@@ -218,17 +218,25 @@ public:
   }
 
   // TODO: allow distinct values here
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
   void setNucleusState(int a, int z) {	// Nucleus to use for recoil
     nucleusA.set( Index_v<T>(a) );
     nucleusZ.set( Index_v<T>(z) );
   }
 
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
   void setNucleusState(Index_v<T> const& a, Index_v<T> const& z) {  // Nuclei to use for recoil
     nucleusA.set( a );
     nucleusZ.set( z );
   }
 
   void setVerboseLevel(int level) { verboseLevel = level; }
+
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
+  void printArrays(std::vector<int> const& ikinds, Int_v mult) const;
 
   // Decide whether to use G4ElementaryParticleCollider or not
   virtual bool useEPCollider(GXInuclParticle<T> const* bullet,
@@ -241,29 +249,45 @@ public:
 
   //private:
 
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
   Int_v generateMultiplicity(Int_v const& is, T const& ekin) const;
 
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
   void generateOutgoingPartTypes(Int_v is, Int_v mult, T& ekin);
 
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
   void generateSCMfinalState(T& ekin, T& etot_scm,
 			     GXInuclElementaryParticle<T> const* particle1,
 			     GXInuclElementaryParticle<T> const* particle2);
 
   // Pion (or photon) absorption on a dibaryon
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
   void generateSCMpionAbsorption(T& etot_scm,
 				 GXInuclElementaryParticle<T> const* particle1,
 				 GXInuclElementaryParticle<T> const* particle2);
 
   // Muon absorption on a dibaryon (with outgoing neutrino)
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
   void generateSCMmuonAbsorption(T& etot_scm,
 				 GXInuclElementaryParticle<T> const* particle1,
 				 GXInuclElementaryParticle<T> const* particle2);
 
   /// Pion absorption on a single nucleon (charge exchange)
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
   void generateSCMpionNAbsorption(T& etot_scm,
 				  GXInuclElementaryParticle<T> const* part1,
 				  GXInuclElementaryParticle<T> const* part2,
 				  vecCore::Mask<T> const& doit);
+
+  // VECCORE_ATT_HOST_DEVICE
+  // VECCORE_FORCE_INLINE
+  // void rebasketizeByMultiplicity(size_t size, Index_v<T>* mult, GXInuclElementaryParticle<T>* bullets, GXInuclElementaryParticle<T>* targets) const;
 
   VECCORE_ATT_HOST_DEVICE
   VECCORE_FORCE_INLINE
@@ -296,10 +320,9 @@ public:
     masses2.resize(mult,0.);		// Allows direct [i] setting
 
     for (size_t i = 0; i < mult; i++) {
-      // uses GXInuclElemParticle::setParticleMass()
-      particles[i].setParticleMass(particle_kinds[i]);
-      masses[i] = particles[0].mass();
+      masses[i] = GXInuclElementaryParticle<T>::getParticleMass(particle_kinds[i]);
       masses2[i] = masses[i] * masses[i];
+      std::cerr<<"   i="<< i <<" masses: "<< masses[i] <<", masses2[i]: "<< masses2[i] <<"\n";
     }
   }
 
@@ -320,6 +343,35 @@ private:
     return val;
   }
 };
+
+/*
+template <typename T>
+VECCORE_ATT_HOST_DEVICE
+VECCORE_FORCE_INLINE
+void GXElementaryParticleCollider<T>::
+rebasketizeByMultiplicity(size_t size, Index_v<T>* mult, GXInuclElementaryParticle<T>* bullets, GXInuclElementaryParticle<T>* targets) const
+{
+  Index_v<T> counters[10] = {0};
+
+  // count multiplicities and build mapping
+  const size_t vsize = vecCore::VectorSize<T>();
+  for(size_t i = 0; i < size; i += vsize) {
+    //std::cerr<<"rebask: i="<< i <<", mult="<< mult <<", bullets="<< bullets <<", targets="<< targets <<"\n";
+    counters[Get(mult,i)]++;
+    std::cerr<<"Loop: mult["<< i <<"]="<< mult[i] <<", counters: ";
+    for(size_t j = 2; j <= 9; ++j) {
+      vecCore::MaskedAssign(counters[j], mult[i] == Index_v<T>(j), counters[j] + Index_v<T>(1));
+    }
+  }
+  std::cerr<<" counters: <";
+  for (size_t j = 2; j <= 9; ++j) {
+    std::cerr<<"["<< j <<':'<< counters[j]<<"], ";
+  }
+  std::cerr<<"\n";
+
+  // swap tracks as appropriate
+}
+*/
 
 template <typename T>
 vecCore::Index_v<T> GXElementaryParticleCollider<T>::
@@ -361,7 +413,9 @@ generateMultiplicity(vecCore::Index_v<T> const& hadPairs, T const& ekin) const
       << " multiplicity = " << mult <<"\n";
   }
 
-  return mult;
+  //return mult;
+  ////// temporary!!! return fixed multiplicity
+  return Int_v(2);
 }
 
 /* // GL Note: I tried to push vectorization into xsecTable->GetMultiplicity(ekin), but got "virtual template methods not allowed" problems
@@ -402,7 +456,35 @@ template <typename T>
 void GXElementaryParticleCollider<T>::
 generateOutgoingPartTypes(Int_v hadPairs, Int_v mult, T& ekin)
 {
+  assert(isHomogeneous(hadPairs) && "Non-homogeneous input initial state.");
+  if (!isHomogeneous(hadPairs)) {
+    std::cerr<< ">>> generateOutgoingPartTypes(): ERROR: Non-homogeneous input initial state: "<< hadPairs <<"\n";
+  }
+
+  assert(isHomogeneous(mult) && "Non-homogeneous input multiplicity.");
+  if (!isHomogeneous(mult)) {
+    std::cerr<< ">>> generateOutgoingPartTypes(): ERROR: Non-homogeneous input initial state: "<< hadPairs <<"\n";
+  }
+
   particle_kinds.clear();	// Initialize buffer for generation
+
+  //=== original code, for reference -- not hard to vectorize if given homogeneous input
+//   int initState = Get(hdPairs, 0);
+//   const G4CascadeChannel* xsecTable = G4CascadeChannelTables::GetTable(initState);
+//   if (xsecTable)
+//     xsecTable->getOutgoingParticleTypes(particle_kinds, mult, ekin);
+//   else {
+//     std::cerr << " GXElementaryParticleCollider: Unknown interaction channel "
+//       << initState << " - outgoing kinds not generated.\n";
+//   }
+
+//   return;
+// }
+  //=== end of original code
+
+  const size_t cmultiplicity = Get(mult, 0);
+  particle_kinds.resize(cmultiplicity);
+  std::vector<int> tempKinds;  // buffer for scalar calls to xsecTable->getOutgoingParticleTypes()
 
   const G4CascadeChannel* xsecTable;
   size_t vsize = vecCore::VectorSize<T>();
@@ -410,28 +492,49 @@ generateOutgoingPartTypes(Int_v hadPairs, Int_v mult, T& ekin)
   for (size_t i =0; i < vsize; ++i) {
     double laneEkin = Get(ekin, i);
     int lanePair    = Get(hadPairs, i);
-    std::vector<int> tempKinds; // TODO: should pre-allocate (call resize())
     size_t nkinds = particle_kinds.size();
-    for (size_t ikind = 0; ikind < nkinds; ++ikind) {
-      int kk = Get(particle_kinds[ikind], i);
-      if (kk > 0) tempKinds.push_back(kk);
-      else --nkinds;
-    }
-    tempKinds.resize(nkinds);
     if (lanePair != lastPair) {
       xsecTable = G4CascadeChannelTables::GetTable(lanePair);
       lastPair = lanePair;
     }
+    //std::cerr<<" i="<< i <<", laneEkin="<< laneEkin <<", lanePair="<< lanePair <<", lastPair="<< lastPair <<", xsecTable="<<  xsecTable <<"\n";
     if (xsecTable) {
       xsecTable->getOutgoingParticleTypes(tempKinds, nkinds, laneEkin);
+      // std::cerr<<" xsecTable: tempKinds["<< tempKinds.size() <<"] = [";
+      // for (size_t ii=0; ii < cmultiplicity; ++ii) {
+      //   std::cerr<< tempKinds[ii] <<", ";
+      // }
+      // std::cerr<<"]\n";
     }
     else {
       std::cerr << " GXElementaryParticleCollider: Unknown interaction channel "
 	<< lanePair << " - outgoing kinds not generated.\n";
     }
+
+    for (size_t isec = 0; isec < cmultiplicity; ++isec) {
+      Set( particle_kinds[isec], i, tempKinds[isec] );
+    }
   }
 
+  std::cerr<<" returning from generateOutPartTypes: "; this->printArrays(tempKinds, mult);
   return;
+}
+
+template <typename T>
+void GXElementaryParticleCollider<T>::printArrays(std::vector<int> const& ikinds, Int_v mult) const
+{
+  const size_t cmultiplicity = Get(mult, 0);
+  const size_t ksize = ikinds.size();
+  std::cerr<<" mult="<< mult
+	   <<", ikinds[size="<< ksize <<"]: [";
+  for (size_t i = 0; i < ksize; ++i) {
+    std::cerr << ikinds[i] <<" ";
+  }
+  std::cerr<<"] and part_kinds: [";
+  for (size_t i = 0; i < cmultiplicity; ++i) {
+    std::cerr << particle_kinds[i] <<" ";
+  }
+  std::cerr <<"]\n";
 }
 
 template <typename T>
@@ -466,12 +569,18 @@ void GXElementaryParticleCollider<T>::generateSCMfinalState(T& ekin, T& etot_scm
     // Generate list of final-state particles
     multiplicity = generateMultiplicity(is, ekin);
 
+    //.. rebasketize cf. multiplicity
+    //... not needed for now, since multiplicity was forced to be constant in generateMultiplicity()
+
     generateOutgoingPartTypes(is, multiplicity, ekin);
     if (particle_kinds.empty()) {
       if (verboseLevel > 3) {
 	cerr << " generateOutgoingPartTypes failed mult " << multiplicity <<"\n";
       }
       continue;
+    }
+    else {
+      cerr<<" generateOutgoingPartTypes(): partKinds="<< particle_kinds <<"\n";
     }
 
     fillOutgoingMasses();	// Fill mass buffer from particle types

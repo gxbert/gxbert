@@ -296,6 +296,10 @@ public:
     }
   }
 
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
+  static T getParticleMass(Index_v<T> const itype);
+
   // Overwrite data structure (avoids creating/copying temporaries)
 
   /// warning: momentum direction is not reset in this case
@@ -461,6 +465,27 @@ static GXParticleDefinition const* getDefinition(int ityp)
   return 0;
 }
 
+template <typename T>
+VECCORE_ATT_HOST_DEVICE
+VECCORE_FORCE_INLINE
+T GXInuclElementaryParticle<T>::
+getParticleMass(Index_v<T> const itype)
+{
+  if (isHomogeneous<Index_v<T>>(itype)) {
+    const GXParticleDefinition* pd = getDefinition( Get(itype,0) );
+    return T(pd ? pd->GetPDGMass() * CLHEP::MeV / CLHEP::GeV : 0.0);	// From G4 to Bertini units
+    //return GXInuclElementaryParticle<T>::getParticleMass( Get(itype,0) );
+  }
+  else {
+    T result(0.0);
+    GXParticleDefinition const* pd;
+    for (size_t i = 0; i < VectorSize<T>(); ++i) {
+      pd = getDefinition(Get(itype,i));
+      if (pd) Set(result, i, pd->GetPDGMass() * CLHEP::MeV / CLHEP::GeV);
+    }
+    return result;
+  }
+}
 
 template <typename T>
 std::ostream &operator<<(std::ostream &os, GXInuclElementaryParticle<T> const& trk)

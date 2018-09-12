@@ -85,11 +85,14 @@ getOutgoingParticleTypes(std::vector<G4int>& kinds,
   kinds.clear();
   kinds.reserve(mult);
 
+#ifdef G4CASCADE_DEBUG_SAMPLER
+  G4cerr << " getOutgoingParticleTypes: mult=" << mult << " KE=" << ke <<"\n";
+#endif
   G4int channel = this->findFinalStateIndex(mult, ke, DATA::data.index,
 				            DATA::data.crossSections);
 #ifdef G4CASCADE_DEBUG_SAMPLER
-  G4cout << " getOutgoingParticleTypes: mult=" << mult << " KE=" << ke
-	 << ": channel=" << channel << G4endl;
+  G4cerr << " getOutgoingParticleTypes: mult=" << mult << " KE=" << ke
+	 << ": channel=" << channel <<"\n";
 #endif
 
   // Identify final-state array to be copied

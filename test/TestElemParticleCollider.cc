@@ -47,6 +47,8 @@ int main()
   for(size_t i=0; i<10; ++i) {
     auto multipl = collider.generateMultiplicity(initialState, ekin);
     std::cerr<<" i="<< i <<" multipl="<< multipl <<"\n";
+    collider.generateOutgoingPartTypes(initialState, multipl, ekin);
+    collider.fillOutgoingMasses();
   }
 
   /*
@@ -114,9 +116,13 @@ int main()
 
   auto initStateVec = bullets->type() * targets->type();
   Real_v ekinVec = bullets->getKineticEnergy();
-  for(size_t i=0; i<10; ++i) {
-    auto multipl = vecCollider.generateMultiplicity(initStateVec, ekinVec);
-    std::cerr<<" i="<< i <<" multipl="<< multipl <<"\n";
+  auto multipl = vecCollider.generateMultiplicity(initStateVec, ekinVec);
+  std::cerr<<" multipl="<< multipl <<"\n";
+  for(size_t i=2; i<10; ++i) {
+    // make multiplicity vector uniform
+    multipl = vecCore::Index_v<Real_v>(i);
+    vecCollider.generateOutgoingPartTypes(initStateVec, multipl, ekinVec);
+    vecCollider.fillOutgoingMasses();
   }
 
   /*
