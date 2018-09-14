@@ -20,7 +20,7 @@
 #include "GXParticleLargerEkin.hh"
 #include "GXCollisionOutput.hh"
 #include "GXInuclSpecialFunctions.hh"
-//#include "GXCascadeFinalStateGenerator.hh"
+#include "GXCascadeFinalStateGenerator.hh"
 
 #include "G4CascadeChannelTables.hh"
 #include "G4CascadeChannel.hh"
@@ -51,7 +51,7 @@ private:
   Index_v<T> nucleusZ;
 
   //.. Utility class to generate final-state kinematics
-  //GXCascadeFinalStateGenerator<T> fsGenerator;
+  GXCascadeFinalStateGenerator<T> fsGenerator;
 
   //.. Internal buffers for lists of secondaries
   std::vector<GXInuclElementaryParticle<T>> particles;
@@ -548,7 +548,7 @@ void GXElementaryParticleCollider<T>::generateSCMfinalState(T& ekin, T& etot_scm
     std::cerr << ">>> G4ElementaryParticleCollider::generateSCMfinalState\n";
   }
 
-  //fsGenerator.SetVerboseLevel(verboseLevel);
+  fsGenerator.SetVerboseLevel(verboseLevel);
 
   Int_v type1 = particle1->type();
   Int_v type2 = particle2->type();
@@ -586,7 +586,7 @@ void GXElementaryParticleCollider<T>::generateSCMfinalState(T& ekin, T& etot_scm
     fillOutgoingMasses();	// Fill mass buffer from particle types
 
     //.. Attempt to produce final state kinematics
-    //GLTEMP// fsGenerator.Configure(particle1, particle2, particle_kinds);
+    fsGenerator.Configure(particle1, particle2, particle_kinds);
     //GLTEMP// goodStates = fsGenerator.Generate(etot_scm, masses, scm_momentums);
   }	// while (generate) 
 

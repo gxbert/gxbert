@@ -77,19 +77,11 @@ protected:
   vecCore::Mask_v<T> satisfyTriangle(const std::vector<T>& pmod) const;
 
   // Generate momentum directions into final state
-  void FillDirections(T initialMass,
-		      const std::vector<T>& masses,
-		      std::vector<LorentzVector<T>>& finalState);
+  void FillDirections(T initialMass, const std::vector<T>& masses, std::vector<LorentzVector<T>>& finalState);
+  void FillDirThreeBody(T initialMass, const std::vector<T>& masses, std::vector<LorentzVector<T>>& finalState);
+  void FillDirManyBody(T initialMass, const std::vector<T>& masses, std::vector<LorentzVector<T>>& finalState);
 
-  void FillDirThreeBody(T initialMass,
-			const std::vector<T>& masses,
-			std::vector<LorentzVector<T>>& finalState, Bool_v mult3);
-
-  void FillDirManyBody(T initialMass,
-		       const std::vector<T>& masses,
-		       std::vector<LorentzVector<T>>& finalState, Bool_v multHi);
-
-  T GenerateCosTheta(Int_v ptype, T pmod) const;
+  T GenerateCosTheta(vecCore::Index_v<T> ptype, T pmod) const;
 
   // SPECIAL:  Generate N-body phase space using Kopylov algorithm
   void FillUsingKopylov(T initialMass,
@@ -217,8 +209,10 @@ template <typename T>
 VECCORE_ATT_HOST_DEVICE
 VECCORE_FORCE_INLINE
 void GXCascadeFinalStateAlgorithm<T>::
-FillMagnitudes(T initialMass, const std::vector<T>& masses) {
+FillMagnitudes(T initialMass, const std::vector<T>& masses)
+{
   assert(isHomogeneous(vmultipl));
+
   if (GetVerboseLevel()>1) 
     std::cerr << " >>> " << GetName() << "::FillMagnitudes\n";
 
@@ -237,47 +231,56 @@ FillMagnitudes(T initialMass, const std::vector<T>& masses) {
   size_t itry = -1;
   while (++itry < itry_max) {		/* Loop checking 08.06.2015 MHK */
     if (GetVerboseLevel() > 3) {
-      std::cerr << " itry in fillMagnitudes " << itry <<"\n";
+      std::cerr << " FillMagnitudes(): itry = " << itry <<"\n";
     }
 
     T eleft = initialMass;
 
     size_t i;	// For access outside of loop
     size_t maxmult = multiplicity;
-    for (i=0; i < maxmult-1; ++i) {
+    Bool_v done(false);
+    for (i = 0 ; i < maxmult - 1 ; ++i) {
+      // sample momentum distribution
       pmod = momDist->GetMomentum(kinds[i], bullet_ekin);
 
-      if (pmod < small) break;
-      eleft -= std::sqrt(pmod*pmod + masses[i]*masses[i]);
+      done |= pmod < small;
+      if (vecCore::MaskFull(done)) break;
+
+      T temp = math::Sqrt(pmod*pmod + masses[i]*masses[i]);
+      vecCore::MaskedAssign(eleft, !done, eleft - temp);
 
       if (GetVerboseLevel() > 3) {
-	std::cerr << " kp " << kinds[i] << " pmod " << pmod
-		  << " mass2 " << masses[i]*masses[i] << " eleft " << eleft
-		  << "\n x1 " << eleft - mass_last <<"\n";
+	std::cerr << " kp=" << kinds[i] << " pmod=" << pmod
+		  << " mass2=" << masses[i]*masses[i] << " eleft=" << eleft
+		  << "\n x1=" << eleft - mass_last <<"\n";
       }
 
-      if (eleft <= mass_last) break;
+      done |= eleft <= mass_last;
+      if (vecCore::MaskFull(done)) break;
 
-      modules[i] = pmod;
+      vecCore::MaskedAssign(modules[i], !done, pmod);
     }
 
     if (i < maxmult-1) continue;	// Failed to generate full kinematics
 
-    T plast = eleft * eleft - masses.back()*masses.back();
+    T plast = eleft * eleft - masses.back() * masses.back();
     if (GetVerboseLevel() > 2) std::cerr << " plast ** 2 " << plast <<"\n";
 
-    if (plast <= small) continue;	// Not enough momentum left over
+    Bool_v done2 = (plast <= small);
+    if (vecCore::MaskFull(done2)) continue;	// Not enough momentum left over
 
-    plast = std::sqrt(plast);		// Final momentum is what's left over
-    modules.back() = plast;
+    vecCore::MaskedAssign(modules.back(), !done2, math::Sqrt(plast));		// Final momentum is what's left over
 
-    if (multiplicity > 3 || satisfyTriangle(modules)) break;	// Successful
+    if (multiplicity > 3 || vecCore::MaskFull(satisfyTriangle(modules))) break;	// Successful
   }	// while (itry < itry_max)
 
   if (itry >= itry_max) {		// Too many attempts
     if (GetVerboseLevel() > 2) {
-      std::cerr << " Unable to generate momenta for multiplicity "
-	<< multiplicity <<"\n";
+      std::cerr << " Unable to generate momenta for multiplicity "<< multiplicity <<" and modules[i] = [";
+      for(size_t i = 0; i < multiplicity-1; ++i) {
+	std::cerr<< modules[i] <<" ";
+      }
+      std::cerr<<"]\n";
     }
     modules.clear();		// Something went wrong, throw away partial
   }
@@ -292,13 +295,13 @@ satisfyTriangle(const std::vector<T>& pmod) const {
   if (GetVerboseLevel() > 3) 
     std::cerr << " >>> " << GetName() << "::satisfyTriangle\n";
 
-  return ( (pmod.size() != 3) ||
-	   !(pmod[0] < math::Abs(pmod[1] - pmod[2]) ||
-	     pmod[0] > pmod[1] + pmod[2] ||
-	     pmod[1] < math::Abs(pmod[0] - pmod[2]) ||
-	     pmod[1] > pmod[0] + pmod[2] ||
-	     pmod[2] < math::Abs(pmod[0] - pmod[1]) ||
-	     pmod[2] > pmod[1] + pmod[0])
+  return ( vecCore::Mask_v<T>(pmod.size() != 3) |
+	   (pmod[0] > math::Abs(pmod[1] - pmod[2]) &
+	    pmod[0] < pmod[1] + pmod[2] &
+	    pmod[1] > math::Abs(pmod[0] - pmod[2]) &
+	    pmod[1] < pmod[0] + pmod[2] &
+	    pmod[2] > math::Abs(pmod[0] - pmod[1]) &
+	    pmod[2] < pmod[1] + pmod[0])
 	   );
 }
 
@@ -310,33 +313,27 @@ void GXCascadeFinalStateAlgorithm<T>::
 FillDirections(T initialMass, const std::vector<T>& masses,
 	       std::vector<LorentzVector<T>>& finalState)
 {
-  if (GetVerboseLevel()>1) 
-    std::cerr << " >>> " << GetName() << "::FillDirections.\n";
+  assert(isHomogeneous(vmultipl));
+
+  if (GetVerboseLevel()>1) std::cerr << " >>> " << GetName() << "::FillDirections.\n";
 
   finalState.clear();			// Initialization and sanity check
-  size_t maxmult = multiplicity;
-  finalState.resize(maxmult);
 
-  // test
-  if (modules.size() != maxmult) {
-    std::cerr << " >>> " << GetName() << "::FillDirections() error: modules.size() != maxmult!\n";
-    return; // ??? FIXME
-  }
+  if (modules.size() != multiplicity) return;
 
   // Different order of processing for three vs. N body
-  Bool_v mult3 = (multiplicity == 3);
-  Bool_v multHi = (multiplicity > 3);
-  if (!vecCore::MaskEmpty(mult3))
-    FillDirThreeBody(initialMass, masses, finalState, mult3);
-  if (!vecCore::MaskEmpty(multHi))
-    FillDirManyBody(initialMass, masses, finalState, multHi);
+  if (multiplicity == 3) {
+    FillDirThreeBody(initialMass, masses, finalState);
+  }
+  else {
+    FillDirManyBody(initialMass, masses, finalState);
+  }
 }
 
 
 template <typename T>
 void GXCascadeFinalStateAlgorithm<T>::
-FillDirThreeBody(T initialMass, const std::vector<T>& masses,
-		 std::vector<LorentzVector<T>>& finalState, Bool_v mult3)
+FillDirThreeBody(T initialMass, const std::vector<T>& masses, std::vector<LorentzVector<T>>& finalState)
 {
   if (GetVerboseLevel() > 1) {
     std::cerr << " >>> " << GetName() << "::FillDirThreeBody\n";
@@ -344,21 +341,20 @@ FillDirThreeBody(T initialMass, const std::vector<T>& masses,
 
   T costh = GenerateCosTheta(kinds[2], modules[2]);
   // FIXME: should use a local LorVector here instead of finalstate[2]?
-  vecCore::MaskedAssign(finalState[2], mult3, generateWithFixedTheta(costh, modules[2], masses[2]));
-  vecCore::MaskedAssign(finalState[2], mult3, toSCM.rotate(finalState[2]));	// Align target axis
+  finalState[2] = generateWithFixedTheta(costh, modules[2], masses[2]);
+  finalState[2] = toSCM.rotate(finalState[2]);	// Align target axis
 
   // Generate direction of first particle
   costh = -0.5 * (modules[2]*modules[2] + modules[0]*modules[0] - modules[1]*modules[1]) / modules[2] / modules[0];
 
-  if (std::fabs(costh) >= maxCosTheta) {  // Bad kinematics; abort generation
-    finalState.clear();
-    return;
-  }
+  //Bool_v done = (math::Abs(costh) >= maxCosTheta);
+  // if (!vecCore::MaskEmpty(done)) {  // Bad kinematics; abort generation
+  //   finalState.clear();
+  //   return;
+  // }
 
   // Report success
-  if (GetVerboseLevel()>2) {
-    std::cerr << " ok for mult 3\n";
-  }
+  if (GetVerboseLevel()>2) std::cerr << " ok for mult 3\n";
 
   // First particle is at fixed angle to recoil system
   finalState[0] = generateWithFixedTheta(costh, modules[0], masses[0]);
@@ -371,8 +367,7 @@ FillDirThreeBody(T initialMass, const std::vector<T>& masses,
 
 template <typename T>
 void GXCascadeFinalStateAlgorithm<T>::
-FillDirManyBody(T initialMass, const std::vector<T>& masses,
-		std::vector<LorentzVector<T>>& finalState, Bool_v multHi)
+FillDirManyBody(T initialMass, const std::vector<T>& masses, std::vector<LorentzVector<T>>& finalState)
 {
   if (GetVerboseLevel()>1) {
     std::cerr << " >>> " << GetName() << "::FillDirManyBody\n";
@@ -390,31 +385,29 @@ FillDirManyBody(T initialMass, const std::vector<T>& masses,
   }
 
   // Total momentum so far, to compute recoil of last two particles
-  LorentzVector<T> psum =
-    std::accumulate(finalState.begin(), finalState.end()-2, LorentzVector<T>());
+  LorentzVector<T> psum = std::accumulate(finalState.begin(), finalState.end()-2, LorentzVector<T>());
   T pmod = psum.Vect().Mag();
 
-  costh = -0.5 * (pmod*pmod +
-		  modules[multiplicity-2]*modules[multiplicity-2] -
-		  modules[multiplicity-1]*modules[multiplicity-1])
+  costh = -0.5 * (pmod * pmod +
+		  modules[multiplicity-2] * modules[multiplicity-2] -
+		  modules[multiplicity-1] * modules[multiplicity-1])
     / pmod / modules[multiplicity-2];
 
   if (GetVerboseLevel() > 2) {
-    std::cerr <<  " ct last " << costh <<"\n";
+    std::cerr <<  " costh last " << costh <<"\n";
   }
 
-  if (std::fabs(costh) >= maxCosTheta) {  // Bad kinematics; abort generation
-    finalState.clear();
-    return;
+  if (!vecCore::MaskEmpty(math::Abs(costh) >= maxCosTheta)) {  // Bad kinematics; abort generation
+    std::cerr <<  " *** FillDirManyBody(): triggered |costh| >= maxCosTheta " << costh <<"\n";
+    //finalState.clear();
+    //return;
   }
 
   // Report success
   if (GetVerboseLevel()>2) std::cerr << " ok for mult " << multiplicity <<"\n";
 
   // First particle is at fixed angle to recoil system
-  finalState[multiplicity-2] =
-    generateWithFixedTheta(costh, modules[multiplicity-2],
-			   masses[multiplicity-2]);
+  finalState[multiplicity-2] = generateWithFixedTheta(costh, modules[multiplicity-2], masses[multiplicity-2]);
   finalState[multiplicity-2] = toSCM.rotate(psum, finalState[multiplicity-2]);
 
   // Remaining particle is constrained to recoil from entire rest of system
@@ -427,7 +420,7 @@ FillDirManyBody(T initialMass, const std::vector<T>& masses,
 
 template <typename T>
 T GXCascadeFinalStateAlgorithm<T>::
-GenerateCosTheta(Int_v ptype, T pmod) const {
+GenerateCosTheta(vecCore::Index_v<T> ptype, T pmod) const {
   constexpr size_t vsize = vecCore::VectorSize<T>();
   using Int_T = typename vecCore::backend::VcSimdArray<vsize>::Int_v;
   GXPowVec<T,Int_T>* ppow = GXPowVec<T, Int_T>::GetInstance();

@@ -282,7 +282,7 @@ namespace GXInuclSpecialFunctions {
     T S = inuclRndm<T>();		// Random fraction for expansion
 
     double C;
-    double PQ=0.;
+    T PQ = 0.;
     T V, PR(0.);
     for (int i=0; i<4; i++) {
       V = 0.0;
@@ -295,7 +295,7 @@ namespace GXInuclSpecialFunctions {
       PR += V * pPow->PowN(S, Index_v<T>(i));
     }
 
-    return math::Sqrt(S) * (PR + (1-PQ)*(S*S*S*S));
+    return math::Sqrt(S) * (PR + (T(1.) - PQ)*(S*S*S*S));
   }
 
 } // end namespace G4InuclSpecialFunctions

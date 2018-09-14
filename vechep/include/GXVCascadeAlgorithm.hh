@@ -78,16 +78,14 @@ private:
 
   template <typename T>
   vecCore::Mask_v<T> GXVCascadeAlgorithm<T>::
-  IsDecayAllowed(T initialMass,
-		 const std::vector<T>& masses) const
+  IsDecayAllowed(T initialMass, const std::vector<T>& masses) const
   {
-    Bool_v okay =
-      (initialMass > 0. && masses.size() >= 2 &&
-       initialMass >= std::accumulate(masses.begin(), masses.end(), T(0.)));
+    Bool_v okay( masses.size() >= 2 );
+    okay = okay & (initialMass > T(0.)) & initialMass >= std::accumulate(masses.begin(), masses.end(), T(0.));
 
     if (verboseLevel) {
       std::cerr << GetName() << "::IsDecayAllowed? initialMass " << initialMass
-		<< " " << masses.size() << " masses sum "
+		<< " - " << masses.size() << " masses sum "
 		<< std::accumulate(masses.begin(), masses.end(), T(0.)) <<"\n";
 
       if (verboseLevel>1) PrintVector(masses, " ", std::cerr);

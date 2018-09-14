@@ -94,7 +94,7 @@ protected:
 	     << " and PRA = PS*Spow = " << PRA <<"\n";
     }
 
-    return std::fabs(PRA);
+    return math::Abs(PRA);
   }
 
 } // GXBERT_IMPL_NAMESPACE
