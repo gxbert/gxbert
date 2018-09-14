@@ -81,7 +81,7 @@ private:
   IsDecayAllowed(T initialMass, const std::vector<T>& masses) const
   {
     Bool_v okay( masses.size() >= 2 );
-    okay = okay & (initialMass > T(0.)) & initialMass >= std::accumulate(masses.begin(), masses.end(), T(0.));
+    okay = okay & (initialMass > T(0.)) & (initialMass >= std::accumulate(masses.begin(), masses.end(), T(0.)));
 
     if (verboseLevel) {
       std::cerr << GetName() << "::IsDecayAllowed? initialMass " << initialMass

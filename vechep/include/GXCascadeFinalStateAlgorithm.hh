@@ -96,7 +96,7 @@ private:
 
   std::vector<Index_v<T>> kinds;	// Copy of particle_kinds list
   Index_v<T> vmultipl;		        // Final state size, for convenience
-  int multiplicity;
+  size_t multiplicity;
   T bullet_ekin;			// Kinematics needed for distributions
   GXLorentzConvertor<T> toSCM;		// Handles complex rotations/transforms
 
@@ -296,12 +296,10 @@ satisfyTriangle(const std::vector<T>& pmod) const {
     std::cerr << " >>> " << GetName() << "::satisfyTriangle\n";
 
   return ( vecCore::Mask_v<T>(pmod.size() != 3) |
-	   (pmod[0] > math::Abs(pmod[1] - pmod[2]) &
-	    pmod[0] < pmod[1] + pmod[2] &
-	    pmod[1] > math::Abs(pmod[0] - pmod[2]) &
-	    pmod[1] < pmod[0] + pmod[2] &
-	    pmod[2] > math::Abs(pmod[0] - pmod[1]) &
-	    pmod[2] < pmod[1] + pmod[0])
+	   ((pmod[0] > math::Abs(pmod[1] - pmod[2])) & (pmod[0] < pmod[1] + pmod[2]) &
+	    (pmod[1] > math::Abs(pmod[0] - pmod[2])) & (pmod[1] < pmod[0] + pmod[2]) &
+	    (pmod[2] > math::Abs(pmod[0] - pmod[1])) & (pmod[2] < pmod[1] + pmod[0])
+	    )
 	   );
 }
 
@@ -495,7 +493,7 @@ GenerateTwoBody(T initialMass, std::vector<T> const& masses,
   finalState.clear();		// Initialization and sanity checks
 
   if (vecCore::EarlyReturnAllowed()) {
-    if (vecCore::MaskFull(multiplicity != Index_v<T>(2))) return;
+    if (vecCore::MaskFull(multiplicity != 2)) return;
   }
 
   {
@@ -550,7 +548,7 @@ GenerateMultiBody(T initialMass, const std::vector<T>& masses,
 
   finalState.clear();		// Initialization and sanity checks
 
-  Bool_v done = (multiplicity < Index_v<T>(3));
+  Bool_v done(multiplicity < 3);
   if (vecCore::EarlyReturnAllowed()) {
     if (vecCore::MaskFull(done) || momDist == NULL) return;
   }
