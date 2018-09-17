@@ -78,7 +78,7 @@ public:
       cerr << " >>> G4ElementaryParticleCollider::collide\n";
 
     // Sanity check
-    Bool_v done = !useEPCollider(bullet,target);
+    Bool_v done(!useEPCollider(bullet,target));
     if ( !vecCore::MaskEmpty(done) ) {
       cerr << " ElementaryParticleCollider -> can collide only particle with particle: done="<< done <<"\n";
       return;
@@ -101,16 +101,14 @@ public:
       cerr <<" GXEPCollider::collide() - input particles:"<< *particle1 << "\n and: " << *particle2 <<"\n";
     }
 
-    done = done | (!particle1) | (!particle2);
-    //if (!particle1 || !particle2) {    // Redundant with useEPCollider()
-    if ( !vecCore::MaskEmpty(done) ) {    // Redundant with useEPCollider()
+    if (!particle1 || !particle2) {    // Redundant with useEPCollider() ?
       cerr << " ElementaryParticleCollider -> can only collide hadrons!  done="<< done <<"\n";
       return;
     }
 
     // Keep track of lanes for which no cascading is needed
     const size_t vsize = vecCore::VectorSize<T>();
-    done = done | ( particle1->isNeutrino() || particle2->isNeutrino() );
+    done = done | Bool_v( particle1->isNeutrino() || particle2->isNeutrino() );
 
     // Check if input is homogeneous -- redundant!?
     Index_v<T> hadcase = interCase.hadrons();
@@ -557,7 +555,7 @@ void GXElementaryParticleCollider<T>::generateSCMfinalState(T& ekin, T& etot_scm
   if (verboseLevel > 3) std::cerr << " is " << is <<"\n";
 
   Int_v multiplicity = 0;
-  Bool_v goodStates  = true;
+  Bool_v goodStates(true);
 
   // Initialize buffers for this event
   particles.clear();
@@ -580,7 +578,12 @@ void GXElementaryParticleCollider<T>::generateSCMfinalState(T& ekin, T& etot_scm
       continue;
     }
     else {
-      cerr<<" generateOutgoingPartTypes(): partKinds="<< particle_kinds <<"\n";
+      cerr<<" generateOutgoingPartTypes(): partKinds=[";
+      typename std::vector<Int_v>::const_iterator iter = particle_kinds.begin();
+      for( ; iter != particle_kinds.end(); ++iter ) {
+	std::cerr<< *iter <<' ';
+      }
+      std::cerr<<"]\n";
     }
 
     fillOutgoingMasses();	// Fill mass buffer from particle types

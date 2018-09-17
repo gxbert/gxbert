@@ -192,13 +192,32 @@ void RunGXElementaryParticleCollider(const char* testname, GXTrack_v const& soaB
 
       auto initStateVec = pbullets->type() * ptargets->type();
       Real_v ekinVec = bullets.getKineticEnergy();
-      //auto multipl = collider.generateMultiplicity(initStateVec, ekinVec);
+
       auto multipl = collider.generateMultiplicity(initStateVec, ekinVec);
       counter += multipl;
       pMult[i] = multipl;
 
       collider.generateOutgoingPartTypes(initStateVec, multipl, ekinVec);
       collider.fillOutgoingMasses();
+
+      //collider.collide(pbullets, ptargets, output);
+
+      GXLorentzConvertor<Real_v> convertToSCM;    // Utility to handle frame manipulation
+      convertToSCM.setVerbose(debugLevel);
+
+      // TODO: need to swap appropriately at this point!!!
+      if (vecCore::MaskFull(ptargets->nucleon() | ptargets->quasi_deutron()) ) {
+	convertToSCM.setBullet(*pbullets);
+	convertToSCM.setTarget(*ptargets);
+      } else {
+	cerr<<" ***** GXEPCollider::collide(): SWAP WAS NEEDED!!  CHECK RESULTS!!\n";
+	convertToSCM.setBullet(*ptargets);
+	convertToSCM.setTarget(*pbullets);
+      }
+      convertToSCM.toTheCenterOfMass();
+
+      Real_v etot_scm = convertToSCM.getTotalSCMEnergy();
+      collider.generateSCMfinalState(ekinVec, etot_scm, pbullets, ptargets);
     }
 
     _mm_free(pMult);
