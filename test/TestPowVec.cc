@@ -12,7 +12,7 @@
 #include "GXPowVec.hh"
 #include "ApproxEqual.hh"
 #include "GXInuclSpecialFunctions.hh"
-#include "VecCore/Timer.h"
+#include "timer.h"
 
 #include <iostream>
 

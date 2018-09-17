@@ -1,6 +1,6 @@
 #include <Vc/Vc>
-#include "VecCore/Timer.h"
-#include "VecRng/RngDefs.h"
+#include "timer.h"
+#include "VecCoreLib/Rng/RngDefs.h"
 
 #include "GXTrack.hh"
 #include "GXTrackHandler.hh"

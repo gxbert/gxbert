@@ -6,7 +6,7 @@
 // 2018-05-25 Guilherme lima  Adapted from InuclColliderBenchmark.cc
 
 #include "VecCore/VecCore"
-#include "VecCore/Timer.h"
+#include "timer.h"
 #include "GXTrack.hh"
 #include "GXTrackHandler.hh"
 //#include "GXInuclCollider.hh"

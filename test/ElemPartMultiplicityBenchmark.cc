@@ -10,7 +10,7 @@
 // this is needed in order to make generateMultiplicity public
 #undef NDEBUG
 #include "VecCore/VecCore"
-#include "VecCore/Timer.h"
+#include "timer.h"
 #include "GXTrack.hh"
 #include "GXTrackHandler.hh"
 

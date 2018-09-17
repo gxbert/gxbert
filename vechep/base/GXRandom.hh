@@ -1,7 +1,7 @@
 #ifndef GXRANDOM_H
 #define GXRANDOM_H
 
-#include "VecRng/MRG32k3a.h"
+#include "VecCoreLib/Rng/MRG32k3a.h"
 #include "VecHepDefs.hh"
 
 namespace gxbert {

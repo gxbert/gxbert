@@ -84,7 +84,8 @@ endif()
 # Find VecCore with selected components turned on (CUDA and backend)
 
 if (GXBERT_VECTEST)
-  find_package(VecCore REQUIRED COMPONENTS ${VecCore_COMPONENTS})
+  #find_package(VecCore REQUIRED COMPONENTS ${VecCore_COMPONENTS})
+  find_package(VecCoreLib 0.1.0 REQUIRED COMPONENTS Vc)
   include_directories(SYSTEM ${VecCore_INCLUDE_DIRS})
   set(GXBERT_DEFINITIONS "${GXBERT_DEFINITIONS} ${VecCore_DEFINITIONS}")
   set(GXBERT_DEFINITIONS "${GXBERT_DEFINITIONS} -DGXBERT_${_BACKEND_UP}")
@@ -380,7 +381,7 @@ endif()
 # Build libraries
 
 add_library(gxbert ${SRC_CPP})
-target_link_libraries(gxbert ${GXBERT_LIBRARIES}
+target_link_libraries(gxbert VecCoreLib::VecCoreLib ${GXBERT_LIBRARIES}
                       ${GXBERT_LIBRARIES_EXTERNAL})
 
 set(GXBERT_LIBRARIES ${GXBERT_LIBRARIES} gxbert)
