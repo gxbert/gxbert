@@ -8,7 +8,7 @@
 
 //#include "G4CascadeColliderBase.hh"
 //#include "G4CascadeInterpolator.hh"
-#include "G4CascadeParameters.hh"
+#include "GXCascadeParameters.hh"
 #include "G4NucleiModel.hh"
 #include "LorentzVector.hh"
 
@@ -72,171 +72,36 @@ public:
   virtual ~GXElementaryParticleCollider()
   { }
 
-  void collide(GXInuclParticle<T> const* bullet, GXInuclParticle<T> const* target, GXCollisionOutput& output)
-  {
-    if (verboseLevel > 1)
-      cerr << " >>> G4ElementaryParticleCollider::collide\n";
-
-    // Sanity check
-    Bool_v done(!useEPCollider(bullet,target));
-    if ( !vecCore::MaskEmpty(done) ) {
-      cerr << " ElementaryParticleCollider -> can collide only particle with particle: done="<< done <<"\n";
-      return;
-    }
-
-#ifdef G4CASCADE_DEBUG_SAMPLER
-    static G4bool doPrintTables = true;	// Once and only once per job
-    if (doPrintTables) {
-      G4CascadeChannelTables::Print();
-      doPrintTables = false;
-    }
-#endif
-
-    interCase.set(bullet, target);	// To identify kind of collision
-
-    GXInuclElementaryParticle<T> const* particle1 = dynamic_cast<GXInuclElementaryParticle<T> const*>(bullet);
-    GXInuclElementaryParticle<T> const* particle2 = dynamic_cast<GXInuclElementaryParticle<T> const*>(target);
-
-    if (verboseLevel > 1) {
-      cerr <<" GXEPCollider::collide() - input particles:"<< *particle1 << "\n and: " << *particle2 <<"\n";
-    }
-
-    if (!particle1 || !particle2) {    // Redundant with useEPCollider() ?
-      cerr << " ElementaryParticleCollider -> can only collide hadrons!  done="<< done <<"\n";
-      return;
-    }
-
-    // Keep track of lanes for which no cascading is needed
-    const size_t vsize = vecCore::VectorSize<T>();
-    done = done | Bool_v( particle1->isNeutrino() || particle2->isNeutrino() );
-
-    // Check if input is homogeneous -- redundant!?
-    Index_v<T> hadcase = interCase.hadrons();
-    const size_t case0 = Get(hadcase, 0);
-    bool allsame(true);
-    for (size_t i = 1; i < vsize; ++i) {
-      allsame &= (case0 == Get(hadcase, i));
-    }
-    assert(allsame && "GXEPCollider::collide() called for inhomogeneous interCases");
-
-    // Check for available interaction table, if not quasi-deuteron special cases
-    {
-      const Bool_v cantCollide = (!particle1->quasi_deutron() && !particle2->quasi_deutron() && !interCase.hasValidTable());
-      done = done | cantCollide;
-      if (!vecCore::MaskEmpty(cantCollide)) {
-	cerr << " ElementaryParticleCollider -> cantCollide="<< cantCollide <<" for "
-	     << *particle1 << " and "<< *particle2 <<" - done="<< done <<"\n";
-      }
-    }
-
-    if (vecCore::EarlyReturnAllowed() && vecCore::MaskFull(done)) return;
-
-    GXLorentzConvertor<T> convertToSCM;    // Utility to handle frame manipulation
-    convertToSCM.setVerbose(verboseLevel);
-
-    // TODO: need to swap appropriately at this point!!!
-    if (vecCore::MaskFull(particle2->nucleon() | particle2->quasi_deutron()) ) {
-      convertToSCM.setBullet(*particle1);
-      convertToSCM.setTarget(*particle2);
-    } else {
-      cerr<<" ***** GXEPCollider::collide(): SWAP WAS NEEDED!!  CHECK RESULTS!!\n";
-      convertToSCM.setBullet(*particle2);
-      convertToSCM.setTarget(*particle1);
-    }
-    convertToSCM.toTheCenterOfMass();
-
-    T etot_scm = convertToSCM.getTotalSCMEnergy();
-
-    // Generate any particle collision with nucleon
-    if (MaskFull(particle1->nucleon()) || MaskFull(particle2->nucleon())) {
-      T ekin = convertToSCM.getKinEnergyInTheTRS();
-
-      // SPECIAL: very low energy pions may be absorbed by a nucleon
-      Bool_v doPionNAbsorption = vecCore::MaskEmpty(pionNucleonAbsorption(ekin));
-      cerr<<" doPionNAbsorption="<< doPionNAbsorption <<"\n";
-
-      // use if() here to save some time, since will be mostly false
-      if ( !vecCore::MaskEmpty(doPionNAbsorption) ) {
-	generateSCMpionNAbsorption(etot_scm, particle1, particle2, doPionNAbsorption);
-	done = done | doPionNAbsorption;
-      }
-
-      if ( !vecCore::MaskFull(doPionNAbsorption) ) {
-	generateSCMfinalState(ekin, etot_scm, particle1, particle2);
-      }
-    }
-
-    // Generate pion or photon collision with quasi-deuteron
-    if (MaskFull(particle1->quasi_deutron()) || MaskFull(particle2->quasi_deutron())) {
-      if (!G4NucleiModel::useQuasiDeuteron(particle1->type(), particle2->type()) &&
-	  !G4NucleiModel::useQuasiDeuteron(particle2->type(), particle1->type())) {
-	cerr << " ElementaryParticleCollider -> can only collide pi,mu,gamma with dibaryons\n";
-	return;
-      }
-
-      if (particle1->isMuon() || particle2->isMuon()) {
-	generateSCMmuonAbsorption(etot_scm, particle1, particle2);
-      } else {		// Currently, pion absoprtion also handles gammas
-	generateSCMpionAbsorption(etot_scm, particle1, particle2);
-      }
-    }
-
-    if (particles.empty()) {	// No final state possible, pass bullet through
-      if (verboseLevel) {
-	cerr << " ElementaryParticleCollider -> failed to collide "
-	     << particle1->getMomModule() << " GeV/c "
-	     << *particle1 << " with "
-	     << *particle2 <<"\n";
-      }
-      return;
-    }
-
-    // Convert final state back to lab frame
-    // TODO: vectorize this loop?
-    LorentzVector<T> mom;      	// Buffer to avoid memory churn
-    typename std::vector<GXInuclElementaryParticle<T>>::iterator ipart = particles.begin();
-    for( ; ipart != particles.end(); ipart++) {	
-      mom = convertToSCM.backToTheLab(ipart->getFourMomentum());
-      ipart->setMomentum(mom); 
-    }
-  
-    // // Check conservation in multibody final state
-    // if (verboseLevel && !validateOutput(bullet, target, particles)) {
-    //   cerr << " incoming particles: \n" << *particle1 << G4endl
-    // 	   << *particle2 <<"\n"
-    // 	   << " outgoing particles:\n";
-    //   for(ipart = particles.begin(); ipart != particles.end(); ipart++)
-    // 	cerr << *ipart <<"\n";
-
-    //   cerr<< " <<< Non-conservation in G4ElementaryParticleCollider\n";
-    // }
-    
-    std::sort(particles.begin(), particles.end(), GXParticleLargerEkin<double>());
-    output.addOutgoingParticles(particles);
-  }
-
+  // Nucleus to use for recoil
   // TODO: allow distinct values here
   VECCORE_ATT_HOST_DEVICE
   VECCORE_FORCE_INLINE
-  void setNucleusState(int a, int z) {	// Nucleus to use for recoil
+  void setNucleusState(int a, int z)
+  {
     nucleusA.set( Index_v<T>(a) );
     nucleusZ.set( Index_v<T>(z) );
   }
 
+  // Nuclei to use for recoil
   VECCORE_ATT_HOST_DEVICE
   VECCORE_FORCE_INLINE
-  void setNucleusState(Index_v<T> const& a, Index_v<T> const& z) {  // Nuclei to use for recoil
+  void setNucleusState(Index_v<T> const& a, Index_v<T> const& z)
+  {
     nucleusA.set( a );
     nucleusZ.set( z );
   }
 
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
   void setVerboseLevel(int level) { verboseLevel = level; }
 
   VECCORE_ATT_HOST_DEVICE
   VECCORE_FORCE_INLINE
   void printArrays(std::vector<int> const& ikinds, Int_v mult) const;
 
-  // Decide whether to use G4ElementaryParticleCollider or not
+  // Decide whether to use GXElementaryParticleCollider<T> or not
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
   virtual bool useEPCollider(GXInuclParticle<T> const* bullet,
 			     GXInuclParticle<T> const* target) const
   {
@@ -244,6 +109,9 @@ public:
 	    dynamic_cast<GXInuclElementaryParticle<T> const*>(target));
   }
 
+  void collide(GXInuclParticle<T> const* bullet,
+	       GXInuclParticle<T> const* target,
+	       GXCollisionOutput& output);
 
   //private:
 
@@ -289,23 +157,10 @@ public:
 
   VECCORE_ATT_HOST_DEVICE
   VECCORE_FORCE_INLINE
-  Bool_v pionNucleonAbsorption(T const& ekin) const
-  {
-    if (verboseLevel > 3)
-      cerr << " >>> GXElementaryParticleCollider::pionNucleonAbsorption ?"
-	   << " ekin " << ekin << " is " << interCase.hadrons() <<"\n";
+  Bool_v pionNucleonAbsorption(T const& ekin) const;
 
-    // Absorption occurs with specified probability
-    const T absProb(G4CascadeParameters::piNAbsorption());
-
-    // Absorption occurs only for pi- p -> n, or pi+ n -> p
-    // Restrict to "very slow" pions, to allow for some normal scattering
-    return ((interCase.hadrons() == pim*pro || interCase.hadrons() == pip*neu)
-	    && (ekin < 0.05)		// 50 MeV kinetic energy or less
-	    && (inuclRndm() < absProb)
-	    );
-  }
-
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
   bool splitQuasiDeuteron(int qdtype); 	// Fill kinds with NN components
 
   //.. Fill mass arrays from particle types
@@ -320,7 +175,9 @@ public:
     for (size_t i = 0; i < mult; i++) {
       masses[i] = GXInuclElementaryParticle<T>::getParticleMass(particle_kinds[i]);
       masses2[i] = masses[i] * masses[i];
-      std::cerr<<"   i="<< i <<" masses: "<< masses[i] <<", masses2[i]: "<< masses2[i] <<"\n";
+      if(verboseLevel > 3) {
+	std::cerr<<"   i="<< i <<" masses: "<< masses[i] <<", masses2[i]: "<< masses2[i] <<"\n";
+      }
     }
   }
 
@@ -401,19 +258,19 @@ generateMultiplicity(vecCore::Index_v<T> const& hadPairs, T const& ekin) const
       Set(mult, i, temp);
     }
     else {
-      std::cerr << " G4ElementaryParticleCollider: Unknown interaction channel "
+      std::cerr << " GXElementaryParticleCollider: Unknown interaction channel "
 	<< lanePair << " - multiplicity not generated.\n";
     }
   }
 
   if(verboseLevel > 3) {
-    std::cerr << " G4ElementaryParticleCollider::generateMultiplicity: "
+    std::cerr << " GXElementaryParticleCollider::generateMultiplicity: "
       << " multiplicity = " << mult <<"\n";
   }
 
   //return mult;
   ////// temporary!!! return fixed multiplicity
-  return Int_v(2);
+  return Index_v<T>(3);
 }
 
 /* // GL Note: I tried to push vectorization into xsecTable->GetMultiplicity(ekin), but got "virtual template methods not allowed" problems
@@ -435,14 +292,14 @@ Index_v<T> GXElementaryParticleCollider<T>::generateMultiplicity(Int_v const& ha
       vecCore::MaskedAssign( mul, hadPairs == nextPair, temp); // update all lanes as appropriate
     }
     else {
-      std::cerr << " G4ElementaryParticleCollider: Unknown interaction channel "
+      std::cerr << " GXElementaryParticleCollider: Unknown interaction channel "
 	<< nextPair << " - multiplicity not generated.\n";
     }
     i++;
   }
 
   if(verboseLevel > 3){
-    std::cerr << " G4ElementaryParticleCollider::generateMultiplicity: "
+    std::cerr << " GXElementaryParticleCollider::generateMultiplicity: "
     << " multiplicity = " << mul <<"\n";
   }
 
@@ -514,7 +371,10 @@ generateOutgoingPartTypes(Int_v hadPairs, Int_v mult, T& ekin)
     }
   }
 
-  std::cerr<<" returning from generateOutPartTypes: "; this->printArrays(tempKinds, mult);
+  if (verboseLevel > 3) {
+    std::cerr<<" returning from generateOutPartTypes: "; this->printArrays(tempKinds, mult);
+  }
+
   return;
 }
 
@@ -543,7 +403,7 @@ void GXElementaryParticleCollider<T>::generateSCMfinalState(T& ekin, T& etot_scm
   constexpr int itry_max = 10;
 
   if (verboseLevel > 2) {
-    std::cerr << ">>> G4ElementaryParticleCollider::generateSCMfinalState\n";
+    std::cerr << ">>> GXElementaryParticleCollider::generateSCMfinalState()...\n";
   }
 
   fsGenerator.SetVerboseLevel(verboseLevel);
@@ -555,14 +415,14 @@ void GXElementaryParticleCollider<T>::generateSCMfinalState(T& ekin, T& etot_scm
   if (verboseLevel > 3) std::cerr << " is " << is <<"\n";
 
   Int_v multiplicity = 0;
-  Bool_v goodStates(true);
+  bool goodStates = false;
 
   // Initialize buffers for this event
   particles.clear();
   particle_kinds.clear();
 
   int itry = 0;
-  while (!vecCore::MaskFull(goodStates) && itry++ < itry_max) {
+  while (!goodStates && itry++ < itry_max) {
 
     // Generate list of final-state particles
     multiplicity = generateMultiplicity(is, ekin);
@@ -573,24 +433,24 @@ void GXElementaryParticleCollider<T>::generateSCMfinalState(T& ekin, T& etot_scm
     generateOutgoingPartTypes(is, multiplicity, ekin);
     if (particle_kinds.empty()) {
       if (verboseLevel > 3) {
-	cerr << " generateOutgoingPartTypes failed mult " << multiplicity <<"\n";
+	std::cerr << " generateOutgoingPartTypes failed mult " << multiplicity <<"\n";
       }
       continue;
     }
-    else {
-      cerr<<" generateOutgoingPartTypes(): partKinds=[";
-      typename std::vector<Int_v>::const_iterator iter = particle_kinds.begin();
-      for( ; iter != particle_kinds.end(); ++iter ) {
-	std::cerr<< *iter <<' ';
-      }
-      std::cerr<<"]\n";
-    }
+    // else {  // debugging printout only!
+    //   cerr<<" generateOutgoingPartTypes(): partKinds=[";
+    //   typename std::vector<Int_v>::const_iterator iter = particle_kinds.begin();
+    //   for( ; iter != particle_kinds.end(); ++iter ) {
+    // 	std::cerr<< *iter <<' ';
+    //   }
+    //   std::cerr<<"]\n";
+    // }
 
     fillOutgoingMasses();	// Fill mass buffer from particle types
 
     //.. Attempt to produce final state kinematics
     fsGenerator.Configure(particle1, particle2, particle_kinds);
-    //GLTEMP// goodStates = fsGenerator.Generate(etot_scm, masses, scm_momentums);
+    goodStates = fsGenerator.Generate(etot_scm, masses, scm_momentums);
   }	// while (generate) 
 
   if (itry >= itry_max) {		// Unable to generate valid final state
@@ -601,14 +461,18 @@ void GXElementaryParticleCollider<T>::generateSCMfinalState(T& ekin, T& etot_scm
 
   // Store generated momenta into outgoing particles
 
+  std::cerr<<" ***** spot 1\n";
   size_t maxmult = vecCore::ReduceMax(multiplicity);
+  std::cerr<<" ***** spot 2\n";
   particles.resize(maxmult);		// Preallocate buffer
+  std::cerr<<" ***** spot 3 - particles.size="<< particles.size() <<", maxmult="<< maxmult <<"\n";
   for (size_t i=0; i<maxmult; i++) {
+    std::cerr<<" i="<< i <<", scm_mom[i]="<< scm_momentums[i] <<", kinds[i]="<< particle_kinds[i] <<"\n";
     particles[i].fill(scm_momentums[i], particle_kinds[i], gxbert::EPCollider);
   }
 
   if (verboseLevel > 3) {
-    std::cerr << " <<< G4ElementaryParticleCollider::generateSCMfinalState.\n";
+    std::cerr << " <<< GXElementaryParticleCollider::generateSCMfinalState.\n";
   }
 
   return;	// Particles buffer filled
@@ -616,30 +480,33 @@ void GXElementaryParticleCollider<T>::generateSCMfinalState(T& ekin, T& etot_scm
 
 // Pion (or photon) absorption on a dibaryon
 template <typename T>
-void GXElementaryParticleCollider<T>::generateSCMpionAbsorption(T& etot_scm,
-								GXInuclElementaryParticle<T> const* particle1,
-								GXInuclElementaryParticle<T> const* particle2)
+void GXElementaryParticleCollider<T>::
+generateSCMpionAbsorption(T& etot_scm,
+			  GXInuclElementaryParticle<T> const* particle1,
+			  GXInuclElementaryParticle<T> const* particle2)
 {
 
 }
 
 // Muon absorption on a dibaryon (with outgoing neutrino)
 template <typename T>
-void GXElementaryParticleCollider<T>::generateSCMmuonAbsorption(T& etot_scm,
-								GXInuclElementaryParticle<T> const* particle1,
-								GXInuclElementaryParticle<T> const* particle2)
+void GXElementaryParticleCollider<T>::
+generateSCMmuonAbsorption(T& etot_scm,
+			  GXInuclElementaryParticle<T> const* particle1,
+			  GXInuclElementaryParticle<T> const* particle2)
 {
 
 }
 
 template <typename T>
-void GXElementaryParticleCollider<T>::generateSCMpionNAbsorption(T& etot_scm,
-								 GXInuclElementaryParticle<T> const* part1,
-								 GXInuclElementaryParticle<T> const* part2,
-								 vecCore::Mask<T> const& doit)
+void GXElementaryParticleCollider<T>::
+generateSCMpionNAbsorption(T& etot_scm,
+			   GXInuclElementaryParticle<T> const* part1,
+			   GXInuclElementaryParticle<T> const* part2,
+			   vecCore::Mask<T> const& doit)
 {
   if (verboseLevel > 3)
-    cerr << " >>> G4ElementaryParticleCollider::generateSCMpionNAbsorption\n";
+    cerr << " >>> GXElementaryParticleCollider::generateSCMpionNAbsorption\n";
 
   particles.clear();		// Initialize buffers for this event
   particles.resize(1);
@@ -700,6 +567,171 @@ void GXElementaryParticleCollider<T>::generateSCMpionNAbsorption(T& etot_scm,
 
   // Fill only the ejected nucleon
   particles[0].fill(mom1, particle_kinds[0], EPCollider);
+}
+
+template <typename T>
+void GXElementaryParticleCollider<T>::
+collide(GXInuclParticle<T> const* bullet, GXInuclParticle<T> const* target, GXCollisionOutput& output)
+{
+  if (verboseLevel > 1) cerr << " >>> GXElementaryParticleCollider::collide\n";
+
+  // Sanity check
+  Bool_v done(!useEPCollider(bullet,target));
+  if ( !vecCore::MaskEmpty(done) ) {
+    cerr << " ElementaryParticleCollider -> can collide only particle with particle: done="<< done <<"\n";
+    return;
+  }
+
+#ifdef G4CASCADE_DEBUG_SAMPLER
+  static bool doPrintTables = true;	// Once and only once per job
+  if (doPrintTables) {
+    G4CascadeChannelTables::Print();
+    doPrintTables = false;
+  }
+#endif
+
+  interCase.set(bullet, target);	// To identify kind of collision
+
+  GXInuclElementaryParticle<T> const* particle1 = dynamic_cast<GXInuclElementaryParticle<T> const*>(bullet);
+  GXInuclElementaryParticle<T> const* particle2 = dynamic_cast<GXInuclElementaryParticle<T> const*>(target);
+
+  if (verboseLevel > 1) {
+    cerr <<" GXEPCollider::collide() - input particles:"<< *particle1 << "\n and: " << *particle2 <<"\n";
+  }
+
+  if (!particle1 || !particle2) {    // Redundant with useEPCollider() ?
+    cerr << " ElementaryParticleCollider -> can only collide hadrons!  done="<< done <<"\n";
+    return;
+  }
+
+  // Keep track of lanes for which no cascading is needed
+  const size_t vsize = vecCore::VectorSize<T>();
+  done = done | Bool_v( particle1->isNeutrino() || particle2->isNeutrino() );
+
+  // Check if input is homogeneous -- redundant!?
+  Index_v<T> hadcase = interCase.hadrons();
+  const size_t case0 = Get(hadcase, 0);
+  bool allsame(true);
+  for (size_t i = 1; i < vsize; ++i) {
+    allsame &= (case0 == Get(hadcase, i));
+  }
+  assert(allsame && "GXEPCollider::collide() called for inhomogeneous interCases");
+
+  // Check for available interaction table, if not quasi-deuteron special cases
+  {
+    const Bool_v cantCollide = (!particle1->quasi_deutron() && !particle2->quasi_deutron() && !interCase.hasValidTable());
+    done = done | cantCollide;
+    if (!vecCore::MaskEmpty(cantCollide)) {
+      cerr << " ElementaryParticleCollider -> cantCollide="<< cantCollide <<" for "
+	   << *particle1 << " and "<< *particle2 <<" - done="<< done <<"\n";
+    }
+  }
+
+  if (vecCore::EarlyReturnAllowed() && vecCore::MaskFull(done)) return;
+
+  GXLorentzConvertor<T> convertToSCM;    // Utility to handle frame manipulation
+  convertToSCM.setVerbose(verboseLevel);
+
+  // TODO: need to swap appropriately at this point!!!
+  if (vecCore::MaskFull(particle2->nucleon() | particle2->quasi_deutron()) ) {
+    convertToSCM.setBullet(*particle1);
+    convertToSCM.setTarget(*particle2);
+  } else {
+    cerr<<" ***** GXEPCollider::collide(): SWAP WAS NEEDED!!  CHECK RESULTS!!\n";
+    convertToSCM.setBullet(*particle2);
+    convertToSCM.setTarget(*particle1);
+  }
+  convertToSCM.toTheCenterOfMass();
+
+  T etot_scm = convertToSCM.getTotalSCMEnergy();
+
+  // Generate any particle collision with nucleon
+  if (MaskFull(particle1->nucleon()) || MaskFull(particle2->nucleon())) {
+    T ekin = convertToSCM.getKinEnergyInTheTRS();
+
+    // SPECIAL: very low energy pions may be absorbed by a nucleon
+    Bool_v doPionNAbsorption = vecCore::MaskEmpty(pionNucleonAbsorption(ekin));
+    cerr<<" doPionNAbsorption="<< doPionNAbsorption <<"\n";
+
+    // use if() here to save some time, since will be mostly false
+    if ( !vecCore::MaskEmpty(doPionNAbsorption) ) {
+      generateSCMpionNAbsorption(etot_scm, particle1, particle2, doPionNAbsorption);
+      done = done | doPionNAbsorption;
+    }
+
+    if ( !vecCore::MaskFull(doPionNAbsorption) ) {
+      generateSCMfinalState(ekin, etot_scm, particle1, particle2);
+    }
+  }
+
+  // Generate pion or photon collision with quasi-deuteron
+  if (MaskFull(particle1->quasi_deutron()) || MaskFull(particle2->quasi_deutron())) {
+    if (!G4NucleiModel::useQuasiDeuteron(particle1->type(), particle2->type()) &&
+	!G4NucleiModel::useQuasiDeuteron(particle2->type(), particle1->type())) {
+      cerr << " ElementaryParticleCollider -> can only collide pi,mu,gamma with dibaryons\n";
+      return;
+    }
+
+    if (particle1->isMuon() || particle2->isMuon()) {
+      generateSCMmuonAbsorption(etot_scm, particle1, particle2);
+    } else {		// Currently, pion absoprtion also handles gammas
+      generateSCMpionAbsorption(etot_scm, particle1, particle2);
+    }
+  }
+
+  if (particles.empty()) {	// No final state possible, pass bullet through
+    if (verboseLevel) {
+      cerr << " ElementaryParticleCollider -> failed to collide "
+	   << particle1->getMomModule() << " GeV/c "
+	   << *particle1 << " with "
+	   << *particle2 <<"\n";
+    }
+    return;
+  }
+
+  // Convert final state back to lab frame
+  // TODO: vectorize this loop?
+  LorentzVector<T> mom;      	// Buffer to avoid memory churn
+  typename std::vector<GXInuclElementaryParticle<T>>::iterator ipart = particles.begin();
+  for( ; ipart != particles.end(); ipart++) {
+    mom = convertToSCM.backToTheLab(ipart->getFourMomentum());
+    ipart->setMomentum(mom);
+  }
+
+  // // Check conservation in multibody final state
+  // if (verboseLevel && !validateOutput(bullet, target, particles)) {
+  //   cerr << " incoming particles: \n" << *particle1 << G4endl
+  // 	   << *particle2 <<"\n"
+  // 	   << " outgoing particles:\n";
+  //   for(ipart = particles.begin(); ipart != particles.end(); ipart++)
+  // 	cerr << *ipart <<"\n";
+
+  //   cerr<< " <<< Non-conservation in GXElementaryParticleCollider\n";
+  // }
+
+  std::sort(particles.begin(), particles.end(), GXParticleLargerEkin<double>());
+  output.addOutgoingParticles(particles);
+}
+
+template <typename T>
+VECCORE_ATT_HOST_DEVICE
+VECCORE_FORCE_INLINE
+vecCore::Mask_v<T> GXElementaryParticleCollider<T>::
+pionNucleonAbsorption(T const& ekin) const
+{
+  if (verboseLevel > 3)
+    cerr << " >>> GXElementaryParticleCollider::pionNucleonAbsorption ?"
+	 << " ekin " << ekin << " is " << interCase.hadrons() <<"\n";
+
+  // Absorption occurs with specified probability
+  const T absProb(GXCascadeParameters::piNAbsorption());
+
+  // Absorption occurs only for pi- p -> n, or pi+ n -> p
+  // Restrict to "very slow" pions, to allow for some normal scattering
+  return ((interCase.hadrons() == pim*pro || interCase.hadrons() == pip*neu)
+	  && (ekin < 0.05)		// 50 MeV kinetic energy or less
+	  && (inuclRndm() < absProb)
+	  );
 }
 
 // initialize verboseLevel

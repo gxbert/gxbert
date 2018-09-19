@@ -63,31 +63,47 @@ protected:
     if (fVerbose>3) {
       std::cerr << fName << "::GetMomentum: ptype=" << ptype << " ekin=" << ekin <<"\n";
     }
-    if (!isHomogeneous(ptype)) {
-      std::cerr <<"GXVMultiBodyMomDst::GetMomentum(ptype,ekin) called with non-homogeneous ptype: "<< ptype <<"\n";
-      return T(0.0);
+
+    static bool first = true;
+    if(first) {
+      std::cerr << "\n===== GXVMultiBodyMomDst: TODO: JK (don't forget!!!) =====" << 0 <<"\n\n";
+      first = false;
     }
 
-    int itype = Get(ptype,0);
-    int JK = (itype==pro || itype==neu) ? 0 : 1;	// nucleon vs. other
+    static const Index_v<T> PROTON(pro);
+    static const Index_v<T> NEUTRON(neu);
+    vecCore::Mask_v<Index_v<T>> nucleon = (ptype == PROTON) | (ptype == NEUTRON);
+    Index_v<T> vecJK(1);
+    vecCore::MaskedAssign(vecJK, nucleon, Index_v<T>(0));
 
+    if (!isHomogeneous(vecJK)) {
+      std::cerr <<"GXVMultiBodyMomDst::GetMomentum(ptype,ekin) called with non-homogeneous nucleon/non-nucleon input: "
+		<< ptype <<" and JK="<< vecJK <<"\n";
+      return T(0.0);
+    }
+    int JK = Get(vecJK,0);
     if (fVerbose > 3) std::cerr << " JK " << JK <<"\n";
 
     GXPowVec<T,IntT>* theGXPow = GXPowVec<T,IntT>::GetInstance();	// For convenience
     T Spow = randomInuclPowers(ekin, coeffPR[JK]);
 
     double C=0.;
-    T PS(0.);
+    T oldPS(0.);
     for(int im = 0; im < 3; im++) {
       C = coeffPS[JK][im];
-      PS += C * theGXPow->PowN(ekin, im);
+      oldPS += C * theGXPow->PowN(ekin, im);
 
       if (fVerbose >3) {
 	std::cerr << " im " << im << " : coeffPS[JK][im] " << C
 	     << " ekin^im " << theGXPow->PowN(ekin, im) <<"\n";
       }
     }
-  
+
+    T PS = coeffPS[JK][0] + ekin * (coeffPS[JK][1] + ekin * coeffPS[JK][2]);
+    if (!vecCore::MaskEmpty(math::Abs(oldPS-PS) > T(1.0e-15))) {
+      std::cerr<<"PS: "<< oldPS <<" x "<< PS <<" and diff="<< oldPS - PS <<"\n";
+    }
+
     T PRA = PS * Spow;
     if (fVerbose > 3) {
       std::cerr << " PS=" << PS << " Spow = sqrt(S)*(PR+(1-PQ)*S^4) = " << Spow

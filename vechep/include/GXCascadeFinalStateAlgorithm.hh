@@ -39,6 +39,7 @@ class GXCascadeFinalStateAlgorithm : public GXVCascadeAlgorithm<T> {
   using Bool_v = vecCore::Mask_v<T>;
   using GXVCascadeAlgorithm<T>::GXVCascadeAlgorithm;
   using GXVCascadeAlgorithm<T>::GetName;
+  using GXVCascadeAlgorithm<T>::SetVerboseLevel;
   using GXVCascadeAlgorithm<T>::GetVerboseLevel;
 
 public:
@@ -48,46 +49,74 @@ public:
   virtual void SetVerboseLevel(int verbose);  // Pass through to factories
 
   // Select appropriate distributions based on interaction
-  void Configure(GXInuclElementaryParticle<T>* bullet,
-		 GXInuclElementaryParticle<T>* target,
-		 const std::vector<Int_v>& particle_kinds);
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
+  void Configure(GXInuclElementaryParticle<T> const* bullet,
+		 GXInuclElementaryParticle<T> const* target,
+		 std::vector<Index_v<T>> const& particle_kinds);
 
 protected:
   // Two-body generation uses angular-distribution function
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
   virtual void GenerateTwoBody(T initialMass,
 			       std::vector<T> const& masses,
 			       std::vector<LorentzVector<T>>& finalState);
 
   // N-body generation uses momentum-modulus distribution, computed angles
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
   virtual void GenerateMultiBody(T initialMass,
 				 const std::vector<T>& masses,
 				 std::vector<LorentzVector<T>>& finalState);
 
   // Compute kinematic quantities needed for distributions
-  void SaveKinematics(GXInuclElementaryParticle<T>* bullet,
-		      GXInuclElementaryParticle<T>* target);
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
+  void SaveKinematics(GXInuclElementaryParticle<T> const* bullet,
+		      GXInuclElementaryParticle<T> const* target);
 
   // Select generator based on initial and final state
-  void ChooseGenerators(Int_v is, Int_v fs);
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
+  void ChooseGenerators(Index_v<T> const& is, Index_v<T> const& fs);
 
   // Generate momentum magnitudes and validate for use
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
   void FillMagnitudes(T initialMass,
 		      const std::vector<T>& masses);
 
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
   vecCore::Mask_v<T> satisfyTriangle(const std::vector<T>& pmod) const;
 
   // Generate momentum directions into final state
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
   void FillDirections(T initialMass, const std::vector<T>& masses, std::vector<LorentzVector<T>>& finalState);
+
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
   void FillDirThreeBody(T initialMass, const std::vector<T>& masses, std::vector<LorentzVector<T>>& finalState);
+
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
   void FillDirManyBody(T initialMass, const std::vector<T>& masses, std::vector<LorentzVector<T>>& finalState);
 
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
   T GenerateCosTheta(vecCore::Index_v<T> ptype, T pmod) const;
 
   // SPECIAL:  Generate N-body phase space using Kopylov algorithm
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
   void FillUsingKopylov(T initialMass,
 			const std::vector<T>& masses,
 			std::vector<LorentzVector<T>>& finalState);
 
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
   T BetaKopylov(size_t K) const;	// Copied from G4HadPhaseSpaceKopylov
 
 private:
@@ -138,9 +167,15 @@ template <typename T>
 GXCascadeFinalStateAlgorithm<T>::~GXCascadeFinalStateAlgorithm() { }
 
 template <typename T>
-void GXCascadeFinalStateAlgorithm<T>::SetVerboseLevel(int verbose) {
+VECCORE_ATT_HOST_DEVICE
+VECCORE_FORCE_INLINE
+void GXCascadeFinalStateAlgorithm<T>::
+SetVerboseLevel(int verbose) {
   GXVCascadeAlgorithm<T>::SetVerboseLevel(verbose);
-  //GXMultiBodyMomentumDist::setVerboseLevel(verbose);
+  if (GetVerboseLevel())
+    std::cerr << " >>> "<< GetName() << "::SetVerboseLevel("<< verbose <<")\n";
+
+  GXMultiBodyMomentumDist::setVerboseLevel(verbose);
   GXTwoBodyAngularDist<T>::setVerboseLevel(verbose);
   toSCM.setVerbose(verbose);
 }
@@ -148,17 +183,22 @@ void GXCascadeFinalStateAlgorithm<T>::SetVerboseLevel(int verbose) {
 // Algorithm declarations
 
 template <typename T>
+VECCORE_ATT_HOST_DEVICE
+VECCORE_FORCE_INLINE
 void GXCascadeFinalStateAlgorithm<T>::
-Configure(GXInuclElementaryParticle<T>* bullet,
-	  GXInuclElementaryParticle<T>* target,
-	  const std::vector<Int_v>& particle_kinds) {
-  if (GetVerboseLevel()>1)
-    std::cerr << " >>> " << GetName() << "::Configure()\n";
+Configure(GXInuclElementaryParticle<T> const* bullet,
+	  GXInuclElementaryParticle<T> const* target,
+	  std::vector<Index_v<T>> const& particle_kinds)
+{
+  if (GetVerboseLevel() > 1) {
+    std::cerr << " >>> " << GetName() << "::Configure()...\n";
+  }
+
+  multiplicity = particle_kinds.size();
 
   // Identify initial and final state (if two-body) for algorithm selection
-  multiplicity = particle_kinds.size();
-  Int_v is = bullet->type() * target->type();
-  Int_v fs(0);
+  Index_v<T> is = bullet->type() * target->type();
+  Index_v<T> fs(0);
   vecCore::MaskedAssign(fs, vmultipl == Index_v<T>(2), particle_kinds[0] * particle_kinds[1]);
 
   ChooseGenerators(is, fs);
@@ -172,22 +212,24 @@ Configure(GXInuclElementaryParticle<T>* bullet,
 
 
 template <typename T>
+VECCORE_ATT_HOST_DEVICE
+VECCORE_FORCE_INLINE
 void GXCascadeFinalStateAlgorithm<T>::
-ChooseGenerators(Int_v is, Int_v fs) {
+ChooseGenerators(Index_v<T> const& is, Index_v<T> const& fs) {
   if (GetVerboseLevel()>1) 
     std::cerr << " >>> " << GetName() << "::ChooseGenerators"
-	      << " is " << is << " fs " << fs <<"\n";
+	      << " initState=" << is << " finalState=" << fs <<"\n";
 
   // Get generators for momentum and angle
-  if (G4CascadeParameters::usePhaseSpace()) momDist = 0;
-  else momDist = GXMultiBodyMomentumDist::GetDist(is, vmultipl);
+  if (GXCascadeParameters::usePhaseSpace()) momDist = 0;
+  else momDist = GXMultiBodyMomentumDist::GetDist<T>(is, vmultipl);
 
   for(size_t i = 0; i < fTsize; ++i) {
     int isi = Get(is,i);
     int fsi = Get(fs,i);
     if (fsi > 0 && multiplicity == 2) {
       int kw = (fsi == isi) ? 1 : 2;
-      angDist[i] = GXTwoBodyAngularDist<T>::GetDist(isi, fsi, kw);
+      GXTwoBodyAngularDist<T>::GetDist(isi, fsi, kw, angDist);
     } else if (multiplicity == 3) {
       angDist[i] = GXTwoBodyAngularDist<T>::GetDist(isi);
     } else {
@@ -199,7 +241,7 @@ ChooseGenerators(Int_v is, Int_v fs) {
     std::cerr << " momDist: " << (momDist ? momDist->GetName().c_str() : "") << " - angDist: [";
     for(size_t i = 0; i < fTsize; ++i) {
       if (i>0) std::cerr <<"; ";
-      std::cerr << (angDist[i] ? angDist[i]->GetName().c_str() : "none") <<"\n";
+      std::cerr << (angDist[i] ? angDist[i]->GetName().c_str() : "none");
     }
     std::cerr << "]\n";
   }
@@ -290,6 +332,8 @@ FillMagnitudes(T initialMass, const std::vector<T>& masses)
 // For three-body states, check kinematics of momentum moduli
 
 template <typename T>
+VECCORE_ATT_HOST_DEVICE
+VECCORE_FORCE_INLINE
 vecCore::Mask_v<T> GXCascadeFinalStateAlgorithm<T>::
 satisfyTriangle(const std::vector<T>& pmod) const {
   if (GetVerboseLevel() > 3) 
@@ -307,6 +351,8 @@ satisfyTriangle(const std::vector<T>& pmod) const {
 // Generate momentum directions into final state
 
 template <typename T>
+VECCORE_ATT_HOST_DEVICE
+VECCORE_FORCE_INLINE
 void GXCascadeFinalStateAlgorithm<T>::
 FillDirections(T initialMass, const std::vector<T>& masses,
 	       std::vector<LorentzVector<T>>& finalState)
@@ -330,6 +376,8 @@ FillDirections(T initialMass, const std::vector<T>& masses,
 
 
 template <typename T>
+VECCORE_ATT_HOST_DEVICE
+VECCORE_FORCE_INLINE
 void GXCascadeFinalStateAlgorithm<T>::
 FillDirThreeBody(T initialMass, const std::vector<T>& masses, std::vector<LorentzVector<T>>& finalState)
 {
@@ -364,6 +412,8 @@ FillDirThreeBody(T initialMass, const std::vector<T>& masses, std::vector<Lorent
 }
 
 template <typename T>
+VECCORE_ATT_HOST_DEVICE
+VECCORE_FORCE_INLINE
 void GXCascadeFinalStateAlgorithm<T>::
 FillDirManyBody(T initialMass, const std::vector<T>& masses, std::vector<LorentzVector<T>>& finalState)
 {
@@ -417,6 +467,8 @@ FillDirManyBody(T initialMass, const std::vector<T>& masses, std::vector<Lorentz
 // Generate polar angle for three- and multi-body systems
 
 template <typename T>
+VECCORE_ATT_HOST_DEVICE
+VECCORE_FORCE_INLINE
 T GXCascadeFinalStateAlgorithm<T>::
 GenerateCosTheta(vecCore::Index_v<T> ptype, T pmod) const {
   constexpr size_t vsize = vecCore::VectorSize<T>();
@@ -483,6 +535,8 @@ GenerateCosTheta(vecCore::Index_v<T> ptype, T pmod) const {
 
 
 template <typename T>
+VECCORE_ATT_HOST_DEVICE
+VECCORE_FORCE_INLINE
 void GXCascadeFinalStateAlgorithm<T>::
 GenerateTwoBody(T initialMass, std::vector<T> const& masses,
 		std::vector<LorentzVector<T>>& finalState)
@@ -534,6 +588,8 @@ GenerateTwoBody(T initialMass, std::vector<T> const& masses,
 // N-body generation uses momentum-modulus distribution, computed angles
 
 template <typename T>
+VECCORE_ATT_HOST_DEVICE
+VECCORE_FORCE_INLINE
 void GXCascadeFinalStateAlgorithm<T>::
 GenerateMultiBody(T initialMass, const std::vector<T>& masses,
 		  std::vector<LorentzVector<T>>& finalState) {
@@ -541,7 +597,7 @@ GenerateMultiBody(T initialMass, const std::vector<T>& masses,
   if (GetVerboseLevel()>1)
     std::cerr << " >>> " << GetName() << "::GenerateMultiBody\n";
 
-  if (G4CascadeParameters::usePhaseSpace()) {
+  if (GXCascadeParameters::usePhaseSpace()) {
     FillUsingKopylov(initialMass, masses, finalState);
     return;
   }
@@ -563,6 +619,8 @@ GenerateMultiBody(T initialMass, const std::vector<T>& masses,
 
 
 template <typename T>
+VECCORE_ATT_HOST_DEVICE
+VECCORE_FORCE_INLINE
 void GXCascadeFinalStateAlgorithm<T>::
 FillUsingKopylov(T initialMass,
 		 std::vector<T> const& masses,
@@ -615,6 +673,8 @@ FillUsingKopylov(T initialMass,
 }
 
 template <typename T>
+VECCORE_ATT_HOST_DEVICE
+VECCORE_FORCE_INLINE
 T GXCascadeFinalStateAlgorithm<T>::
 BetaKopylov(size_t K) const
 {
@@ -639,6 +699,28 @@ BetaKopylov(size_t K) const
     done = (Fmax * inuclRndm<T>() < F);
   } while ( !vecCore::MaskFull(done) );
   return chi;
+}
+
+template <typename T>
+VECCORE_ATT_HOST_DEVICE
+VECCORE_FORCE_INLINE
+void GXCascadeFinalStateAlgorithm<T>::
+SaveKinematics(GXInuclElementaryParticle<T> const* bullet,
+	       GXInuclElementaryParticle<T> const* target) {
+  if (GetVerboseLevel()>1)
+    std::cerr << " >>> " << GetName() << "::SaveKinematics\n";
+
+  if (vecCore::MaskFull(target->nucleon())) {	// Which particle originated in nucleus?
+    toSCM.setBullet(*bullet);
+    toSCM.setTarget(*target);
+  } else {
+    toSCM.setBullet(*target);
+    toSCM.setTarget(*bullet);
+  }
+
+  toSCM.toTheCenterOfMass();
+
+  bullet_ekin = toSCM.getKinEnergyInTheTRS();
 }
 
 } // GXBERT_IMPL_NAMESPACE

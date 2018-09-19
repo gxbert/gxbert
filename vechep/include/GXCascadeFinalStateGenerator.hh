@@ -41,7 +41,12 @@ GXBERT_IMPL_NAMESPACE {
 						  GXInuclElementaryParticle<T> const* target,
 						  const std::vector<Index_v<T>>& particle_kinds)
   {
-    return;
+    if (this->verboseLevel>1)
+      std::cerr << " >>> GXCascadeFinalStateGenerator<T>::Configure()\n";
+
+    // Casting is safe, based on constructor implementation
+    GXCascadeFinalStateAlgorithm<T>* cascAlg = dynamic_cast<GXCascadeFinalStateAlgorithm<T>*>(this->theAlgorithm);
+    cascAlg->Configure(bullet, target, particle_kinds);
   }
 } // GXBERT_IMPL_NAMESPACE
 } // gxbert namespace

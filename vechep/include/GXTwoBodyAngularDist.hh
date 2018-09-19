@@ -46,17 +46,22 @@ public:
   static const G4TwoBodyAngularDist* GetInstance() { return G4TwoBodyAngularDist::GetInstance(); }
 
   // Return appropriate generator for initial, final state, and kw flag
-  static void GetDist(Int_v is, Int_v fs, Int_v kw, const G4VTwoBodyAngDst** angDist) {
+  static void GetDist(Index_v<T> const& is, Index_v<T> const& fs, int kw, const G4VTwoBodyAngDst** angDist) {
     assert( !isHomogeneous(is) );
 
     int isi = Get(is, 0);
-    for(size_t i = 0; i < fvsize; ++i) { angDist[i] = GetInstance()->GetDist(isi, Get(fs,i), Get(kw,i)); }
+    for(size_t i = 0; i < fvsize; ++i) { angDist[i] = GetInstance()->GetDist(isi, Get(fs,i), kw); }
   }
 
-  static void GetDist(Int_v is, const G4VTwoBodyAngDst** angDist) {
+  static void GetDist(Index_v<T> const& is, const G4VTwoBodyAngDst** angDist) {
     assert( !isHomogeneous(is) );
     int isi = Get(is, 0);
     for(size_t i = 0; i < fvsize; ++i) { angDist[i] = GetInstance()->GetDist(isi, 0, 0); }
+  }
+
+  static G4VTwoBodyAngDst const* GetDist(int is)
+  {
+    return G4TwoBodyAngularDist::GetInstance()->GetDist(is, 0, 0);
   }
 
   // Pass verbosity through to owned objects

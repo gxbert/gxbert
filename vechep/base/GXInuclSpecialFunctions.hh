@@ -278,22 +278,36 @@ namespace GXInuclSpecialFunctions {
   VECCORE_FORCE_INLINE
   T randomInuclPowers(const T& ekin, const double (&coeff)[4][4])
   {
-    GXPowVec<T,Index_v<T>>* pPow = GXPowVec<T,Index_v<T>>::GetInstance();
     T S = inuclRndm<T>();		// Random fraction for expansion
 
-    double C;
-    T PQ = 0.;
-    T V, PR(0.);
-    for (int i=0; i<4; i++) {
-      V = 0.0;
-      for (int k=0; k<4; k++) {
-	C = coeff[i][k];
-	V += C * pPow->PowN(ekin, Index_v<T>(k));
-      }
+    // GXPowVec<T,Index_v<T>>* pPow = GXPowVec<T,Index_v<T>>::GetInstance();
+    // double C;
+    // T PQold = 0.;
+    // T V, PRold(0.);
+    // for (int i=0; i<4; i++) {
+    //   V = 0.0;
+    //   for (int k=0; k<4; k++) {
+    // 	C = coeff[i][k];
+    // 	V += C * pPow->PowN(ekin, Index_v<T>(k));
+    //   }
 
-      PQ += V;
-      PR += V * pPow->PowN(S, Index_v<T>(i));
-    }
+    //   PQold += V;
+    //   PRold += V * pPow->PowN(S, Index_v<T>(i));
+    // }
+
+    // unrolling the loops
+    T V0 = coeff[0][0] + ekin * (coeff[0][1] + ekin * (coeff[0][2] + ekin * coeff[0][3]));
+    T V1 = coeff[1][0] + ekin * (coeff[1][1] + ekin * (coeff[1][2] + ekin * coeff[1][3]));
+    T V2 = coeff[2][0] + ekin * (coeff[2][1] + ekin * (coeff[2][2] + ekin * coeff[2][3]));
+    T V3 = coeff[3][0] + ekin * (coeff[3][1] + ekin * (coeff[3][2] + ekin * coeff[3][3]));
+
+    T PQ = V0 + V1 + V2 + V3;
+    T PR = V0 + S * (V1 + S * (V2 + S * V3));
+
+    // if (!vecCore::MaskEmpty(math::Abs(PQ-PQnew) > T(1.0e-15))) {
+    //   std::cerr<<"*** randomInuclPowers: S="<< S <<", PQ: "<< PQold <<" x "<< PQ <<", diff="<< PQold - PQ
+    // 	       <<" and PR: "<< PRold <<" x "<< PR <<", diff="<< PRold - PR <<"\n";
+    // }
 
     return math::Sqrt(S) * (PR + (T(1.) - PQ)*(S*S*S*S));
   }

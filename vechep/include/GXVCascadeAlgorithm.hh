@@ -33,11 +33,17 @@ public:
 
   // Initial state (rest mass) and list of final masses
   void Generate(T initialMass,
-		const std::vector<T>& masses,
+		std::vector<T> const& masses,
 		std::vector<LorentzVector<T>>& finalState);
 
   // Enable (or disable if 0) diagnostic messages (subclass may overload)
-  virtual void  SetVerboseLevel(int verbose) { verboseLevel = verbose; }
+  void  SetVerboseLevel(int verbose)
+  {
+    verboseLevel = verbose;
+    if (GetVerboseLevel() > 0)
+      std::cerr << " >>> "<< GetName() << "::SetVerboseLevel("<< verbose <<")\n";
+  }
+
   int GetVerboseLevel() const { return verboseLevel; }
   const std::string& GetName() const { return name; }
   
@@ -54,7 +60,7 @@ protected:
   // Validate kinematics (e.g., limit number of final state particles)
   // Subclasses may override or call back to this function
   virtual Bool_v IsDecayAllowed(T initialMass,
-				const std::vector<T>& masses) const;
+				std::vector<T> const& masses) const;
 
   // Two-body momentum function (c.f. PDK from CERNLIB W505)
   T TwoBodyMomentum(T M0, T M1, T M2) const;
@@ -78,7 +84,7 @@ private:
 
   template <typename T>
   vecCore::Mask_v<T> GXVCascadeAlgorithm<T>::
-  IsDecayAllowed(T initialMass, const std::vector<T>& masses) const
+  IsDecayAllowed(T initialMass, std::vector<T> const& masses) const
   {
     Bool_v okay( masses.size() >= 2 );
     okay = okay & (initialMass > T(0.)) & (initialMass >= std::accumulate(masses.begin(), masses.end(), T(0.)));
@@ -161,6 +167,30 @@ private:
     os << " " << vname << "(" << v.size() << ") ";
     std::copy(v.begin(), v.end(), std::ostream_iterator<T>(os, " "));
     os <<"\n";
+  }
+
+  // Initial state (rest mass) and list of final masses
+  template <typename T>
+  void GXVCascadeAlgorithm<T>::
+  Generate(T initialMass,
+	   std::vector<T> const& masses,
+	   std::vector<LorentzVector<T>>& finalState)
+  {
+    if (verboseLevel) std::cerr << GetName() << "::Generate.\n";
+
+    // Initialization and sanity check
+    finalState.clear();
+    Bool_v doit = IsDecayAllowed(initialMass, masses);
+    if(vecCore::MaskEmpty(doit)) return;
+    assert(vecCore::MaskFull(doit) && "GXVCascadeAlgorithm(): mixed decay reasonability in lanes!");
+
+    // Allow different procedures for two-body or N-body distributions
+    if (masses.size() == 2U) {
+      GenerateTwoBody(initialMass, masses, finalState);
+    }
+    else {
+      GenerateMultiBody(initialMass, masses, finalState);
+    }
   }
 
 } // GXBERT_IMPL_NAMESPACE

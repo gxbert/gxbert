@@ -191,7 +191,7 @@ public:
     return ! (this->operator==(right));
   }
   
-  ~GXInuclElementaryParticle() {}
+  virtual ~GXInuclElementaryParticle() {}
 
   // Ensure that type code refers to a known particle
   VECCORE_ATT_HOST_DEVICE

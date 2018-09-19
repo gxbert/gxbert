@@ -21,15 +21,25 @@ namespace gxbert {
 inline namespace
 GXBERT_IMPL_NAMESPACE {
 
-
 class GXMultiBodyMomentumDist {
 public:
   ~GXMultiBodyMomentumDist();
 
-  static const GXMultiBodyMomentumDist* GetInstance();
+  static const GXMultiBodyMomentumDist* GetInstance()
+  {
+    if (!theInstance) {
+      theInstance = new GXMultiBodyMomentumDist;
+      //TK for GXBERT: Exclude to use G4AutoDelete
+      //G4AutoDelete::Register(theInstance);
+    }
+
+    return theInstance;
+  }
 
   // Return appropriate generator for initial state and multiplicity
-  static const GXVMultiBodyMomDst* GetDist(Int_v is, Int_v mult) {
+  template <typename T>
+  static const GXVMultiBodyMomDst* GetDist(Index_v<T> const& is, Index_v<T> const& mult)
+  {
     if( !isHomogeneous(is) ) return NULL;
     if( !isHomogeneous(mult) ) return NULL;
     return GetInstance()->ChooseDist(Get(is,0), Get(mult,0));
@@ -62,13 +72,41 @@ private:
   GXMultiBodyMomentumDist& operator=(const GXMultiBodyMomentumDist&);
 };
 
-  void GXMultiBodyMomentumDist::passVerbose(int vb)
-  {
-    if (nn3BodyDst) nn3BodyDst->setVerboseLevel(vb);
-    if (nn4BodyDst) nn4BodyDst->setVerboseLevel(vb);
-    if (hn3BodyDst) hn3BodyDst->setVerboseLevel(vb);
-    if (hn4BodyDst) hn4BodyDst->setVerboseLevel(vb);
+  G4ThreadLocal GXMultiBodyMomentumDist* GXMultiBodyMomentumDist::theInstance = 0;
+
+GXMultiBodyMomentumDist::GXMultiBodyMomentumDist()
+  : nn3BodyDst(new GXNuclNucl3BodyMomDst),
+    nn4BodyDst(new GXNuclNucl4BodyMomDst),
+    hn3BodyDst(new GXHadNucl3BodyMomDst),
+    hn4BodyDst(new GXHadNucl4BodyMomDst)
+{ }
+
+void GXMultiBodyMomentumDist::passVerbose(int vb)
+{
+  if (nn3BodyDst) nn3BodyDst->setVerboseLevel(vb);
+  if (nn4BodyDst) nn4BodyDst->setVerboseLevel(vb);
+  if (hn3BodyDst) hn3BodyDst->setVerboseLevel(vb);
+  if (hn4BodyDst) hn4BodyDst->setVerboseLevel(vb);
+}
+
+GXVMultiBodyMomDst const*
+GXMultiBodyMomentumDist::ChooseDist(int is, int mult) const
+{
+  if (is == pro*pro || is == pro*neu || is == neu*neu) {
+    //***** REMOVED BY VLADIMIR UZHINSKY 18 JULY 2011
+    if (GXCascadeParameters::use3BodyMom() && mult==3) return nn3BodyDst;
+    return nn4BodyDst;
   }
+
+  else {	// FIXME:  All other initial states use pi-N scattering
+    //***** REMOVED BY VLADIMIR UZHINSKY 18 JULY 2011
+    if (GXCascadeParameters::use3BodyMom() && mult==3) return hn3BodyDst;
+    return hn4BodyDst;
+  }
+
+  // Invalid interaction
+  return 0;
+}
 
 } // GXBERT_IMPL_NAMESPACE
 } // gxbert namespace

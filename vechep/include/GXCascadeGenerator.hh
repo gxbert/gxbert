@@ -4,7 +4,6 @@
 #ifndef GXCascadeGenerator_HH
 #define GXCascadeGenerator_HH 1
 
-//#include "globals.hh"
 #include "LorentzVector.hh"
 #include <vector>
 
@@ -37,26 +36,26 @@ public:
   const std::string& GetAlgorithmName() const;
 
   // Initial state (rest mass) and list of final masses
-  Bool_v Generate(T initialMass,
-		  const std::vector<T>& masses,
-		  std::vector<LorentzVector<T>>& finalState);
+  bool Generate(T initialMass,
+                std::vector<T> const& masses,
+                std::vector<LorentzVector<T>>& finalState);
 
   // Initial state particle and list of final masses
-  Bool_v Generate(const GXParticleDefinition* initialPD,
-		  const std::vector<T>& masses,
-		  std::vector<LorentzVector<T>>& finalState);
+  bool Generate(GXParticleDefinition const* initialPD,
+                std::vector<T> const& masses,
+      	        std::vector<LorentzVector<T>>& finalState);
 
   // Initial state (frame) and list of final masses
   // Final state particles will be boosted to initial-state frame
-  Bool_v Generate(const LorentzVector<T>& initialState,
-		  const std::vector<T>& masses,
-		  std::vector<LorentzVector<T>>& finalState);
+  bool Generate(LorentzVector<T> const& initialState,
+                std::vector<T> const& masses,
+                std::vector<LorentzVector<T>>& finalState);
 
 protected:
   // Special case for one-body final state
-  Bool_v GenerateOneBody(T initialMass,
-			 const std::vector<T>& masses,
-			 std::vector<LorentzVector<T>>& finalState) const;
+  bool GenerateOneBody(T initialMass,
+                       const std::vector<T>& masses,
+                       std::vector<LorentzVector<T>>& finalState) const;
 
   // Special function used by constructor for unrecognized algorithm code
   void ReportInvalidAlgorithm(Algorithm alg) const;
@@ -103,28 +102,101 @@ template <typename T>
 void GXCascadeGenerator<T>::SetVerboseLevel(int verbose)
 {
   verboseLevel = verbose;
+  if (verboseLevel)
+    std::cerr << " >>> GXCascadeGenerator::SetVerboseLevel("<< verbose <<")\n";
   if (theAlgorithm) theAlgorithm->SetVerboseLevel(verbose);
 }
 
+// Initial state (rest mass) and list of final masses
+
 template <typename T>
-vecCore::Mask_v<T> GXCascadeGenerator<T>::Generate(T initialMass,
-						   const std::vector<T>& masses,
-						   std::vector<LorentzVector<T>>& finalState)
+bool GXCascadeGenerator<T>::Generate(T initialMass,
+				     const std::vector<T>& masses,
+				     std::vector<LorentzVector<T>>& finalState)
 {
   if (verboseLevel) 
-    G4cout << " >>> GXCascadeGenerator::Generate (mass) [EMPTY!!]" << G4endl;
-  /*
+    std::cerr << " >>> GXCascadeGenerator::Generate (mass) [EMPTY!!]\n";
+
   if (!theAlgorithm) ReportMissingAlgorithm();
 
   if (masses.size() == 1U)
     return GenerateOneBody(initialMass, masses, finalState);
 
   theAlgorithm->Generate(initialMass, masses, finalState);
-  */
+
   return !finalState.empty();		// Generator failure returns empty state
+}
+
+// Initial state particle and list of final masses
+
+template <typename T>
+bool GXCascadeGenerator<T>::
+Generate(GXParticleDefinition const* initialPD,
+	 std::vector<T> const& masses,
+	 std::vector<LorentzVector<T>>& finalState)
+{
+  if (verboseLevel) std::cerr << " >>> GXCascadeGenerator::Generate (particle).\n";
+  return (initialPD && Generate(T(initialPD->GetPDGMass()), masses, finalState));
+}
+
+// Final state particles will be boosted to initial-state frame
+
+template <typename T>
+bool GXCascadeGenerator<T>::
+Generate(LorentzVector<T> const& initialState,
+	 std::vector<T> const& masses,
+	 std::vector<LorentzVector<T>>& finalState)
+{
+  if (verboseLevel) {
+    std::cerr << " >>> GXCascadeGenerator::Generate (frame).\n";
+  }
+  bool good = Generate(initialState.m(), masses, finalState);
+  if (good) {
+    GXThreeVector<T> bv = initialState.boostVector();
+    for (size_t i = 0; i < finalState.size(); ++i) {
+      finalState[i].boost(bv);
+    }
+  }
+
+  return good;
+}
+
+// Handle special case of "one body decay" (used for kaon mixing)
+
+template <typename T>
+bool GXCascadeGenerator<T>::
+GenerateOneBody(T initialMass,
+		std::vector<T> const& masses,
+		std::vector<LorentzVector<T>>& finalState) const
+{
+  if (verboseLevel>1) std::cerr << " >>> GXCascadeGenerator<T>::GenerateOneBody...\n";
+
+  // Initialization and sanity checks
+  finalState.clear();
+
+  if (masses.size() != 1U) return false;	// Should not have been called
+  vecCore::Mask_v<T> done = ( math::Abs(initialMass - masses[0]) > T(CLHEP::eV) );
+  if(vecCore::MaskFull(done)) return false;
+  assert(!vecCore::MaskEmpty(done) &&
+	 ">>> GXCascadeGenerator<T>::GenerateOneBody(): Warning: this line should never be reached!\n");
+
+  if (verboseLevel>2) std::cerr << " finalState mass = " << masses[0] <<"\n";
+
+  finalState.push_back(LorentzVector<T>(0.,0.,0.,masses[0]));
+  return true;
+}
+
+template <typename T>
+void GXCascadeGenerator<T>::
+ReportMissingAlgorithm() const
+{
+  if (verboseLevel) {
+    std::cerr << "GXCascadeGenerator<T>: no algorithm specified.\n";
+  }
+  throw GXHadronicException(__FILE__, __LINE__, "Null algorithm pointer");
 }
 
 } // GXBERT_IMPL_NAMESPACE
 } // gxbert namespace
 
-#endif	/* GXCascadeGenerator_HH */
+#endif // GXCascadeGenerator_HH
