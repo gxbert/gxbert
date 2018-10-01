@@ -258,9 +258,11 @@ G4ElementaryParticleCollider::collide(G4InuclParticle* bullet,
     G4cout << " <<< Non-conservation in G4ElementaryParticleCollider"
 	   << G4endl;
   }
-    
+
+  G4cout <<" EPCollider::collide(): sorting particles..."<< G4endl;
   std::sort(particles.begin(), particles.end(), G4ParticleLargerEkin());
   output.addOutgoingParticles(particles);
+  G4cout <<" EPCollider::collide(): returning... particle[0]="<< particles[0] <<" and part[1]="<< particles[1] << G4endl;
 }
 
 
@@ -283,7 +285,8 @@ G4ElementaryParticleCollider::generateMultiplicity(G4int is,
            << " multiplicity = " << mul << G4endl; 
   }
 
-  return mul;
+  //return mul;
+  return 2;  // GL: temporarily forced to match comparisons with vectorized code
 }
 
  

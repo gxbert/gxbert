@@ -36,7 +36,7 @@ size_t nReps     = 1;
 size_t nEvents   = 16; // 1024*64;
 double kinEnergy = 1.500; // in GeV
 
-int debugLevel   = 0;
+int debugLevel   = 4;
 
 bool isOutputInvalid(G4InuclParticle const &bullet, G4CollisionOutput const &output)
 {
@@ -158,6 +158,11 @@ void RunG4ElementaryParticleCollider(GXTrack_v const& soaBullets, GXTrack_v cons
       soaTargets.getFourMomentum(i, lorvec);
       target.fill(lorvec, G4InuclParticleNames::neutron);
 
+      if (debugLevel>0) {
+	std::cerr<<"\n=== G4InuclEP-bullet: "<< bullet <<"\n";
+	std::cerr<<"\n=== G4InuclEP-target: "<< target <<"\n";
+      }
+
       numberOfTries = 0;
       do {   			// we try to create inelastic interaction
 	output.reset();
@@ -166,7 +171,7 @@ void RunG4ElementaryParticleCollider(GXTrack_v const& soaBullets, GXTrack_v cons
       } while ( numberOfTries <= 20 && isOutputInvalid(bullet, output) );
 
       // update counters
-      //cerr<<"***** Event "<< i <<" Ntries="<< numberOfTries <<" Final state: "<< output.numberOfOutgoingParticles() <<" hadrons + "<< output.numberOfOutgoingNuclei() <<" nuclei\n";
+      cerr<<"***** Event "<< i <<" Ntries="<< numberOfTries <<" Final state: "<< output.numberOfOutgoingParticles() <<" hadrons + "<< output.numberOfOutgoingNuclei() <<" nuclei\n"; 
       nHadrons += output.numberOfOutgoingParticles();
       const std::vector<G4InuclElementaryParticle>& outParticles = output.getOutgoingParticles();
       std::vector<G4InuclElementaryParticle>::const_iterator ipart = outParticles.begin(), iend = outParticles.end();

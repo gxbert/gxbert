@@ -47,6 +47,7 @@ public:
 
   // Return appropriate generator for initial, final state, and kw flag
   static void GetDist(Index_v<T> const& is, Index_v<T> const& fs, int kw, const G4VTwoBodyAngDst** angDist) {
+    std::cerr<<"GXTwoBodyAngularDist::GetDist(): is="<< is <<"\n";
     assert( isHomogeneous(is) && "Non-homogeneous initial state!");
 
     int isi = Get(is, 0);

@@ -303,6 +303,7 @@ FillMagnitudes(T initialMass, const std::vector<T>& masses)
       if (vecCore::MaskFull(done)) break;
 
       vecCore::MaskedAssign(modules[i], !done, pmod);
+      std::cerr<<" updated modules["<< i <<"] = "<< modules[i] <<"\n";
     }
 
     if (i < maxmult-1) continue;	// Failed to generate full kinematics
@@ -434,11 +435,13 @@ FillDirManyBody(T initialMass, const std::vector<T>& masses, std::vector<Lorentz
     costh = GenerateCosTheta(kinds[i], modules[i]);
     finalState[i] = generateWithFixedTheta(costh, modules[i], masses[i]);
     finalState[i] = toSCM.rotate(finalState[i]);	// Align target axis
+    std::cerr<<"finalState["<< i <<"] = "<< finalState[i] <<"\n";
   }
 
   // Total momentum so far, to compute recoil of last two particles
   LorentzVector<T> psum = std::accumulate(finalState.begin(), finalState.end()-2, LorentzVector<T>());
   T pmod = psum.Vect().Mag();
+  std::cerr<<"   psum = accumulate: "<< psum <<" and pmod="<< pmod <<"\n";
 
   costh = -0.5 * (pmod * pmod +
 		  modules[multiplicity-2] * modules[multiplicity-2] -
@@ -492,6 +495,7 @@ GenerateCosTheta(vecCore::Index_v<T> ptype, T pmod) const {
       double costhi = angDist[i]->GetCosTheta(ekin, itype);
       Set(result, i, costhi);
     }
+    std::cerr<<" GenCosTheta(): mult=3 -> return cosTheta="<< result <<"\n";
     return result;
   }
 
@@ -619,6 +623,7 @@ GenerateMultiBody(T initialMass, const std::vector<T>& masses,
     FillMagnitudes(initialMass, masses);
     FillDirections(initialMass, masses, finalState);
     done |= (T(finalState.size()) == multiplicity);
+    std::cerr<<" -- returning from FillDirections(): itry="<< itry <<" fS.size="<< finalState.size() <<" and done="<< done <<"\n";
   }
 }
 
@@ -638,6 +643,7 @@ FillUsingKopylov(T initialMass,
 
   size_t N = masses.size();
   finalState.resize(N);
+  std::cerr<<" *** FillUsingKopylov(): finalState.size() = "<< finalState.size() <<"\n";
 
   T zero(0.0);
   T mtot = std::accumulate(masses.begin(), masses.end(), zero);

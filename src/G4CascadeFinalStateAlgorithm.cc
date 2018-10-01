@@ -92,11 +92,12 @@ void G4CascadeFinalStateAlgorithm::
 Configure(G4InuclElementaryParticle* bullet,
 	  G4InuclElementaryParticle* target,
 	  const std::vector<G4int>& particle_kinds) {
+  multiplicity = particle_kinds.size();
+
   if (GetVerboseLevel()>1)
-    G4cout << " >>> " << GetName() << "::Configure" << G4endl;
+    G4cout << " >>> " << GetName() << "::Configure... mult=" << multiplicity << G4endl;
 
   // Identify initial and final state (if two-body) for algorithm selection
-  multiplicity = particle_kinds.size();
   G4int is = bullet->type() * target->type();
   G4int fs = (multiplicity==2) ? particle_kinds[0]*particle_kinds[1] : 0;
 
@@ -220,6 +221,7 @@ GenerateMultiBody(G4double initialMass, const std::vector<G4double>& masses,
   while ((G4int)finalState.size() != multiplicity && ++itry < itry_max) {
     FillMagnitudes(initialMass, masses);
     FillDirections(initialMass, masses, finalState);
+    G4cout <<" -- returning from FillDirections(): itry="<< itry <<" fS.size="<< finalState.size() << G4endl;
   }
 }
 
@@ -266,6 +268,7 @@ FillMagnitudes(G4double initialMass, const std::vector<G4double>& masses) {
       if (eleft <= mass_last) break;
 
       modules[i] = pmod;
+      G4cout<<" modules["<< i <<"] = "<< modules[i] <<"\n";
     }
 
     if (i < multiplicity-1) continue;	// Failed to generate full kinematics
@@ -329,7 +332,7 @@ void G4CascadeFinalStateAlgorithm::
 FillDirThreeBody(G4double initialMass, const std::vector<G4double>& masses,
 		 std::vector<G4LorentzVector>& finalState) {
   if (GetVerboseLevel()>1) 
-    G4cout << " >>> " << GetName() << "::FillDirThreeBody" << G4endl;
+    G4cout << " >>> " << GetName() << "::FillDirThreeBody - finalState.size()="<< finalState.size() <<'/'<< finalState.capacity() << G4endl;
 
   finalState.resize(3);
 
@@ -373,19 +376,21 @@ FillDirManyBody(G4double initialMass, const std::vector<G4double>& masses,
     costh = GenerateCosTheta(kinds[i], modules[i]);
     finalState[i] = generateWithFixedTheta(costh, modules[i], masses[i]);
     finalState[i] = toSCM.rotate(finalState[i]);	// Align target axis
+    G4cout<<"finalState["<< i <<"] = "<< finalState[i] << G4endl;
   }
 
   // Total momentum so far, to compute recoil of last two particles
   G4LorentzVector psum =
     std::accumulate(finalState.begin(), finalState.end()-2, G4LorentzVector());
   G4double pmod = psum.rho();
+  G4cout <<"   psum = accumulate: "<< psum <<" and pmod="<< pmod << G4endl;
 
   costh = -0.5 * (pmod*pmod +
 		  modules[multiplicity-2]*modules[multiplicity-2] -
 		  modules[multiplicity-1]*modules[multiplicity-1])
     / pmod / modules[multiplicity-2];
 
-  if (GetVerboseLevel() > 2) G4cout << " ct last " << costh << G4endl;
+  if (GetVerboseLevel() > 2) G4cout << " costh last " << costh << G4endl;
 
   if (std::fabs(costh) >= maxCosTheta) {  // Bad kinematics; abort generation
     finalState.clear();
@@ -417,7 +422,9 @@ GenerateCosTheta(G4int ptype, G4double pmod) const {
   }
 
   if (multiplicity == 3) {		// Use distribution for three-body
-    return angDist->GetCosTheta(bullet_ekin, ptype);
+    G4double result = angDist->GetCosTheta(bullet_ekin, ptype);
+    std::cerr<<" GenCosTheta(): mult=3 -> return cosTheta="<< result <<"\n";
+    return result;
   }
 
   // Throw multi-body distribution
@@ -431,12 +438,14 @@ GenerateCosTheta(G4int ptype, G4double pmod) const {
     G4double s1 = pmod * inuclRndm();
     G4double s2 = alf * oneOverE * p0 * inuclRndm();
     G4double salf = s1 * alf * GXExp(-s1 / p0);
+    if (salf > s2) sinth = s1 / pmod;
+
     if (GetVerboseLevel() > 3) {
       G4cout << " s1 * alf * GXExp(-s1 / p0) " << salf
-	     << " s2 " << s2 << G4endl;
+	     << " s2 " << s2
+	     << " sinth " << sinth
+	     << G4endl;
     }
-    
-    if (salf > s2) sinth = s1 / pmod;
   }
   
   if (GetVerboseLevel() > 3)

@@ -720,6 +720,7 @@ collide(GXInuclParticle<T> const* bullet, GXInuclParticle<T> const* target, GXCo
   // in vector mode, sorting is painful!
   //std::sort(particles.begin(), particles.end(), GXParticleLargerEkin<double>());
   output.addOutgoingParticles(particles);
+  std::cerr <<" GXEPCollider::collide(): returning... particle[0]="<< particles[0] <<" and part[1]="<< particles[1] << G4endl;
 }
 
 template <typename T>
@@ -742,6 +743,21 @@ pionNucleonAbsorption(T const& ekin) const
 	  && (inuclRndm() < absProb)
 	  );
 }
+
+/*
+// saves final state particles into a SIMD array similar to the input format
+template <typename T>
+VECCORE_ATT_HOST_DEVICE
+VECCORE_FORCE_INLINE
+void GXElementaryParticleCollider<T>::
+SaveOutgoingParticles(G4CollisionOutput& output) const
+{
+  std::vector<GXInuclElementaryParticle<T>>::const_iterator ipartSIMD = particles.begin();
+  for( ; ipartSIMD != particles.end(); ++iparticles) {
+
+  }
+}
+*/
 
 // initialize verboseLevel
 template <typename T>
