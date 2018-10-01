@@ -422,21 +422,26 @@ void GXElementaryParticleCollider<T>::generateSCMfinalState(T& ekin, T& etot_scm
   particle_kinds.clear();
 
   int itry = 0;
-  while (!goodStates && itry++ < itry_max) {
+  // Generate list of final-state particles
+  multiplicity = generateMultiplicity(is, ekin);
 
-    // Generate list of final-state particles
-    multiplicity = generateMultiplicity(is, ekin);
+  //.. rebasketize cf. multiplicity
+  //... not needed for now, since multiplicity was forced to be constant in generateMultiplicity()
 
-    //.. rebasketize cf. multiplicity
-    //... not needed for now, since multiplicity was forced to be constant in generateMultiplicity()
-
-    generateOutgoingPartTypes(is, multiplicity, ekin);
-    if (particle_kinds.empty()) {
-      if (verboseLevel > 3) {
-	std::cerr << " generateOutgoingPartTypes failed mult " << multiplicity <<"\n";
-      }
-      continue;
+  // no need to be inside the loop (perf improvement)
+  generateOutgoingPartTypes(is, multiplicity, ekin);
+  if (particle_kinds.empty()) {
+    if (verboseLevel > 3) {
+      std::cerr << " generateOutgoingPartTypes failed mult " << multiplicity <<"\n";
     }
+    //continue;
+  }
+
+  fillOutgoingMasses();	// Fill mass buffer from particle types
+
+  fsGenerator.Configure(particle1, particle2, particle_kinds);
+
+  while (!goodStates && itry++ < itry_max) {
     // else {  // debugging printout only!
     //   cerr<<" generateOutgoingPartTypes(): partKinds=[";
     //   typename std::vector<Int_v>::const_iterator iter = particle_kinds.begin();
@@ -446,10 +451,6 @@ void GXElementaryParticleCollider<T>::generateSCMfinalState(T& ekin, T& etot_scm
     //   std::cerr<<"]\n";
     // }
 
-    fillOutgoingMasses();	// Fill mass buffer from particle types
-
-    //.. Attempt to produce final state kinematics
-    fsGenerator.Configure(particle1, particle2, particle_kinds);
     goodStates = fsGenerator.Generate(etot_scm, masses, scm_momentums);
   }	// while (generate) 
 
