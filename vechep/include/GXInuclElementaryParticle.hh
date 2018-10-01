@@ -125,26 +125,26 @@ public:
 
   VECCORE_ATT_HOST_DEVICE
   VECCORE_FORCE_INLINE
-  GXInuclElementaryParticle(const LorentzVector<T>& mom,
+  GXInuclElementaryParticle(const LorentzVector<T>& momInGeV,
 			    Index_v<T> const& ityp, Model model = DefaultModel)
-    : BaseClass(mom, model)
+    : BaseClass(momInGeV, model)
     , iType(ityp)
   { }
 
   VECCORE_ATT_HOST_DEVICE
   VECCORE_FORCE_INLINE
-  GXInuclElementaryParticle(T ekin, Index_v<T> ityp, Model model = DefaultModel) 
-    : BaseClass(ekin, model)
+  GXInuclElementaryParticle(T ekinInGeV, Index_v<T> ityp, Model model = DefaultModel)
+    : BaseClass(ekinInGeV, model)
     , iType(ityp)
   { }
 
   // WARNING:  This may create a particle without a valid type code!
   VECCORE_ATT_HOST_DEVICE
   VECCORE_FORCE_INLINE
-  GXInuclElementaryParticle(const LorentzVector<T>& mom,
+  GXInuclElementaryParticle(const LorentzVector<T>& momInGeV,
 			    const GXParticleDefinition* pd,
 			    Model model=DefaultModel)
-    : BaseClass(mom, model)
+    : BaseClass(momInGeV, model)
     , iType(pd->GetParticleType())
   { }
 
@@ -212,11 +212,15 @@ public:
 
   VECCORE_ATT_HOST_DEVICE
   VECCORE_FORCE_INLINE
-  Bool_v isElectron() const { return Bool_v(G4InuclParticleNames::isElectron(type())); }
+  Bool_v isElectron() const {
+    //return Bool_v(G4InuclParticleNames::isElectron(type()));
+    return isOfType(electron) | isOfType(positron);
+  }
 
   VECCORE_ATT_HOST_DEVICE
   VECCORE_FORCE_INLINE
-  Bool_v isNeutrino() const { return Bool_v(G4InuclParticleNames::isNeutrino(type())); }
+  Bool_v isNeutrino() const
+  { return isOfType(enu) | isOfType(mnu) | isOfType(tnu) | isOfType(aenu) | isOfType(amnu) | isOfType(atnu); }
 
   VECCORE_ATT_HOST_DEVICE
   VECCORE_FORCE_INLINE
@@ -284,13 +288,13 @@ public:
   virtual void setParticleMass(Index_v<T> const& itype) override
   {
     if (VectorSize<T>() == 1) {
-      this->setMass( getDefinition(Get(itype,0)) -> GetPDGMass() );
+      this->setMass( getDefinition(Get(itype,0)) -> GetPDGMass() * CLHEP::GeV/CLHEP::MeV );
     }
     else {
       T mass;
       for (size_t i = 0; i < VectorSize<T>(); ++i) {
 	auto pd = getDefinition(Get(type(), i));
-	Set(mass, i, (pd ? pd->GetPDGMass() : 0.0));
+	Set(mass, i, (pd ? pd->GetPDGMass() * CLHEP::GeV/CLHEP::MeV : 0.0));
       }
       this->setMass( mass );
     }
@@ -305,26 +309,26 @@ public:
   /// warning: momentum direction is not reset in this case
   VECCORE_ATT_HOST_DEVICE
   VECCORE_FORCE_INLINE
-  void fill(T const& ekin, Index_v<T> const& ityp, Model const& model)
+  void fill(T const& ekinInMeV, Index_v<T> const& ityp, Model const& model)
   {
     setType(ityp);
-    this->setKineticEnergy(ekin);
+    this->setKineticEnergy(ekinInMeV);
     this->setModel(model);
   }
 
   VECCORE_ATT_HOST_DEVICE
   VECCORE_FORCE_INLINE
-  void fill(LorentzVector<T> const& mom, Index_v<T> const& ityp, Model const& model = DefaultModel)
+  void fill(LorentzVector<T> const& momInMeV, Index_v<T> const& ityp, Model const& model = DefaultModel)
   {
-    this->setMomentumDirection(mom.Vect().Unit());
-    fill(mom.t() - mom.Mag(), ityp, model);
+    this->setMomentumDirection(momInMeV.Vect());
+    fill(momInMeV.t() - momInMeV.Mag(), ityp, model);
   }
 
   VECCORE_ATT_HOST_DEVICE
   VECCORE_FORCE_INLINE
-  void fill(LorentzVector<T> const& mom, const GXParticleDefinition* pd, Model const& model = DefaultModel)
+  void fill(LorentzVector<T> const& momInMeV, const GXParticleDefinition* pd, Model const& model = DefaultModel)
   {
-    fill(mom, pd->GetParticleType(), model);
+    fill(momInMeV, pd->GetParticleType(), model);
   }
 
   VECCORE_ATT_HOST_DEVICE
@@ -333,8 +337,13 @@ public:
   {
     os << "\n";
     //if(vecCore::VectorSize<T>()==1) os << " Particle: " << getDefinition(type())->GetParticleName();
-    os << " type=" << type() << " mass=" << this->mass()
-       << " ekin=" << this->getKineticEnergy();
+    os << " type=" << type() << " mass=" << this->mass() <<" MeV,"
+       << " ekin=" << this->getKineticEnergy() <<" MeV\n";
+
+    LorentzVector<T> mom = this->getFourMomentum();
+    os << " Mom/MeV=(" << mom.x() << "; " << mom.y() << "; " << mom.z() <<")"
+       << " pmod/MeV=" << mom.Perp() << " E/MeV=" << mom.E()
+       << " creator model " << this->getModel();
   }
 };
 
@@ -469,7 +478,7 @@ template <typename T>
 VECCORE_ATT_HOST_DEVICE
 VECCORE_FORCE_INLINE
 T GXInuclElementaryParticle<T>::
-getParticleMass(Index_v<T> const itype)
+getParticleMass(Index_v<T> const itype)  // static function
 {
   if (isHomogeneous<Index_v<T>>(itype)) {
     const GXParticleDefinition* pd = getDefinition( Get(itype,0) );
@@ -487,6 +496,7 @@ getParticleMass(Index_v<T> const itype)
   }
 }
 
+// Note: see also the <double> specialization just below
 template <typename T>
 std::ostream &operator<<(std::ostream &os, GXInuclElementaryParticle<T> const& trk)
 {
@@ -502,12 +512,12 @@ std::ostream &operator<<(std::ostream &os, GXInuclElementaryParticle<T> const& t
       }
       GXParticleDefinition const* pd = getDefinition(Get(ityp, i));
       names << pd->GetParticleName();
-      masses << pd->GetPDGMass();
+      masses << Get(trk.mass(),i);
     }
     os << " Particles=["<< names.str() <<"]"
-       << " masses=[" << masses.str() <<"]"
+       << " masses/GeV=[" << masses.str() <<"]"
        << " types=" << trk.type()
-       << " ekin=" << trk.getKineticEnergy();
+       << " ekin/GeV=" << trk.getKineticEnergy();
   }
   return os;
 }
@@ -516,10 +526,10 @@ template <>
 std::ostream &operator<<(std::ostream &os, GXInuclElementaryParticle<double> const& trk)
 {
   GXParticleDefinition const* pd = getDefinition(trk.type());
-  os << " Particle: " << pd->GetParticleName()
-     << " mass=" << pd->GetPDGMass()
+  os << " GXInuclElemPart: " << pd->GetParticleName()
+     << " mass/GeV=" << trk.mass()
      << " type=" << trk.type()
-     << " ekin=" << trk.getKineticEnergy();
+     << " ekin/GeV=" << trk.getKineticEnergy();
   return os;
 }
 

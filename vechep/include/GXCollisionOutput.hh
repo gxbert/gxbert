@@ -1,7 +1,7 @@
 //
 // @File: GXCollisionOutput.h
 //
-// 20180705  Guilherme Lima -- Created, based on M.Kelsey's G4CollisionOutput
+// 20180921  Guilherme Lima -- Created, based on M.Kelsey's G4CollisionOutput
 
 #ifndef GXCOLLISION_OUTPUT_HH
 #define GXCOLLISION_OUTPUT_HH
@@ -20,37 +20,36 @@
 class G4CascadParticle;
 class GXLorentzConvertor;
 
-
 namespace gxbert {
 
 inline namespace
 GXBERT_IMPL_NAMESPACE {
 
+template <typename T>
 class GXCollisionOutput {
 
 private: 
   int verboseLevel;
 
-  std::vector<GXInuclElementaryParticle<double>> outgoingParticles;
-  //std::vector<GXInuclNuclei<double>> outgoingNuclei;
-  //std::vector<GXFragment<double>> recoilFragments;
+  std::vector<GXInuclElementaryParticle<T>> outgoingParticles;
+  //std::vector<GXInuclNuclei<T>> outgoingNuclei;
+  //std::vector<GXFragment<T>> recoilFragments;
   static const GXFragment emptyFragment;	// To return if list empty
 
   std::pair<std::pair<int,int>, int> selectPairToTune(double de) const; 
-  bool tuneSelectedPair(LorentzVector<double>& mom1, LorentzVector<double>& mom2,
-			int mom_index) const;
+  bool tuneSelectedPair(LorentzVector<T>& mom1, LorentzVector<T>& mom2, int mom_index) const;
 
   double eex_rest;		// Used by setOnShell() for kinematics
-  LorentzVector<double> mom_non_cons;
+  LorentzVector<T> mom_non_cons;
   bool on_shell;
 
 public:
   GXCollisionOutput() {}
   ~GXCollisionOutput() {}
 
-  GXCollisionOutput& operator=(const GXCollisionOutput& right);
+  GXCollisionOutput& operator=(GXCollisionOutput const& right);
 
-  void setVerboseLevel(G4int verbose) { verboseLevel = verbose; };
+  void setVerboseLevel(int verbose) { verboseLevel = verbose; };
 
   // ===== Accumulate contents of lists =====
 
@@ -65,14 +64,20 @@ public:
     on_shell = false;
   }
 
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
   void add(const GXCollisionOutput& right);	// Merge complete objects
 
-  void addOutgoingParticle(const GXInuclElementaryParticle<double>& particle)
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
+  void addOutgoingParticle(GXInuclElementaryParticle<T> const& particle)
   {
     outgoingParticles.push_back(particle);
   }
 
-  void addOutgoingParticles(const std::vector<GXInuclElementaryParticle<double>>& particles)
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
+  void addOutgoingParticles(std::vector<GXInuclElementaryParticle<T>> const& particles)
   {
     outgoingParticles.insert(outgoingParticles.end(), particles.begin(), particles.end());
   }
@@ -98,12 +103,21 @@ public:
   // void addRecoilFragment(const GXFragment& aFragment) {
   //   recoilFragments.push_back(aFragment);
   // }
-  
+
   // ===== Remove contents of lists, by index, reference or value  =====
 
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
   void removeOutgoingParticle(int index);
-  void removeOutgoingParticle(const GXInuclElementaryParticle<double>& particle);
-  void removeOutgoingParticle(const GXInuclElementaryParticle<double>* particle) {
+
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
+  void removeOutgoingParticle(GXInuclElementaryParticle<T> const& particle);
+
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
+  void removeOutgoingParticle(GXInuclElementaryParticle<T> const* particle)
+  {
     if (particle) removeOutgoingParticle(*particle);
   }
 
@@ -117,13 +131,14 @@ public:
 
   // ===== Access contents of lists =====
 
-  G4int numberOfOutgoingParticles() const { return outgoingParticles.size(); }
-    
-  const std::vector<GXInuclElementaryParticle<double>>& getOutgoingParticles() const {
+  int numberOfOutgoingParticles() const { return outgoingParticles.size(); }
+
+  std::vector<GXInuclElementaryParticle<T>> const& getOutgoingParticles() const
+  {
     return outgoingParticles;
   };
 
-  std::vector<GXInuclElementaryParticle<double>>& getOutgoingParticles() {
+  std::vector<GXInuclElementaryParticle<T>>& getOutgoingParticles() {
     return outgoingParticles;
   };
 
@@ -147,28 +162,28 @@ public:
 
   // ===== Get event totals for conservation checking, recoil, etc. ======
 
-  G4LorentzVector getTotalOutputMomentum() const;
-  G4int getTotalCharge() const;			// NOTE:  No fractional charges!
-  G4int getTotalBaryonNumber() const;
-  G4int getTotalStrangeness() const;
+  LorentzVector<T> getTotalOutputMomentum() const;
+  int getTotalCharge() const;			// NOTE:  No fractional charges!
+  int getTotalBaryonNumber() const;
+  int getTotalStrangeness() const;
 
-  void printCollisionOutput(std::ostream& os=G4cout) const;
+  void printCollisionOutput(std::ostream& os = std::cerr) const;
 
   // ===== Manipulate final-state particles for kinematics =====
 
-  void boostToLabFrame(const GXLorentzConvertor<double>& convertor);
+  void boostToLabFrame(const GXLorentzConvertor<T>& convertor);
 
-  G4LorentzVector boostToLabFrame(LorentzVector<double>& mom,	// Note pass by value!
-				  GXLorentzConvertor<double> const& convertor) const;
+  G4LorentzVector boostToLabFrame(LorentzVector<T>& mom,	// Note pass by value!
+				  GXLorentzConvertor<T> const& convertor) const;
 
   //void rotateEvent(GXLorentzRotation<T> const& rotate);
-  void trivialise(GXInuclParticle<double>* bullet, GXInuclParticle<double>* target);
-  void setOnShell(GXInuclParticle<double>* bullet, GXInuclParticle<double>* target);
+  void trivialise(GXInuclParticle<T>* bullet, GXInuclParticle<T>* target);
+  void setOnShell(GXInuclParticle<T>* bullet, GXInuclParticle<T>* target);
   void setRemainingExcitationEnergy();
 
   double getRemainingExcitationEnergy() const { return eex_rest; };
   G4bool acceptable() const { return on_shell; };
-};        
+};
 
 }
 }

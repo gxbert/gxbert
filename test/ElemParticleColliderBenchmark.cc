@@ -84,6 +84,52 @@ bool isOutputInvalid(G4InuclParticle const &bullet, G4CollisionOutput const &out
 	 );
 }
 
+template <typename T>
+bool isOutputInvalid(GXInuclParticle<T> const& bullet, GXCollisionOutput<T> const& output)
+{
+  // Quantities necessary for conditional block below
+  int npart = output.numberOfOutgoingParticles();
+  //int nfrag = output.numberOfOutgoingNuclei();
+
+  //const GXParticleDefinition* firstOut = (npart == 0) ? 0 : getDefinition(output.getOutgoingParticles().begin()->type());
+
+  /*
+#ifdef G4CASCADE_DEBUG_INTERFACE
+  // Report on all retry conditions, in order of return logic
+  G4cout << " retryInelasticNucleus: numberOfTries "
+	 << ((numberOfTries < maximumTries) ? "RETRY (t)" : "EXIT (f)")
+	 << "\n retryInelasticNucleus: AND outputParticles "
+	 << ((npart != 0) ? "NON-ZERO (t)" : "EMPTY (f)")
+#ifdef G4CASCADE_COULOMB_DEV
+	 << "\n retryInelasticNucleus: AND coulombBarrier (COULOMB_DEV) "
+	 << (coulombBarrierViolation() ? "VIOLATED (t)" : "PASSED (f)")
+	 << "\n retryInelasticNucleus: AND collision type (COULOMB_DEV) "
+	 << ((npart+nfrag > 2) ? "INELASTIC (t)" : "ELASTIC (f)")
+#else
+	 << "\n retryInelasticNucleus: AND collsion type "
+	 << ((npart+nfrag < 3) ? "ELASTIC (t)" : "INELASTIC (f)")
+	 << "\n retryInelasticNucleus: AND Leading particle bullet "
+	 << ((firstOut == bullet->getDefinition()) ? "YES (t)" : "NO (f)")
+#endif
+	 << "\n retryInelasticNucleus: OR conservation "
+	 << (!balance->okay() ? "FAILED (t)" : "PASSED (f)")
+	 << G4endl;
+#endif
+  */
+
+  return ( ((npart != 0) //&&
+	    //#ifdef G4CASCADE_COULOMB_DEV
+	    //(coulombBarrierViolation() && npart+nfrag > 2)
+	    //#else
+	    //(npart+nfrag < 3 && firstOut == bullet.getDefinition())
+	    //#endif
+             )
+	     //#ifndef G4CASCADE_SKIP_ECONS
+	     //|| (!balance->okay())
+	     //#endif
+	 );
+}
+
 
 //
 //================================= Reference: G4InuclCollider functionalities ==================
@@ -110,7 +156,7 @@ void RunG4ElementaryParticleCollider(GXTrack_v const& soaBullets, GXTrack_v cons
       bullet.fill(lorvec, G4InuclParticleNames::proton);
 
       soaTargets.getFourMomentum(i, lorvec);
-      target.fill(lorvec, G4InuclParticleNames::proton);
+      target.fill(lorvec, G4InuclParticleNames::neutron);
 
       numberOfTries = 0;
       do {   			// we try to create inelastic interaction
@@ -149,13 +195,15 @@ void RunG4ElementaryParticleCollider(GXTrack_v const& soaBullets, GXTrack_v cons
 //=====================================  VECTORIZED testing version  ========================
 //
 template <typename Real_v>
-void RunGXElementaryParticleCollider(const char* testname, GXTrack_v const& soaBullets, GXTrack_v const& soaTargets, GXCollisionOutput &output)
+void RunGXElementaryParticleCollider(const char* testname, GXTrack_v const& soaBullets, GXTrack_v const& soaTargets,
+				     GXCollisionOutput<Real_v> &output)
 {
   int nNeutrons = 0;
   int nProtons = 0;
   int nPhotons = 0;
   int nOthers = 0;
 
+  // build a vectorized EP collider
   int vsize = vecCore::VectorSize<Real_v>();
   GXElementaryParticleCollider<Real_v> collider;
   collider.setVerboseLevel(debugLevel);
@@ -163,12 +211,12 @@ void RunGXElementaryParticleCollider(const char* testname, GXTrack_v const& soaB
   GXInuclElementaryParticle<Real_v> bullets, targets;
   LorentzVector<Real_v> lorvec;
   Timer<nanoseconds> timer;
-  vecCore::Index_v<Real_v> counter(0);
-  //int numberOfTries = 0;
+  //vecCore::Index_v<Real_v> counter(0);
+  int numberOfTries = 0;
 
   // allocate buffer for multiplicity array
-  size_t intsize = sizeof(vecCore::Index_v<Real_v>);
-  vecCore::Index_v<Real_v>* pMult = (vecCore::Index_v<Real_v>*)_mm_malloc(nEvents*intsize, 64);
+  // size_t intsize(vecCore::Index_v<Real_v>);
+  // vecCore::Index_v<Real_v>* pMult = (vecCore::Index_v<Real_v>*)_mm_malloc(nEvents*intsize, 64);
   //long pMult[nEvents];
 
   timer.Start();
@@ -182,10 +230,12 @@ void RunGXElementaryParticleCollider(const char* testname, GXTrack_v const& soaB
 
       GXInuclElementaryParticle<Real_v> const* pbullets = dynamic_cast<GXInuclElementaryParticle<Real_v> const*>(&bullets);
       GXInuclElementaryParticle<Real_v> const* ptargets = dynamic_cast<GXInuclElementaryParticle<Real_v> const*>(&targets);
-      // std::cerr<<"\n=== GXInuclEP-bullets: "<< *pbullets <<"\n";
-      // std::cerr<<"\n=== GXInuclEP-targets: "<< *ptargets <<"\n";
+      if (debugLevel>0) {
+	std::cerr<<"\n=== GXInuclEP-bullets: "<< *pbullets <<"\n";
+	std::cerr<<"\n=== GXInuclEP-targets: "<< *ptargets <<"\n";
+      }
 
-      // build a vectorized EP collider
+      /*
       //std::cerr<<"useEPCollider<Real_v>(bullets,targtes): "<< collider.useEPCollider(pbullets, ptargets) <<"\n";
       // assert(collider.useEPCollider(pbullets, ptargets));
       // assert(collider.useEPCollider(ptargets, pbullets));
@@ -199,65 +249,54 @@ void RunGXElementaryParticleCollider(const char* testname, GXTrack_v const& soaB
 
       collider.generateOutgoingPartTypes(initStateVec, multipl, ekinVec);
       collider.fillOutgoingMasses();
+      */
 
-      //collider.collide(pbullets, ptargets, output);
-
-      GXLorentzConvertor<Real_v> convertToSCM;    // Utility to handle frame manipulation
-      convertToSCM.setVerbose(debugLevel);
-
-      // TODO: need to swap appropriately at this point!!!
-      if (vecCore::MaskFull(ptargets->nucleon() | ptargets->quasi_deutron()) ) {
-	convertToSCM.setBullet(*pbullets);
-	convertToSCM.setTarget(*ptargets);
-      } else {
-	cerr<<" ***** GXEPCollider::collide(): SWAP WAS NEEDED!!  CHECK RESULTS!!\n";
-	convertToSCM.setBullet(*ptargets);
-	convertToSCM.setTarget(*pbullets);
-      }
-      convertToSCM.toTheCenterOfMass();
-
-      Real_v etot_scm = convertToSCM.getTotalSCMEnergy();
-      collider.generateSCMfinalState(ekinVec, etot_scm, pbullets, ptargets);
-    }
-
-    _mm_free(pMult);
-
-    // only needed for vectorized mode
-    //collider.rebasketizeByMultiplicity(nEvents, pMult, &bullets, &targets);
-
-      //not ready yet for full collisions...
-      /*
-      numberOfTries = 0;
+      // only needed for vectorized mode
+      //collider.rebasketizeByMultiplicity(nEvents, pMult, &bullets, &targets);
 
       if (debugLevel > 1) cerr<<"=== Generating cascade attemp "<< numberOfTries <<"\n";
-      output.reset();
-      collider.collide(&bullet, &target, output);
-      ++numberOfTries;
+
+      numberOfTries = 0;
+      do {   			// we try to create inelastic interaction
+	output.reset();
+	collider.collide(pbullets, ptargets, output);
+	numberOfTries++;
+      } while ( numberOfTries <= 20 && isOutputInvalid<Real_v>(*pbullets, output) );
 
       // update counters
-      cerr<<"***** Event "<< i <<" Ntries="<< numberOfTries <<"\n";
-      //<<" Final state: "<< output.numberOfOutgoingParticles()
-      //<<" hadrons + "<< output.numberOfOutgoingNuclei() <<" nuclei\n";
+      cerr<<"***** Event "<< i <<" Ntries="<< numberOfTries
+          <<" Final state: "<< output.numberOfOutgoingParticles()
+          <<" hadrons + 0 nuclei\n"; //<< output.numberOfOutgoingNuclei() <<" nuclei\n";
 
+      /*
       auto initStateVec = soaBullets.type() * soaTargets.type();
       Real_v ekinVec = soaBullets.getKineticEnergy();
       nHadrons += collider.generateMultiplicity(initStateVec, ekinVec);
       std::cerr<<" nHadrons: "<< nHadrons <<"\n";
-      //const std::vector<G4InuclElementaryParticle>& outParticles = output.getOutgoingParticles();
-      //std::vector<const G4InuclElementaryParticle>::const_iterator ipart = outParticles.begin(), iend = outParticles.end();
-      //for( ; ipart != iend; ++ipart) {
-      //  if (ipart->type() == G4InuclParticleNames::neutron) ++nNeutrons; //??? suspended...
-      //  else if (ipart->type() == G4InuclParticleNames::proton) ++nProtons; //??? suspended...
-      //  else if (ipart->type() == G4InuclParticleNames::photon) ++nPhotons; //??? suspended...
-      //  else ++nOthers;
-      // }
       */
-    //}
+
+      const std::vector<GXInuclElementaryParticle<Real_v>>& outParticles = output.getOutgoingParticles();
+      typename std::vector<const GXInuclElementaryParticle<Real_v>>::const_iterator ipart = outParticles.begin();
+      typename std::vector<const GXInuclElementaryParticle<Real_v>>::const_iterator iend  = outParticles.end();
+      for( ; ipart != iend; ++ipart) {
+	Index_v<Real_v> types = ipart->type();
+	for(size_t j = 0; j < VectorSize<Real_v>(); ++j) {
+	  int jtype = Get(types, j);
+	  if (jtype == G4InuclParticleNames::neutron) ++nNeutrons; //??? suspended...
+	  else if (jtype == G4InuclParticleNames::proton) ++nProtons; //??? suspended...
+	  else if (jtype == G4InuclParticleNames::photon) ++nPhotons; //??? suspended...
+	  else ++nOthers;
+	}
+      }
+    }
+
+    //_mm_free(pMult);
+
   }
   double elapsed = timer.Elapsed();
 
   std::cerr<< testname <<" results: "
-	   <<"  nHadrons="<< vecCore::ReduceAdd(counter)
+	   <<"  nHadrons="<< (nNeutrons + nProtons + nOthers)
 	   <<"\tnNeutrons="<< nNeutrons
 	   <<"\tnProtons="<< nProtons
 	   <<"\tnPhotons="<< nPhotons
@@ -306,9 +345,11 @@ int main(int argc, char* argv[]) {
   RunG4ElementaryParticleCollider(soaBullets, soaTargets, output);
 
   // benchmarks templated on types
-  GXCollisionOutput gxoutput;
-  RunGXElementaryParticleCollider<double>("double", soaBullets, soaTargets, gxoutput);
-  RunGXElementaryParticleCollider<Real_v>("Real_v", soaBullets, soaTargets, gxoutput);
+  GXCollisionOutput<double> scalarOutput;
+  RunGXElementaryParticleCollider<double>("double", soaBullets, soaTargets, scalarOutput);
+
+  GXCollisionOutput<Real_v> vectorOutput;
+  RunGXElementaryParticleCollider<Real_v>("Real_v", soaBullets, soaTargets, vectorOutput);
 
   /*
   //=== Alternate way to load arrays for vectorized converter

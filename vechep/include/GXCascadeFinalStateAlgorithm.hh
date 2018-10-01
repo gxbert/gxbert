@@ -6,6 +6,7 @@
 #ifndef GXCascadeFinalStateAlgorithm_hh
 #define GXCascadeFinalStateAlgorithm_hh 1
 
+#include "G4CascadeParameters.hh"
 #include "GXVCascadeAlgorithm.hh"
 #include "GXLorentzConvertor.hh"
 #include "GXInuclSpecialFunctions.hh"
@@ -190,16 +191,17 @@ Configure(GXInuclElementaryParticle<T> const* bullet,
 	  GXInuclElementaryParticle<T> const* target,
 	  std::vector<Index_v<T>> const& particle_kinds)
 {
-  if (GetVerboseLevel() > 1) {
-    std::cerr << " >>> " << GetName() << "::Configure()...\n";
-  }
-
   multiplicity = particle_kinds.size();
+  vmultipl = Index_v<T>(multiplicity);
 
   // Identify initial and final state (if two-body) for algorithm selection
   Index_v<T> is = bullet->type() * target->type();
   Index_v<T> fs(0);
-  vecCore::MaskedAssign(fs, vmultipl == Index_v<T>(2), particle_kinds[0] * particle_kinds[1]);
+  if (multiplicity == 2U) fs = particle_kinds[0] * particle_kinds[1];
+  if (GetVerboseLevel() > 1) {
+    std::cerr << " >>> " << GetName() << "::Configure()..., mult="<< multiplicity <<", "<< vmultipl <<"\n";
+  }
+
 
   ChooseGenerators(is, fs);
 
@@ -290,14 +292,14 @@ FillMagnitudes(T initialMass, const std::vector<T>& masses)
 
       T temp = math::Sqrt(pmod*pmod + masses[i]*masses[i]);
       vecCore::MaskedAssign(eleft, !done, eleft - temp);
+      done |= eleft <= mass_last;
 
       if (GetVerboseLevel() > 3) {
 	std::cerr << " kp=" << kinds[i] << " pmod=" << pmod
-		  << " mass2=" << masses[i]*masses[i] << " eleft=" << eleft
-		  << "\n x1=" << eleft - mass_last <<"\n";
+		  << " mass2=" << masses[i]*masses[i] << " leftEne=" << eleft
+		  << "\n x1=leftE-mass_last=" << eleft - mass_last <<", done="<< done <<"\n";
       }
 
-      done |= eleft <= mass_last;
       if (vecCore::MaskFull(done)) break;
 
       vecCore::MaskedAssign(modules[i], !done, pmod);
@@ -382,8 +384,10 @@ void GXCascadeFinalStateAlgorithm<T>::
 FillDirThreeBody(T initialMass, const std::vector<T>& masses, std::vector<LorentzVector<T>>& finalState)
 {
   if (GetVerboseLevel() > 1) {
-    std::cerr << " >>> " << GetName() << "::FillDirThreeBody\n";
+    std::cerr << " >>> " << GetName() << "::FillDirThreeBody, finalState.size()="<< finalState.size() <<"/"<< finalState.capacity() <<"\n";
   }
+
+  finalState.resize(multiplicity);
 
   T costh = GenerateCosTheta(kinds[2], modules[2]);
   // FIXME: should use a local LorVector here instead of finalstate[2]?
@@ -493,27 +497,28 @@ GenerateCosTheta(vecCore::Index_v<T> ptype, T pmod) const {
 
   //.. Throw multi-body distribution
   // original: G4double p0 = ptype<3 ? 0.36 : 0.25;	// Nucleon vs. everything else
-  T p0(0.36);
-  for(size_t i = 0; i < vsize; ++i) {
-    if(Get(ptype,i) >= 3) Set(p0, i, 0.25);
-  }
+  T p0(0.25);
+  // for(size_t i = 0; i < vsize; ++i) {
+  //   if(Get(ptype,i) < 3) Set(p0, i, 0.25);
+  // }
+  vecCore::MaskedAssign(p0, vecCore::Convert<T,Index_v<T>>(ptype) < T(3.), T(0.36));
 
   T alf = T(1.0) / (p0 * (p0 - (pmod + p0) * ppow->ExpAVec(-pmod / p0)));
-  T sinth(2.0);
 
+  T sinth(2.0);
   int itry1 = 0;		/* Loop checking 08.06.2015 MHK */
   Bool_v done(false);
   do {
     T s1 = pmod * inuclRndm<T>();
     T s2 = alf * oneOverE * p0 * inuclRndm<T>();
     T salf = s1 * alf * ppow->ExpAVec(-s1 / p0);
-    if (GetVerboseLevel() > 3) {
-      std::cerr << " s1 * alf * GXExp(-s1 / p0) " << salf << " s2 " << s2 <<"\n";
-    }
 
     //if (salf > s2) sinth = s1 / pmod;
     vecCore::MaskedAssign(sinth, !done && salf > s2, s1 / pmod);
     done = math::Abs(sinth) <= maxCosTheta;
+    if (GetVerboseLevel() > 3) {
+      std::cerr << " s1 * alf * GXExp(-s1 / p0) " << salf << " s2 " << s2 <<" sinth="<< sinth <<" done="<< done <<"\n";
+    }
   } while (!vecCore::MaskFull(done) && ++itry1 < itry_max);
 
   //if (GetVerboseLevel() > 3)

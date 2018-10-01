@@ -111,7 +111,7 @@ public:
 
   void collide(GXInuclParticle<T> const* bullet,
 	       GXInuclParticle<T> const* target,
-	       GXCollisionOutput& output);
+	       GXCollisionOutput<T>& output);
 
   //private:
 
@@ -270,7 +270,7 @@ generateMultiplicity(vecCore::Index_v<T> const& hadPairs, T const& ekin) const
 
   //return mult;
   ////// temporary!!! return fixed multiplicity
-  return Index_v<T>(3);
+  return Index_v<T>(2);
 }
 
 /* // GL Note: I tried to push vectorization into xsecTable->GetMultiplicity(ekin), but got "virtual template methods not allowed" problems
@@ -461,13 +461,11 @@ void GXElementaryParticleCollider<T>::generateSCMfinalState(T& ekin, T& etot_scm
 
   // Store generated momenta into outgoing particles
 
-  std::cerr<<" ***** spot 1\n";
   size_t maxmult = vecCore::ReduceMax(multiplicity);
-  std::cerr<<" ***** spot 2\n";
   particles.resize(maxmult);		// Preallocate buffer
-  std::cerr<<" ***** spot 3 - particles.size="<< particles.size() <<", maxmult="<< maxmult <<"\n";
+  //std::cerr<<" ***** spot 1 - particles.size="<< particles.size() <<", maxmult="<< maxmult <<"\n";
   for (size_t i=0; i<maxmult; i++) {
-    std::cerr<<" i="<< i <<", scm_mom[i]="<< scm_momentums[i] <<", kinds[i]="<< particle_kinds[i] <<"\n";
+    //std::cerr<<" i="<< i <<", scm_mom[i]="<< scm_momentums[i] <<", kinds[i]="<< particle_kinds[i] <<"\n";
     particles[i].fill(scm_momentums[i], particle_kinds[i], gxbert::EPCollider);
   }
 
@@ -526,15 +524,21 @@ generateSCMpionNAbsorption(T& etot_scm,
 
   // Get outgoing nucleon type using charge exchange
   // Proton code is 1, neutron code is 2, so 3-# swaps them
-  const Int_v ntype = (part2->nucleon() ? type2 : type1);
-  Int_v outType = 3 - ntype;
+  Int_v ntype(type1);
+  MaskedAssign(ntype, part2->nucleon(), type2);
+  Int_v outType = Int_v(3) - ntype;
   vecCore::MaskedAssign(outType, !doit, Int_v(-1));
   particle_kinds.push_back(outType);
 
   fillOutgoingMasses();
 
   // Get mass of residual nucleus (2-ntype = 1 for proton, 0 for neutron)
-  T mRecoil = G4InuclNuclei::getNucleiMass(nucleusA - Int_v(1), nucleusZ - (Int_v(2) - ntype));
+  T mRecoil(0.);
+  for (size_t i = 0; i < VectorSize<T>(); ++i) {
+    double newA = Get(nucleusA,i) - 1;
+    double newZ = Get(nucleusZ,i) - (2 - Get(ntype,i));
+    Set(mRecoil, i, G4InuclNuclei::getNucleiMass(newA, newZ));
+  }
   T mRecoil2 = mRecoil * mRecoil;
 
   // Recompute Ecm to include nucleus (for recoil kinematics)
@@ -571,7 +575,7 @@ generateSCMpionNAbsorption(T& etot_scm,
 
 template <typename T>
 void GXElementaryParticleCollider<T>::
-collide(GXInuclParticle<T> const* bullet, GXInuclParticle<T> const* target, GXCollisionOutput& output)
+collide(GXInuclParticle<T> const* bullet, GXInuclParticle<T> const* target, GXCollisionOutput<T>& output)
 {
   if (verboseLevel > 1) cerr << " >>> GXElementaryParticleCollider::collide\n";
 
@@ -650,8 +654,8 @@ collide(GXInuclParticle<T> const* bullet, GXInuclParticle<T> const* target, GXCo
     T ekin = convertToSCM.getKinEnergyInTheTRS();
 
     // SPECIAL: very low energy pions may be absorbed by a nucleon
-    Bool_v doPionNAbsorption = vecCore::MaskEmpty(pionNucleonAbsorption(ekin));
-    cerr<<" doPionNAbsorption="<< doPionNAbsorption <<"\n";
+    Bool_v doPionNAbsorption = pionNucleonAbsorption(ekin);
+    //cerr<<" doPionNAbsorption="<< doPionNAbsorption <<"\n";
 
     // use if() here to save some time, since will be mostly false
     if ( !vecCore::MaskEmpty(doPionNAbsorption) ) {
@@ -666,13 +670,16 @@ collide(GXInuclParticle<T> const* bullet, GXInuclParticle<T> const* target, GXCo
 
   // Generate pion or photon collision with quasi-deuteron
   if (MaskFull(particle1->quasi_deutron()) || MaskFull(particle2->quasi_deutron())) {
-    if (!G4NucleiModel::useQuasiDeuteron(particle1->type(), particle2->type()) &&
-	!G4NucleiModel::useQuasiDeuteron(particle2->type(), particle1->type())) {
+    // for now, use the existing scalar function -- ok since particle1,2 are homogeneous!
+    int ptype1 = Get(particle1->type(), 0);
+    int ptype2 = Get(particle2->type(), 0);
+    if (!G4NucleiModel::useQuasiDeuteron(ptype1, ptype2) &&
+	!G4NucleiModel::useQuasiDeuteron(ptype2, ptype1)) {
       cerr << " ElementaryParticleCollider -> can only collide pi,mu,gamma with dibaryons\n";
       return;
     }
 
-    if (particle1->isMuon() || particle2->isMuon()) {
+    if (MaskFull(particle1->isMuon()) || MaskFull(particle2->isMuon())) {
       generateSCMmuonAbsorption(etot_scm, particle1, particle2);
     } else {		// Currently, pion absoprtion also handles gammas
       generateSCMpionAbsorption(etot_scm, particle1, particle2);
@@ -709,7 +716,8 @@ collide(GXInuclParticle<T> const* bullet, GXInuclParticle<T> const* target, GXCo
   //   cerr<< " <<< Non-conservation in GXElementaryParticleCollider\n";
   // }
 
-  std::sort(particles.begin(), particles.end(), GXParticleLargerEkin<double>());
+  // in vector mode, sorting is painful!
+  //std::sort(particles.begin(), particles.end(), GXParticleLargerEkin<double>());
   output.addOutgoingParticles(particles);
 }
 

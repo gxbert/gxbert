@@ -10,7 +10,7 @@
 #include "GXThreeVector.hh"
 #include "LorentzVector.hh"
 //#include "G4NucleiModel.hh"
-#include "GXParticleDefinition.hh"
+//#include "GXParticleDefinition.hh"
 #include "G4InuclParticleNames.hh"
 
 //#include "VecRng/MRG32k3a.h"
@@ -46,8 +46,8 @@ using Bool_v = vecCore::Mask_v<T>;
 
 protected:
   GXThreeVector<T> fDir;
-  T fkinEnergy;
-  T fMass;
+  T fkinEnergy;   // in GeV
+  T fMass;        // in GeV
   Model fModelID;
 
 public:
@@ -65,17 +65,17 @@ public:
 
   VECCORE_ATT_HOST_DEVICE
   VECCORE_FORCE_INLINE
-  GXInuclParticle(const LorentzVector<T>& mom, Model model = DefaultModel)
-    : fDir(mom.Vect().Unit())
-    , fkinEnergy(mom.t() - mom.Mag())
+  GXInuclParticle(const LorentzVector<T>& momInGeV, Model model = DefaultModel)
+    : fDir(momInGeV.Vect().Unit())
+    , fkinEnergy(momInGeV.t() - momInGeV.Mag())
     , fModelID(model)
   { }
 
   VECCORE_ATT_HOST_DEVICE
   VECCORE_FORCE_INLINE
-  GXInuclParticle(T ekin, Index_v<T> ityp, Model model = DefaultModel) 
+  GXInuclParticle(T ekinInGeV, Index_v<T> ityp, Model model = DefaultModel) 
     : fDir(0., 0., 1.)
-    , fkinEnergy(ekin)
+    , fkinEnergy(ekinInGeV)
     , fModelID(model)
   { }
 
@@ -113,7 +113,7 @@ public:
 
   VECCORE_ATT_HOST_DEVICE
   VECCORE_FORCE_INLINE
-  void setKineticEnergy(T const& ekin) { fkinEnergy = ekin; }
+  void setKineticEnergy(T const& ekinInGeV) { fkinEnergy = ekinInGeV; }
 
   VECCORE_ATT_HOST_DEVICE
   VECCORE_FORCE_INLINE
@@ -121,7 +121,7 @@ public:
 
   VECCORE_ATT_HOST_DEVICE
   VECCORE_FORCE_INLINE
-  void setTotalEnergy(T const& etot) { fkinEnergy = etot - fMass; }
+  void setTotalEnergy(T const& etotInGeV) { fkinEnergy = etotInGeV - fMass; }
 
   VECCORE_ATT_HOST_DEVICE
   VECCORE_FORCE_INLINE
@@ -131,16 +131,16 @@ public:
   VECCORE_FORCE_INLINE
   void setMomentumDirection(GXThreeVector<T> const& momentum)
   {
-    fDir = momentum;
-    assert( vecCore::MaskFull( ApproxEqual( momentum.Mag2(), T(1.0)) ) );
+    // force storage of unit vector
+    fDir = momentum.Unit();
   }
 
   VECCORE_ATT_HOST_DEVICE
   VECCORE_FORCE_INLINE
-  void setMomentum(LorentzVector<T> const& lorvec)
+  void setMomentum(LorentzVector<T> const& lorvecInGeV)
   {
-    fDir = lorvec.Vect().Unit();
-    setTotalEnergy( lorvec.E() );
+    setMomentumDirection( lorvecInGeV.Vect() );
+    setTotalEnergy( lorvecInGeV.E() );
   }
 
   VECCORE_ATT_HOST_DEVICE
@@ -154,19 +154,19 @@ public:
   VECCORE_FORCE_INLINE
   T getMomModule() const
   {
-    return vecCore::math::Sqrt(fkinEnergy * ( fkinEnergy + T(2.0) * fMass));
+    return vecCore::math::Sqrt(fkinEnergy * ( fkinEnergy + T(2.0) * fMass)); // returns GeV, unlike original
   }
 
   VECCORE_ATT_HOST_DEVICE
   VECCORE_FORCE_INLINE
   GXThreeVector<T> getMomentum() const
   {
-    return getMomModule() * fDir;
+    return getMomModule() * fDir;  // returns GeV, unlike original
   }
 
   VECCORE_ATT_HOST_DEVICE
   VECCORE_FORCE_INLINE
-  LorentzVector<T> getFourMomentum() const
+  LorentzVector<T> getFourMomentum() const  // returns GeV, unlike original
   {
     LorentzVector<T> temp;
     T momValue = getMomModule();
@@ -205,16 +205,16 @@ public:
   /// Mass setter
   VECCORE_ATT_HOST_DEVICE
   VECCORE_FORCE_INLINE
-  void setMass(T const& mass) { fMass = mass; }
+  void setMass(T const& massInGeV) { fMass = massInGeV; }
 
   /// Mass getters
   VECCORE_ATT_HOST_DEVICE
   VECCORE_FORCE_INLINE
-  T const& getParticleMass() const { return fMass; }
+  T const& getParticleMass() const { return fMass; }  // returns GeV
 
   VECCORE_ATT_HOST_DEVICE
   VECCORE_FORCE_INLINE
-  T const& mass() const { return fMass; }
+  T const& mass() const { return fMass; }  // returns GeV
 
   VECCORE_ATT_HOST_DEVICE
   VECCORE_FORCE_INLINE

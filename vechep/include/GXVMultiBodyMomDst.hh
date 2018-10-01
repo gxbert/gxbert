@@ -58,31 +58,26 @@ protected:
   template <typename T, typename IntT>
   VECCORE_ATT_HOST_DEVICE
   VECCORE_FORCE_INLINE
-  T GXVMultiBodyMomDst::GetMomentum(IntT const& ptype, T const& ekin) const
+  T GXVMultiBodyMomDst::GetMomentum(IntT const& ptype, T const& ekin) const  // input energy in GeV!
   {
     if (fVerbose>3) {
       std::cerr << fName << "::GetMomentum: ptype=" << ptype << " ekin=" << ekin <<"\n";
     }
 
-    static bool first = true;
-    if(first) {
-      std::cerr << "\n===== GXVMultiBodyMomDst: TODO: JK (don't forget!!!) =====" << 0 <<"\n\n";
-      first = false;
-    }
-
     static const Index_v<T> PROTON(pro);
     static const Index_v<T> NEUTRON(neu);
-    vecCore::Mask_v<Index_v<T>> nucleon = (ptype == PROTON) | (ptype == NEUTRON);
+    vecCore::Mask_v<Index_v<T>> isNucleon = (ptype == PROTON) | (ptype == NEUTRON);
     Index_v<T> vecJK(1);
-    vecCore::MaskedAssign(vecJK, nucleon, Index_v<T>(0));
+    vecCore::MaskedAssign(vecJK, isNucleon, Index_v<T>(0));
 
     if (!isHomogeneous(vecJK)) {
       std::cerr <<"GXVMultiBodyMomDst::GetMomentum(ptype,ekin) called with non-homogeneous nucleon/non-nucleon input: "
 		<< ptype <<" and JK="<< vecJK <<"\n";
       return T(0.0);
     }
-    int JK = Get(vecJK,0);
-    if (fVerbose > 3) std::cerr << " JK " << JK <<"\n";
+    int JK = Get(vecJK, 0);
+    //if (fVerbose > 3)
+      std::cerr << " JK " << JK <<"\n";
 
     GXPowVec<T,IntT>* theGXPow = GXPowVec<T,IntT>::GetInstance();	// For convenience
     T Spow = randomInuclPowers(ekin, coeffPR[JK]);

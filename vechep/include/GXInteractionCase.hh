@@ -113,15 +113,15 @@ public:
   Bool_v hasValidTable() const
   {
     size_t vsize = VectorSize<T>();
-    if (vsize == 1) {
-      return G4CascadeChannelTables::hasValidTableFor(fCase);
-    }
-    else {
+    // if (vsize == 1) {
+    //   return G4CascadeChannelTables::hasValidTableFor(fCase);
+    // }
+    // else {
       Bool_v result(false);
       for (size_t i = 0; i < vsize; ++i)
 	Set(result, i, G4CascadeChannelTables::hasValidTableFor(Get(fCase, i)));
       return result;
-    }
+    // }
   }
 
   VECCORE_ATT_HOST_DEVICE

@@ -131,7 +131,8 @@ void RunG4ElemParticleMultiplicity(GXTrack_v const& soaBullets, GXTrack_v const&
 //=====================================  VECTORIZED testing version  ========================
 //
 template <typename Real_v>
-void RunGXElemParticleMultiplicity(const char* testname, GXTrack_v const& soaBullets, GXTrack_v const& soaTargets, GXCollisionOutput &output)
+void RunGXElemParticleMultiplicity(const char* testname, GXTrack_v const& soaBullets, GXTrack_v const& soaTargets,
+				   GXCollisionOutput<Real_v> &output)
 {
   const size_t vsize = vecCore::VectorSize<Real_v>();
   //using Int_v = vecCore::VcSimdArray<vsize>;
@@ -229,9 +230,11 @@ int main(int argc, char* argv[]) {
   RunG4ElemParticleMultiplicity(soaBullets, soaTargets, output);
 
   // benchmarks templated on types
-  GXCollisionOutput gxoutput;
-  RunGXElemParticleMultiplicity<double>("double", soaBullets, soaTargets, gxoutput);
-  RunGXElemParticleMultiplicity<Real_v>("Real_v", soaBullets, soaTargets, gxoutput);
+  GXCollisionOutput<double> scalarOutput;
+  RunGXElemParticleMultiplicity<double>("double", soaBullets, soaTargets, scalarOutput);
+
+  GXCollisionOutput<Real_v> vectorOutput;
+  RunGXElemParticleMultiplicity<Real_v>("Real_v", soaBullets, soaTargets, vectorOutput);
 
   /*
   //=== Alternate way to load arrays for vectorized converter
