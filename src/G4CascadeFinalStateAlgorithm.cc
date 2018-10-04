@@ -177,11 +177,13 @@ GenerateTwoBody(G4double initialMass, const std::vector<G4double>& masses,
   G4double costh = angDist ? angDist->GetCosTheta(bullet_ekin, pscm)
                            : (2.*inuclRndm() - 1.);
 
-  mom.setRThetaPhi(pscm, std::acos(costh), UniformPhi());
+  G4double phi = UniformPhi();
+
+  mom.setRThetaPhi(pscm, std::acos(costh), phi);
 
   if (GetVerboseLevel()>3) {		// Copied from old G4EPCollider
     G4cout << " Particle kinds = " << kinds[0] << " , " << kinds[1]
-	   << "\n pmod " << pscm
+	   << " pmod " << pscm <<" costh="<< costh <<", phi="<< phi
 	   << "\n before rotation px " << mom.x() << " py " << mom.y()
 	   << " pz " << mom.z() << G4endl;
   }
@@ -221,7 +223,7 @@ GenerateMultiBody(G4double initialMass, const std::vector<G4double>& masses,
   while ((G4int)finalState.size() != multiplicity && ++itry < itry_max) {
     FillMagnitudes(initialMass, masses);
     FillDirections(initialMass, masses, finalState);
-    G4cout <<" -- returning from FillDirections(): itry="<< itry <<" fS.size="<< finalState.size() << G4endl;
+    //G4cout <<" -- returning from from GenerateMultiBody(): itry="<< itry <<" fS.size="<< finalState.size() << G4endl;
   }
 }
 
@@ -268,7 +270,7 @@ FillMagnitudes(G4double initialMass, const std::vector<G4double>& masses) {
       if (eleft <= mass_last) break;
 
       modules[i] = pmod;
-      G4cout<<" modules["<< i <<"] = "<< modules[i] <<"\n";
+      //G4cout<<" modules["<< i <<"] = "<< modules[i] <<"\n";
     }
 
     if (i < multiplicity-1) continue;	// Failed to generate full kinematics
@@ -376,14 +378,14 @@ FillDirManyBody(G4double initialMass, const std::vector<G4double>& masses,
     costh = GenerateCosTheta(kinds[i], modules[i]);
     finalState[i] = generateWithFixedTheta(costh, modules[i], masses[i]);
     finalState[i] = toSCM.rotate(finalState[i]);	// Align target axis
-    G4cout<<"finalState["<< i <<"] = "<< finalState[i] << G4endl;
+    if (GetVerboseLevel()>3) G4cout<<"finalState["<< i <<"] = "<< finalState[i] << G4endl;
   }
 
   // Total momentum so far, to compute recoil of last two particles
   G4LorentzVector psum =
     std::accumulate(finalState.begin(), finalState.end()-2, G4LorentzVector());
   G4double pmod = psum.rho();
-  G4cout <<"   psum = accumulate: "<< psum <<" and pmod="<< pmod << G4endl;
+  if (GetVerboseLevel()>3) G4cout <<"   psum = accumulate: "<< psum <<" and pmod="<< pmod << G4endl;
 
   costh = -0.5 * (pmod*pmod +
 		  modules[multiplicity-2]*modules[multiplicity-2] -
@@ -416,14 +418,14 @@ FillDirManyBody(G4double initialMass, const std::vector<G4double>& masses,
 
 G4double G4CascadeFinalStateAlgorithm::
 GenerateCosTheta(G4int ptype, G4double pmod) const {
-  if (GetVerboseLevel() > 2) {
+  if (GetVerboseLevel() > 1) {
     G4cout << " >>> " << GetName() << "::GenerateCosTheta " << ptype
 	   << " " << pmod << G4endl;
   }
 
   if (multiplicity == 3) {		// Use distribution for three-body
     G4double result = angDist->GetCosTheta(bullet_ekin, ptype);
-    std::cerr<<" GenCosTheta(): mult=3 -> return cosTheta="<< result <<"\n";
+    if(GetVerboseLevel() > 1) std::cerr<<" GenCosTheta(): mult=3 -> return cosTheta="<< result <<"\n";
     return result;
   }
 
@@ -447,20 +449,22 @@ GenerateCosTheta(G4int ptype, G4double pmod) const {
 	     << G4endl;
     }
   }
-  
-  if (GetVerboseLevel() > 3)
-    G4cout << " itry1 " << itry1 << " sinth " << sinth << G4endl;
-  
+
   if (itry1 == itry_max) {
-    if (GetVerboseLevel() > 2)
+    if (GetVerboseLevel() > 2) {
       G4cout << " high energy angles generation: itry1 " << itry1 << G4endl;
-    
+    }
+
     sinth = 0.5 * inuclRndm();
   }
 
   // Convert generated sin(theta) to cos(theta) with random sign
   G4double costh = std::sqrt(1.0 - sinth * sinth);
   if (inuclRndm() > 0.5) costh = -costh;
+
+  if (GetVerboseLevel()>2) {
+    G4cout << " GenCosTheta: itry1 " << itry1 << " sinth=" << sinth <<" costh="<< costh << G4endl;
+  }
 
   return costh;
 }

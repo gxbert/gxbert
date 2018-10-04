@@ -76,7 +76,7 @@ protected:
       return T(0.0);
     }
     int JK = Get(vecJK, 0);
-    //if (fVerbose > 3)
+    if (fVerbose > 3)
       std::cerr << " JK " << JK <<"\n";
 
     GXPowVec<T,IntT>* theGXPow = GXPowVec<T,IntT>::GetInstance();	// For convenience

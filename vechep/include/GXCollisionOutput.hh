@@ -142,7 +142,7 @@ public:
     return outgoingParticles;
   };
 
-  //G4int numberOfOutgoingNuclei() const { return outgoingNuclei.size(); };
+  G4int numberOfOutgoingNuclei() const { return 0; } //outgoingNuclei.size(); };
  
   // const std::vector<G4InuclNuclei>& getOutgoingNuclei() const {
   //   return outgoingNuclei;

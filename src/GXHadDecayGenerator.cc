@@ -121,7 +121,7 @@ G4bool
 GXHadDecayGenerator::Generate(G4double initialMass,
 				   const std::vector<G4double>& masses,
 				   std::vector<G4LorentzVector>& finalState) {
-  if (verboseLevel) 
+  if (verboseLevel>1)
     G4cout << " >>> GXHadDecayGenerator::Generate (mass)" << G4endl;
 
   if (!theAlgorithm) ReportMissingAlgorithm();
@@ -139,7 +139,7 @@ G4bool
 GXHadDecayGenerator::Generate(const GXParticleDefinition* initialPD,
 				   const std::vector<G4double>& masses,
 				   std::vector<G4LorentzVector>& finalState) {
-  if (verboseLevel) 
+  if (verboseLevel>1)
     G4cout << " >>> GXHadDecayGenerator::Generate (particle)" << G4endl;
 
   return (initialPD && Generate(initialPD->GetPDGMass(), masses, finalState));
@@ -151,7 +151,7 @@ G4bool
 GXHadDecayGenerator::Generate(const G4LorentzVector& initialState,
 				   const std::vector<G4double>& masses,
 			      std::vector<G4LorentzVector>& finalState) {
-  if (verboseLevel) 
+  if (verboseLevel>1)
     G4cout << " >>> GXHadDecayGenerator::Generate (frame)" << G4endl;
 
   G4bool good = Generate(initialState.m(), masses, finalState);
@@ -172,7 +172,7 @@ G4bool GXHadDecayGenerator::
 GenerateOneBody(G4double initialMass,
 		const std::vector<G4double>& masses,
 		std::vector<G4LorentzVector>& finalState) const {
-  if (verboseLevel>1) 
+  if (verboseLevel>1)
     G4cout << " >>> GXHadDecayGenerator::GenerateOneBody" << G4endl;
 
   // Initialization and sanity checks

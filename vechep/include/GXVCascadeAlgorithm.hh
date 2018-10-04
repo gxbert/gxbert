@@ -40,7 +40,7 @@ public:
   void  SetVerboseLevel(int verbose)
   {
     verboseLevel = verbose;
-    if (GetVerboseLevel() > 0)
+    if (GetVerboseLevel() > 2)
       std::cerr << " >>> "<< GetName() << "::SetVerboseLevel("<< verbose <<")\n";
   }
 
@@ -89,7 +89,7 @@ private:
     Bool_v okay( masses.size() >= 2 );
     okay = okay & (initialMass > T(0.)) & (initialMass >= std::accumulate(masses.begin(), masses.end(), T(0.)));
 
-    if (verboseLevel) {
+    if (verboseLevel>1) {
       std::cerr << GetName() << "::IsDecayAllowed? initialMass " << initialMass
 		<< " - " << masses.size() << " masses sum "
 		<< std::accumulate(masses.begin(), masses.end(), T(0.)) <<"\n";
@@ -125,7 +125,9 @@ private:
       vecCore::MaskedAssign(PSQ, PSQ < 0., T(0.));
     }
 
-    return math::Sqrt(PSQ) / (2. * M0);
+    T result = math::Sqrt(PSQ) / (2. * M0);
+    if (verboseLevel > 1) std::cerr<<"TwoBodyMom(): returning T="<< result <<"\n";
+    return result;
   }
 
   // Convenience functions for uniform angular distributions
@@ -154,6 +156,7 @@ private:
   T GXVCascadeAlgorithm<T>::UniformPhi() const
   {
     return randomPHI<T>();
+    //return CLHEP::twopi * G4UniformRand();
   }
 
 
@@ -176,7 +179,7 @@ private:
 	   std::vector<T> const& masses,
 	   std::vector<LorentzVector<T>>& finalState)
   {
-    if (verboseLevel) std::cerr << GetName() << "::Generate.\n";
+    if (verboseLevel>1) std::cerr << GetName() << "::Generate.\n";
 
     // Initialization and sanity check
     finalState.clear();

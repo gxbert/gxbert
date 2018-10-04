@@ -303,7 +303,9 @@ FillMagnitudes(T initialMass, const std::vector<T>& masses)
       if (vecCore::MaskFull(done)) break;
 
       vecCore::MaskedAssign(modules[i], !done, pmod);
-      std::cerr<<" updated modules["<< i <<"] = "<< modules[i] <<"\n";
+      if (GetVerboseLevel() > 2) {
+	std::cerr<<" updated modules["<< i <<"] = "<< modules[i] <<"\n";
+      }
     }
 
     if (i < maxmult-1) continue;	// Failed to generate full kinematics
@@ -435,13 +437,17 @@ FillDirManyBody(T initialMass, const std::vector<T>& masses, std::vector<Lorentz
     costh = GenerateCosTheta(kinds[i], modules[i]);
     finalState[i] = generateWithFixedTheta(costh, modules[i], masses[i]);
     finalState[i] = toSCM.rotate(finalState[i]);	// Align target axis
-    std::cerr<<"finalState["<< i <<"] = "<< finalState[i] <<"\n";
+    if(GetVerboseLevel()>2) {
+      std::cerr<<"finalState["<< i <<"] = "<< finalState[i] <<"\n";
+    }
   }
 
   // Total momentum so far, to compute recoil of last two particles
   LorentzVector<T> psum = std::accumulate(finalState.begin(), finalState.end()-2, LorentzVector<T>());
   T pmod = psum.Vect().Mag();
-  std::cerr<<"   psum = accumulate: "<< psum <<" and pmod="<< pmod <<"\n";
+  if (GetVerboseLevel()>1) {
+    std::cerr<<"   psum = accumulate: "<< psum <<" and pmod="<< pmod <<"\n";
+  }
 
   costh = -0.5 * (pmod * pmod +
 		  modules[multiplicity-2] * modules[multiplicity-2] -
@@ -453,7 +459,9 @@ FillDirManyBody(T initialMass, const std::vector<T>& masses, std::vector<Lorentz
   }
 
   if (!vecCore::MaskEmpty(math::Abs(costh) >= maxCosTheta)) {  // Bad kinematics; abort generation
-    std::cerr <<  " *** FillDirManyBody(): triggered |costh| >= maxCosTheta " << costh <<"\n";
+    if (GetVerboseLevel() > 2) {
+      std::cerr <<  " *** FillDirManyBody(): triggered |costh| >= maxCosTheta " << costh <<"\n";
+    }
     //finalState.clear();
     //return;
   }
@@ -483,8 +491,8 @@ GenerateCosTheta(vecCore::Index_v<T> ptype, T pmod) const {
   GXPowVec<T,Int_T>* ppow = GXPowVec<T, Int_T>::GetInstance();
 
   if (GetVerboseLevel() > 2) {
-    std::cerr << " >>> " << GetName() << "::GenerateCosTheta " << ptype
-	      << " " << pmod <<"\n";
+    std::cerr << " >>> " << GetName() << "::GenerateCosTheta: ptype=" << ptype
+	      << " pmod=" << pmod <<"\n";
   }
 
   if (multiplicity == 3) {		// Use distribution for three-body
@@ -495,7 +503,9 @@ GenerateCosTheta(vecCore::Index_v<T> ptype, T pmod) const {
       double costhi = angDist[i]->GetCosTheta(ekin, itype);
       Set(result, i, costhi);
     }
-    std::cerr<<" GenCosTheta(): mult=3 -> return cosTheta="<< result <<"\n";
+    if (GetVerboseLevel() > 2) {
+      std::cerr<<" GenCosTheta(): mult=3 -> return cosTheta="<< result <<"\n";
+    }
     return result;
   }
 
@@ -525,8 +535,9 @@ GenerateCosTheta(vecCore::Index_v<T> ptype, T pmod) const {
     }
   } while (!vecCore::MaskFull(done) && ++itry1 < itry_max);
 
-  //if (GetVerboseLevel() > 3)
-  std::cerr << "GXCascadeFSAlgorithm: GenerateCosTheta(): itry1=" << itry1 << " sinth=" << sinth <<"\n";
+  if (GetVerboseLevel() > 3) {
+    std::cerr << "GXCascadeFSAlgorithm: GenerateCosTheta(): itry1=" << itry1 << " sinth=" << sinth <<"\n";
+  }
 
   if (itry1 == itry_max) {
     if (GetVerboseLevel() > 2) {
@@ -568,14 +579,18 @@ GenerateTwoBody(T initialMass, std::vector<T> const& masses,
       // GL.. to be fully vectorized eventually
       double costhi = angDist[i] ? angDist[i]->GetCosTheta(Get(bullet_ekin,i), Get(pscm,i)) : (2. * inuclRndm<double>() - 1.);
       Set(costh, i, costhi);
+      if(GetVerboseLevel() > 3) {
+	std::cerr<<" loop i="<< i <<" angDist[i]="<< angDist[i] <<", ekin@i="<< Get(bullet_ekin,i)
+		 <<", pscm@i="<< Get(pscm,i) <<", costhi="<< costhi <<", costh="<< costh <<"\n";
+      }
     }
 
-    //mom.setRThetaPhi(pscm, Acos(costh), this->UniformPhi());
-    mom.SetMagCosThPhi(pscm, costh, this->UniformPhi());
+    T phi = this->UniformPhi();
+    mom.SetMagCosThPhi(pscm, costh, phi);
 
     if (GetVerboseLevel() > 3) {		// Copied from old G4EPCollider
       std::cerr << " Particle kinds = " << kinds[0] << " , " << kinds[1]
-		<< "\n pmod " << pscm
+		<< "\n pmod " << pscm <<" costh="<< costh <<", phi="<< phi
 		<< "\n before rotation px " << mom.x() << " py " << mom.y()
 		<< " pz " << mom.z() <<"\n";
     }
@@ -623,7 +638,9 @@ GenerateMultiBody(T initialMass, const std::vector<T>& masses,
     FillMagnitudes(initialMass, masses);
     FillDirections(initialMass, masses, finalState);
     done |= (T(finalState.size()) == multiplicity);
-    std::cerr<<" -- returning from FillDirections(): itry="<< itry <<" fS.size="<< finalState.size() <<" and done="<< done <<"\n";
+    if (GetVerboseLevel() > 3) {
+      std::cerr<<" -- returning from FillDirections(): itry="<< itry <<" fS.size="<< finalState.size() <<" and done="<< done <<"\n";
+    }
   }
 }
 
@@ -643,7 +660,9 @@ FillUsingKopylov(T initialMass,
 
   size_t N = masses.size();
   finalState.resize(N);
-  std::cerr<<" *** FillUsingKopylov(): finalState.size() = "<< finalState.size() <<"\n";
+  if (GetVerboseLevel()>2) {
+    std::cerr<<" *** FillUsingKopylov(): finalState.size() = "<< finalState.size() <<"\n";
+  }
 
   T zero(0.0);
   T mtot = std::accumulate(masses.begin(), masses.end(), zero);

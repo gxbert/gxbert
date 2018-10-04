@@ -720,7 +720,9 @@ collide(GXInuclParticle<T> const* bullet, GXInuclParticle<T> const* target, GXCo
   // in vector mode, sorting is painful!
   //std::sort(particles.begin(), particles.end(), GXParticleLargerEkin<double>());
   output.addOutgoingParticles(particles);
-  std::cerr <<" GXEPCollider::collide(): returning... particle[0]="<< particles[0] <<" and part[1]="<< particles[1] << G4endl;
+  if (verboseLevel > 1) {
+    std::cerr <<" GXEPCollider::collide(): returning... particle[0]="<< particles[0] <<" and part[1]="<< particles[1] << G4endl;
+  }
 }
 
 template <typename T>

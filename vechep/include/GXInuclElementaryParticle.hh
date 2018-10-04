@@ -288,13 +288,13 @@ public:
   virtual void setParticleMass(Index_v<T> const& itype) override
   {
     if (VectorSize<T>() == 1) {
-      this->setMass( getDefinition(Get(itype,0)) -> GetPDGMass() * CLHEP::GeV/CLHEP::MeV );
+      this->setMass( getDefinition(Get(itype,0)) -> GetPDGMass() * CLHEP::MeV/CLHEP::GeV );
     }
     else {
       T mass;
       for (size_t i = 0; i < VectorSize<T>(); ++i) {
 	auto pd = getDefinition(Get(type(), i));
-	Set(mass, i, (pd ? pd->GetPDGMass() * CLHEP::GeV/CLHEP::MeV : 0.0));
+	Set(mass, i, (pd ? pd->GetPDGMass() * CLHEP::MeV/CLHEP::GeV : 0.0));
       }
       this->setMass( mass );
     }

@@ -25,6 +25,7 @@
 #include "G4InuclParticleNames.hh"
 
 #include <iostream>
+#include "Randomize.hh"
 
 //using namespace ::vecCore;
 using namespace gxbert;
@@ -36,7 +37,7 @@ size_t nReps     = 1;
 size_t nEvents   = 16; // 1024*64;
 double kinEnergy = 1.500; // in GeV
 
-int debugLevel   = 4;
+int debugLevel   = 0;
 
 bool isOutputInvalid(G4InuclParticle const &bullet, G4CollisionOutput const &output)
 {
@@ -44,8 +45,8 @@ bool isOutputInvalid(G4InuclParticle const &bullet, G4CollisionOutput const &out
   G4int npart = output.numberOfOutgoingParticles();
   G4int nfrag = output.numberOfOutgoingNuclei();
 
-  const GXParticleDefinition* firstOut = (npart == 0) ? 0 :
-    output.getOutgoingParticles().begin()->getDefinition();
+  const GXParticleDefinition* out0 = (npart == 0) ? 0 : output.getOutgoingParticles()[0].getDefinition();
+  const GXParticleDefinition* out1 = (npart == 0) ? 0 : output.getOutgoingParticles()[1].getDefinition();
 
   /*
 #ifdef G4CASCADE_DEBUG_INTERFACE
@@ -71,17 +72,29 @@ bool isOutputInvalid(G4InuclParticle const &bullet, G4CollisionOutput const &out
 #endif
   */
 
-  return ( ((npart != 0) &&
-	    //#ifdef G4CASCADE_COULOMB_DEV
-	    //(coulombBarrierViolation() && npart+nfrag > 2)
-	    //#else
-	      (npart+nfrag < 3 && firstOut == bullet.getDefinition())
-	    //#endif
-             )
-	     //#ifndef G4CASCADE_SKIP_ECONS
-	     //|| (!balance->okay())
-	     //#endif
-	 );
+  // return ( ((npart != 0) &&
+    // 	    //#ifdef G4CASCADE_COULOMB_DEV
+    // 	    //(coulombBarrierViolation() && npart+nfrag > 2)
+    // 	    //#else
+    // 	      (npart+nfrag < 3 && (out0 == bullet.getDefinition() || out1 == bullet.getDefinition()))
+    // 	    //#endif
+    //          )
+    // 	     //#ifndef G4CASCADE_SKIP_ECONS
+    // 	     //|| (!balance->okay())
+    // 	     //#endif
+    // 	 );
+
+  bool result = (npart==0);
+
+  if(debugLevel>1) {
+    std::cout<<"isOutputInvalid/G4: npart="<< npart <<", nfrag="<< nfrag
+	     <<", out0="<< out0->GetParticleName()
+	     <<", out1="<< out1->GetParticleName()
+	     <<", bullet="<< bullet.getDefinition()->GetParticleName()
+	     <<" --> return "<< result <<"\n";
+  }
+
+  return result;
 }
 
 template <typename T>
@@ -89,9 +102,10 @@ bool isOutputInvalid(GXInuclParticle<T> const& bullet, GXCollisionOutput<T> cons
 {
   // Quantities necessary for conditional block below
   int npart = output.numberOfOutgoingParticles();
-  //int nfrag = output.numberOfOutgoingNuclei();
+  int nfrag = output.numberOfOutgoingNuclei();
 
-  //const GXParticleDefinition* firstOut = (npart == 0) ? 0 : getDefinition(output.getOutgoingParticles().begin()->type());
+  Index_v<T> types = output.getOutgoingParticles().begin()->type();
+  //const GXParticleDefinition* firstOut = (npart == 0) ? 0 : output.getOutgoingParticles().begin()->getDefinition();
 
   /*
 #ifdef G4CASCADE_DEBUG_INTERFACE
@@ -117,17 +131,29 @@ bool isOutputInvalid(GXInuclParticle<T> const& bullet, GXCollisionOutput<T> cons
 #endif
   */
 
-  return ( ((npart != 0) //&&
-	    //#ifdef G4CASCADE_COULOMB_DEV
-	    //(coulombBarrierViolation() && npart+nfrag > 2)
-	    //#else
-	    //(npart+nfrag < 3 && firstOut == bullet.getDefinition())
-	    //#endif
-             )
-	     //#ifndef G4CASCADE_SKIP_ECONS
-	     //|| (!balance->okay())
-	     //#endif
-	 );
+  Index_v<T> btypes = dynamic_cast<GXInuclElementaryParticle<T> const*>(&bullet)->type();
+  // GXInuclElementaryParticle<T> const* epBullet =
+  // GXParticleDefinition const* bDef0 = (epBullet ? getDefinition(Get(epBullet->type(),0)) : 0);
+
+  // return ( ((npart != 0) &&
+  // 	    //#ifdef G4CASCADE_COULOMB_DEV
+  // 	    //(coulombBarrierViolation() && npart+nfrag > 2)
+  // 	    //#else
+  // 	    (npart+nfrag < 3 && MaskFull(types == btypes))
+  // 	    //#endif
+  //            )
+  // 	     //#ifndef G4CASCADE_SKIP_ECONS
+  // 	     //|| (!balance->okay())
+  // 	     //#endif
+  // 	 );
+
+  bool result = (npart==0);
+  if(debugLevel>1) {
+    std::cout<<"isOutputInvalid/G4: npart="<< npart <<", nfrag="<< nfrag <<", firstTypes="<< types <<", bullet.types="<< btypes
+	     <<" --> return "<< result <<"\n";
+  }
+
+  return result;
 }
 
 
@@ -158,9 +184,9 @@ void RunG4ElementaryParticleCollider(GXTrack_v const& soaBullets, GXTrack_v cons
       soaTargets.getFourMomentum(i, lorvec);
       target.fill(lorvec, G4InuclParticleNames::neutron);
 
-      if (debugLevel>0) {
-	std::cerr<<"\n=== G4InuclEP-bullet: "<< bullet <<"\n";
-	std::cerr<<"\n=== G4InuclEP-target: "<< target <<"\n";
+      if (debugLevel>1) {
+	std::cerr<<"\n=== G4InuclEP-bullet: "<< bullet;
+	std::cerr<<"\n=== G4InuclEP-target: "<< target <<"\n\n";
       }
 
       numberOfTries = 0;
@@ -171,7 +197,11 @@ void RunG4ElementaryParticleCollider(GXTrack_v const& soaBullets, GXTrack_v cons
       } while ( numberOfTries <= 20 && isOutputInvalid(bullet, output) );
 
       // update counters
-      cerr<<"***** Event "<< i <<" Ntries="<< numberOfTries <<" Final state: "<< output.numberOfOutgoingParticles() <<" hadrons + "<< output.numberOfOutgoingNuclei() <<" nuclei\n"; 
+      if(debugLevel>0) {
+	cerr<<"***** Event "<< i <<" Ntries="<< numberOfTries <<" Final state: "<< output.numberOfOutgoingParticles()
+	    <<" hadrons + "<< output.numberOfOutgoingNuclei() <<" nuclei\n";
+      }
+
       nHadrons += output.numberOfOutgoingParticles();
       const std::vector<G4InuclElementaryParticle>& outParticles = output.getOutgoingParticles();
       std::vector<G4InuclElementaryParticle>::const_iterator ipart = outParticles.begin(), iend = outParticles.end();
@@ -235,9 +265,9 @@ void RunGXElementaryParticleCollider(const char* testname, GXTrack_v const& soaB
 
       GXInuclElementaryParticle<Real_v> const* pbullets = dynamic_cast<GXInuclElementaryParticle<Real_v> const*>(&bullets);
       GXInuclElementaryParticle<Real_v> const* ptargets = dynamic_cast<GXInuclElementaryParticle<Real_v> const*>(&targets);
-      if (debugLevel>0) {
-	std::cerr<<"\n=== GXInuclEP-bullets: "<< *pbullets <<"\n";
-	std::cerr<<"\n=== GXInuclEP-targets: "<< *ptargets <<"\n";
+      if (debugLevel>1) {
+	std::cerr<<"\n=== GXInuclEP-bullets: "<< *pbullets;
+	std::cerr<<"\n=== GXInuclEP-targets: "<< *ptargets <<"\n\n";
       }
 
       /*
@@ -269,9 +299,11 @@ void RunGXElementaryParticleCollider(const char* testname, GXTrack_v const& soaB
       } while ( numberOfTries <= 20 && isOutputInvalid<Real_v>(*pbullets, output) );
 
       // update counters
-      cerr<<"***** Event "<< i <<" Ntries="<< numberOfTries
-          <<" Final state: "<< output.numberOfOutgoingParticles()
-          <<" hadrons + 0 nuclei\n"; //<< output.numberOfOutgoingNuclei() <<" nuclei\n";
+      if (debugLevel>0) {
+	cerr<<"***** Event "<< i <<" Ntries="<< numberOfTries
+	    <<" Final state: "<< output.numberOfOutgoingParticles()
+	    <<" hadrons + 0 nuclei\n"; //<< output.numberOfOutgoingNuclei() <<" nuclei\n";
+      }
 
       /*
       auto initStateVec = soaBullets.type() * soaTargets.type();
@@ -346,13 +378,19 @@ int main(int argc, char* argv[]) {
   // }
 
   // Using function calls for benchmarks
+  //CLHEP::HepRandomEngine* theEngine = G4Random::getTheEngine();
+  CLHEP::HepRandom::setTheSeed(17263543);
   G4CollisionOutput output;
   RunG4ElementaryParticleCollider(soaBullets, soaTargets, output);
 
   // benchmarks templated on types
+  //theEngine->setSeeds(seeds);
+  CLHEP::HepRandom::setTheSeed(17263543);
   GXCollisionOutput<double> scalarOutput;
   RunGXElementaryParticleCollider<double>("double", soaBullets, soaTargets, scalarOutput);
 
+  //theEngine->setSeeds(seeds);
+  CLHEP::HepRandom::setTheSeed(17263543);
   GXCollisionOutput<Real_v> vectorOutput;
   RunGXElementaryParticleCollider<Real_v>("Real_v", soaBullets, soaTargets, vectorOutput);
 

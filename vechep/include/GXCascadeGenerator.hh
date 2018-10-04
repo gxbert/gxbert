@@ -82,7 +82,7 @@ template <typename T>
 GXCascadeGenerator<T>::GXCascadeGenerator(GXVCascadeAlgorithm<T>* alg,
 					  int verbose)
   : verboseLevel(verbose), theAlgorithm(alg) {
-  if (verboseLevel) {
+  if (verboseLevel>1) {
     std::cerr << " >>> GXCascadeGenerator";
     if (theAlgorithm) std::cerr << " using " << theAlgorithm->GetName();
     std::cerr <<"\n";
@@ -102,7 +102,7 @@ template <typename T>
 void GXCascadeGenerator<T>::SetVerboseLevel(int verbose)
 {
   verboseLevel = verbose;
-  if (verboseLevel)
+  if (verboseLevel>1)
     std::cerr << " >>> GXCascadeGenerator::SetVerboseLevel("<< verbose <<")\n";
   if (theAlgorithm) theAlgorithm->SetVerboseLevel(verbose);
 }
@@ -114,7 +114,7 @@ bool GXCascadeGenerator<T>::Generate(T initialMass,
 				     const std::vector<T>& masses,
 				     std::vector<LorentzVector<T>>& finalState)
 {
-  if (verboseLevel) 
+  if (verboseLevel>1)
     std::cerr << " >>> GXCascadeGenerator::Generate (mass) [EMPTY!!]\n";
 
   if (!theAlgorithm) ReportMissingAlgorithm();
@@ -135,7 +135,7 @@ Generate(GXParticleDefinition const* initialPD,
 	 std::vector<T> const& masses,
 	 std::vector<LorentzVector<T>>& finalState)
 {
-  if (verboseLevel) std::cerr << " >>> GXCascadeGenerator::Generate (particle).\n";
+  if (verboseLevel>1) std::cerr << " >>> GXCascadeGenerator::Generate (particle).\n";
   return (initialPD && Generate(T(initialPD->GetPDGMass()), masses, finalState));
 }
 
@@ -147,7 +147,7 @@ Generate(LorentzVector<T> const& initialState,
 	 std::vector<T> const& masses,
 	 std::vector<LorentzVector<T>>& finalState)
 {
-  if (verboseLevel) {
+  if (verboseLevel>1) {
     std::cerr << " >>> GXCascadeGenerator::Generate (frame).\n";
   }
   bool good = Generate(initialState.m(), masses, finalState);
@@ -190,7 +190,7 @@ template <typename T>
 void GXCascadeGenerator<T>::
 ReportMissingAlgorithm() const
 {
-  if (verboseLevel) {
+  if (verboseLevel>1) {
     std::cerr << "GXCascadeGenerator<T>: no algorithm specified.\n";
   }
   throw GXHadronicException(__FILE__, __LINE__, "Null algorithm pointer");

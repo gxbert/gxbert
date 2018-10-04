@@ -49,7 +49,7 @@
 void GXVHadDecayAlgorithm::Generate(G4double initialMass,
 				    const std::vector<G4double>& masses,
 				    std::vector<G4LorentzVector>& finalState) {
-  if (verboseLevel) G4cout << GetName() << "::Generate" << G4endl;
+  if (verboseLevel>1) G4cout << GetName() << "::Generate" << G4endl;
 
   // Initialization and sanity check
   finalState.clear();
@@ -72,7 +72,7 @@ IsDecayAllowed(G4double initialMass,
     (initialMass > 0. && masses.size() >= 2 &&
      initialMass >= std::accumulate(masses.begin(),masses.end(),0.));
 
-  if (verboseLevel) {
+  if (verboseLevel>1) {
     G4cout << GetName() << "::IsDecayAllowed? initialMass " << initialMass
 	   << " " << masses.size() << " masses sum "
 	   << std::accumulate(masses.begin(),masses.end(),0.) << G4endl;
@@ -103,7 +103,9 @@ G4double GXVHadDecayAlgorithm::TwoBodyMomentum(G4double M0, G4double M1,
     PSQ = 0.;
   }
 
-  return std::sqrt(PSQ)/(2.*M0);
+  G4double result = std::sqrt(PSQ)/(2.*M0);
+  if (verboseLevel > 1) G4cout<<"TwoBodyMomentum(): return result = "<< result << G4endl;
+  return result;
 }
 
 // Convenience functions for uniform angular distributions

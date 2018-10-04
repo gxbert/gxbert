@@ -11,6 +11,7 @@ SIMD/SIMT version of G4InuclSpecialFunctions.hh/cc
 #include "GXRandom.hh"
 #include "GXPowVec.hh"
 #include "CLHEP/Units/SystemOfUnits.h"
+#include "Randomize.hh"
 
 namespace gxbert {
 inline namespace GXBERT_IMPL_NAMESPACE {
@@ -112,6 +113,7 @@ namespace GXInuclSpecialFunctions {
   typename Backend::Double_v inuclRndm() 
   { 
     return gxbert::cxx::GXRandom::RNG().Uniform<Backend>();
+    //return G4UniformRand();
   } 
 
   template <typename T>
@@ -120,6 +122,7 @@ namespace GXInuclSpecialFunctions {
   T inuclRndm()
   {
     return gxbert::cxx::GXRandom::RNG().Uniform<VectorBackend>();
+    //return G4UniformRand();
   }
 
   template <>
