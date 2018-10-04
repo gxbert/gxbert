@@ -37,7 +37,7 @@ size_t nReps     = 1;
 size_t nEvents   = 16; // 1024*64;
 double kinEnergy = 1.500; // in GeV
 
-int debugLevel   = 0;
+int debugLevel   = 4;
 
 bool isOutputInvalid(G4InuclParticle const &bullet, G4CollisionOutput const &output)
 {

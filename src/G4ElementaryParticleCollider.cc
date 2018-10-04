@@ -286,7 +286,7 @@ G4ElementaryParticleCollider::generateMultiplicity(G4int is,
   }
 
   //return mul;
-  return 2;  // GL: temporarily forced to match comparisons with vectorized code
+  return 4;  // GL: temporarily forced to match comparisons with vectorized code
 }
 
  
