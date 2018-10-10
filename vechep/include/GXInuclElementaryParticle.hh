@@ -285,6 +285,52 @@ public:
 
   VECCORE_ATT_HOST_DEVICE
   VECCORE_FORCE_INLINE
+  Index_v<T> getCharge() const
+  {
+    T qq = getPDGCharge();
+
+    if (VectorSize<T>() == 1) {
+      auto qq0 = Get(qq,0);
+      return (qq0 < 0.0 ? -1 : (qq0 > 0.0 ? 1 : 0) );
+    }
+
+    if (isHomogeneous(iType)) {
+      auto qq0 = Get(qq,0);
+      return Index_v<T>(qq0 < 0.0 ? -1 : (qq0 > 0.0 ? 1 : 0));
+    }
+    else {
+      Index_v<T> iq(0);
+      for (size_t i = 0; i < VectorSize<T>(); ++i) {
+	auto qqi = Get(qq,i);
+	Set(iq, i, (qqi < 0.0 ? -1 : (qqi > 0.0 ? 1 : 0)));
+      }
+      return iq;
+    }
+  }
+
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
+  T getPDGCharge() const
+  {
+    if (VectorSize<T>() == 1) {
+      return getDefinition(Get(iType,0)) -> GetPDGCharge();
+    }
+
+    if (isHomogeneous(iType)) {
+      return T(getDefinition(Get(iType,0)) -> GetPDGCharge());
+    }
+    else {
+      T qq;
+      for (size_t i = 0; i < VectorSize<T>(); ++i) {
+	auto pd = getDefinition(Get(iType, i));
+	Set(qq, i, (pd ? pd->GetPDGCharge() : 0.0));
+      }
+      return qq;
+    }
+  }
+
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
   virtual void setParticleMass(Index_v<T> const& itype) override
   {
     if (VectorSize<T>() == 1) {

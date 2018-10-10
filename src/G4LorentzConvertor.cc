@@ -146,7 +146,7 @@ G4LorentzConvertor::backToTheLab(const G4LorentzVector& mom) const {
 
   if (verboseLevel > 3)
     G4cout << " at lab: px " << mom1.x() << " py " << mom1.y() << " pz "
-	   << mom1.z() << G4endl;
+	   << mom1.z() <<" e "<< mom1.e() << G4endl;
 
   return mom1;
 }

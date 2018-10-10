@@ -210,7 +210,7 @@ public:
   /// Mass getters
   VECCORE_ATT_HOST_DEVICE
   VECCORE_FORCE_INLINE
-  T const& getParticleMass() const { return fMass; }  // returns GeV
+  T const& getMass() const { return fMass; }  // returns GeV
 
   VECCORE_ATT_HOST_DEVICE
   VECCORE_FORCE_INLINE

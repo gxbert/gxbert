@@ -73,7 +73,7 @@ int main()
 
   //=== try a vector of GXInuclElemParticles
   //using Real_v = Vc::Vector<double>;
-  using Real_v = gxbert::VectorBackend::Double_v;
+  using Real_v = Double_v;
 
   int vsize = vecCore::VectorSize<Real_v>();
   GXTrackHandler *handler = new GXTrackHandler(vsize);

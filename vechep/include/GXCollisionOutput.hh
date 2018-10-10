@@ -29,6 +29,9 @@ template <typename T>
 class GXCollisionOutput {
 
 private: 
+  constexpr static size_t fvsize = vecCore::VectorSize<T>();
+  using Int_v = typename vecCore::backend::VcSimdArray<fvsize>::Int_v;
+
   int verboseLevel;
 
   std::vector<GXInuclElementaryParticle<T>> outgoingParticles;
@@ -184,6 +187,98 @@ public:
   double getRemainingExcitationEnergy() const { return eex_rest; };
   G4bool acceptable() const { return on_shell; };
 };
+
+  template <typename T>
+  using Int_v = typename vecCore::backend::VcSimdArray<vecCore::VectorSize<T>()>::Int_v;
+
+  template <typename T>
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
+  LorentzVector<T> GXCollisionOutput<T>::
+  getTotalOutputMomentum() const
+  {
+    if (verboseLevel > 1) {
+      std::cerr <<" >>> GXCollisionOutput<T>::getTotalOutputMomentum\n";
+    }
+
+    LorentzVector<T> tot_mom;
+    int i;
+    for(i=0; i < numberOfOutgoingParticles(); i++) {
+      tot_mom += outgoingParticles[i].getFourMomentum();
+    }
+    // for(i=0; i < numberOfOutgoingNuclei(); i++) {
+    // 	tot_mom += outgoingNuclei[i].getMomentum();
+    // }
+    // for(i=0; i < numberOfFragments(); i++) {
+    // 	tot_mom += recoilFragments[i].GetMomentum()/GeV;	// Need Bertini units!
+    // }
+
+    return tot_mom;
+  }
+
+
+  template <typename T>
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
+  Index_v<T> GXCollisionOutput<T>::
+  getTotalCharge() const
+  {
+    if (verboseLevel > 1) std::cerr << " >>> GXCollisionOutput<T>::getTotalCharge\n";
+
+    Index_v<T> charge(0);
+    int i;
+    for(i=0; i < numberOfOutgoingParticles(); i++) {
+      charge += outgoingParticles[i].getCharge();
+    }
+    // for(i=0; i < numberOfOutgoingNuclei(); i++) {
+    //   charge += outgoingNuclei[i].getCharge();
+    // }
+    // for(i=0; i < numberOfFragments(); i++) {
+    //   charge += recoilFragments[i].GetZ_asInt();
+    // }
+
+    return charge;
+  }
+
+  template <typename T>
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
+  Index_v<T> GXCollisionOutput<T>::
+  getTotalStrangeness() const
+  {
+    if (verboseLevel > 1) std::cerr << " >>> G4CollisionOutput::getTotalStrangeness\n";
+
+    Index_v<T> strange = 0;
+    int i;
+    for(i=0; i < numberOfOutgoingParticles(); i++) {
+      strange += outgoingParticles[i].getStrangeness();
+    }
+
+    return strange;
+  }
+
+  template <typename T>
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
+  Index_v<T> GXCollisionOutput<T>::
+  getTotalBaryonNumber() const
+  {
+    if (verboseLevel > 1) std::cerr <<" >>> G4CollisionOutput::getTotalBaryonNumber\n";
+
+    Index_v<T> baryon = 0;
+    int i(0);
+    for(i=0; i < numberOfOutgoingParticles(); i++) {
+      baryon += outgoingParticles[i].baryon();
+    }
+    // for(i=0; i < numberOfOutgoingNuclei(); i++) {
+    //   baryon += G4int(outgoingNuclei[i].getA());
+    // }
+    // for(i=0; i < numberOfFragments(); i++) {
+    //   baryon += recoilFragments[i].GetA_asInt();
+    // }
+
+    return baryon;
+  }
 
 }
 }

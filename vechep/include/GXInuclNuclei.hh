@@ -24,6 +24,8 @@ namespace gxbert {
 inline namespace GXBERT_IMPL_NAMESPACE {
 
 // these are defined later in this file (should be moved to their own file?)
+VECCORE_ATT_HOST_DEVICE
+VECCORE_FORCE_INLINE
 static GXParticleDefinition const* getDefinition(int ityp);
 //static int type(const GXParticleDefinition *pd);
 
@@ -230,7 +232,7 @@ public:
 
   VECCORE_ATT_HOST_DEVICE
   VECCORE_FORCE_INLINE
-  virtual T getParticleMass() const override
+  T getParticleMass() const
   {
     T result;
     for (size_t i = 0; i < VectorSize<T>(); ++i) {

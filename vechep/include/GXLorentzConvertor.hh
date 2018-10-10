@@ -234,11 +234,12 @@ public:
 
     // use one of the next two options
     auto undo = v2 <= (Real_v)small;
-    vecCore::MaskedAssign(mom1.x(), undo, mom.x());
-    vecCore::MaskedAssign(mom1.y(), undo, mom.y());
-    vecCore::MaskedAssign(mom1.z(), undo, mom.z());
-    vecCore::MaskedAssign(mom1.t(), undo, mom.t());
-
+    if (!MaskEmpty(undo)) {
+      vecCore::MaskedAssign(mom1.x(), undo, mom.x());
+      vecCore::MaskedAssign(mom1.y(), undo, mom.y());
+      vecCore::MaskedAssign(mom1.z(), undo, mom.z());
+      vecCore::MaskedAssign(mom1.t(), undo, mom.t());
+    }
     if (verboseLevel > 3)
       cerr << " at lab: px " << mom1.x() << " py " << mom1.y() << " pz "
 	     << mom1.z() << "\n";

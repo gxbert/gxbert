@@ -97,6 +97,10 @@ public:
   VECCORE_FORCE_INLINE                       
   T const& t() const { return fE; }                                          
 
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
+  T& E() { return fE; }
+
   VECCORE_ATT_HOST_DEVICE 
   VECCORE_FORCE_INLINE                       
   T& E() { return fE; }                                          

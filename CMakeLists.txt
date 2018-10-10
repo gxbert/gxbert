@@ -433,6 +433,7 @@ if (GXBERT_VECTEST)
     ${PROJECT_SOURCE_DIR}/test/LorentzConvertorBenchmark.cc
     ${PROJECT_SOURCE_DIR}/test/ElemParticleColliderBenchmark.cc
     ${PROJECT_SOURCE_DIR}/test/ElemPartMultiplicityBenchmark.cc
+    ${PROJECT_SOURCE_DIR}/test/ValidateEPCollider.cc
     ${PROJECT_SOURCE_DIR}/test/LogABenchmark.cc
     ${PROJECT_SOURCE_DIR}/test/LogXBenchmark.cc
     ${PROJECT_SOURCE_DIR}/test/LogZBenchmark.cc

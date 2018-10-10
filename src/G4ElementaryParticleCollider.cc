@@ -248,7 +248,7 @@ G4ElementaryParticleCollider::collide(G4InuclParticle* bullet,
   };
   
   // Check conservation in multibody final state
-  if (verboseLevel && !validateOutput(bullet, target, particles)) {
+  if (verboseLevel > 1 && !validateOutput(bullet, target, particles)) {
     G4cout << " incoming particles: \n" << *particle1 << G4endl
 	   << *particle2 << G4endl
 	   << " outgoing particles: " << G4endl;

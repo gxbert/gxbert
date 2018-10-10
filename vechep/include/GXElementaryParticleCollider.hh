@@ -181,6 +181,10 @@ public:
     }
   }
 
+  // This is for use with G4EPCollider
+  Bool_v validateOutput(GXInuclParticle<T> const* bullet, GXInuclParticle<T> const* target,
+			const std::vector<GXInuclElementaryParticle<T>>& particles);
+
 private:
   // Copying of modules is forbidden
   GXElementaryParticleCollider(const GXElementaryParticleCollider&);
@@ -706,16 +710,16 @@ collide(GXInuclParticle<T> const* bullet, GXInuclParticle<T> const* target, GXCo
     ipart->setMomentum(mom);
   }
 
-  // // Check conservation in multibody final state
-  // if (verboseLevel && !validateOutput(bullet, target, particles)) {
-  //   cerr << " incoming particles: \n" << *particle1 << G4endl
-  // 	   << *particle2 <<"\n"
-  // 	   << " outgoing particles:\n";
-  //   for(ipart = particles.begin(); ipart != particles.end(); ipart++)
-  // 	cerr << *ipart <<"\n";
+  // Check conservation in multibody final state
+  if (verboseLevel > 1 && !MaskEmpty(validateOutput(bullet, target, particles))) {
+    cerr << " incoming particles: \n" << *particle1 << G4endl
+  	   << *particle2 <<"\n"
+  	   << " outgoing particles:\n";
+    for(ipart = particles.begin(); ipart != particles.end(); ipart++)
+  	cerr << *ipart <<"\n";
 
-  //   cerr<< " <<< Non-conservation in GXElementaryParticleCollider\n";
-  // }
+    cerr<< " <<< Non-conservation in GXElementaryParticleCollider\n";
+  }
 
   // in vector mode, sorting is painful!
   //std::sort(particles.begin(), particles.end(), GXParticleLargerEkin<double>());
@@ -746,6 +750,36 @@ pionNucleonAbsorption(T const& ekin) const
 	  );
 }
 
+} // inline namespace
+} // gxbert namespace
+
+#include "GXCascadeBalanceChecker.hh"
+
+template <typename T>
+VECCORE_ATT_HOST_DEVICE
+VECCORE_FORCE_INLINE
+vecCore::Mask_v<T> gxbert::GXElementaryParticleCollider<T>::
+validateOutput(GXInuclParticle<T> const* bullet, GXInuclParticle<T> const* target,
+	       const std::vector<GXInuclElementaryParticle<T>>& particles)
+{
+  const size_t vsize = vecCore::VectorSize<T>();
+  std::string name = (vsize == 1 ? "scalarChecker" : "vectorChecker");
+  static GXCascadeBalanceChecker<T> checker(name);
+  static bool first = true;
+  if(first) {
+    checker.setLimits(5*CLHEP::perCent, 10*CLHEP::MeV/CLHEP::GeV);	// Bertini internal units
+    checker.setVerboseLevel(verboseLevel);
+    first = false;
+  }
+
+  //if (!checker) return true;		// Skip checks unless requested
+
+  if (verboseLevel > 1) cerr << " >>> GXEPCollider::validateOutput()\n";
+
+  checker.check(bullet, target, particles);
+  return checker.okay();			// Returns false if violations
+}
+
 /*
 // saves final state particles into a SIMD array similar to the input format
 template <typename T>
@@ -763,8 +797,6 @@ SaveOutgoingParticles(G4CollisionOutput& output) const
 
 // initialize verboseLevel
 template <typename T>
-int GXElementaryParticleCollider<T>::verboseLevel = 0;
+int gxbert::GXElementaryParticleCollider<T>::verboseLevel = 0;
 
-}
-}
 #endif	// GXELEMENTARY_PARTICLE_COLLIDER_HH
