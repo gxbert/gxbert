@@ -274,7 +274,7 @@ generateMultiplicity(vecCore::Index_v<T> const& hadPairs, T const& ekin) const
 
   //return mult;
   ////// temporary!!! return fixed multiplicity
-  return Index_v<T>(4);
+  return Index_v<T>(2);
 }
 
 /* // GL Note: I tried to push vectorization into xsecTable->GetMultiplicity(ekin), but got "virtual template methods not allowed" problems
@@ -707,7 +707,7 @@ collide(GXInuclParticle<T> const* bullet, GXInuclParticle<T> const* target, GXCo
   typename std::vector<GXInuclElementaryParticle<T>>::iterator ipart = particles.begin();
   for( ; ipart != particles.end(); ipart++) {
     mom = convertToSCM.backToTheLab(ipart->getFourMomentum());
-    ipart->setMomentum(mom);
+    ipart->setMomentum(mom);  // in GeV
   }
 
   // Check conservation in multibody final state

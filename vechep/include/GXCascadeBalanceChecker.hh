@@ -126,20 +126,20 @@ public:
   // FIXME:  Relative comparisons don't work for zero!
   VECCORE_ATT_HOST_DEVICE
   VECCORE_FORCE_INLINE
-  T deltaE() const { return (final.E() - 2.*initial.E()); } // TODO: wrong 2!!!
+  T deltaE() const { return (final.E() - initial.E()); }
 
   VECCORE_ATT_HOST_DEVICE
   VECCORE_FORCE_INLINE
   T relativeE() const {
     T result(0.);
-    Mask_v<T> done(math::Abs(deltaE()+2.0) < tolerance); // TODO: wrong 2!!
+    Mask_v<T> done(math::Abs(deltaE()) < tolerance);
     MaskedAssign(result, !done, Blend((initial.E() < tolerance), T(1.), deltaE()/initial.E() ));
     return result;
   }
 
   VECCORE_ATT_HOST_DEVICE
   VECCORE_FORCE_INLINE
-  T deltaKE() const { return (ekin(final) - 2.*ekin(initial)); } // TODO: wrong 2!!!
+  T deltaKE() const { return (ekin(final) - ekin(initial)); }
 
   VECCORE_ATT_HOST_DEVICE
   VECCORE_FORCE_INLINE
@@ -228,17 +228,18 @@ private:
     G4InuclNuclei const* nbullet = dynamic_cast<G4InuclNuclei const*>(bullet);
     G4InuclNuclei const* ntarget = dynamic_cast<G4InuclNuclei const*>(target);
 
-    //=== debugging printout ===
-    std::cerr<<"\tbullet: "<< *pbullet <<"\n";
-    std::cerr<<"\ttarget: "<< *ptarget <<"\n";
-    const std::vector<GXInuclElementaryParticle<T>>& outparts = output.getOutgoingParticles();
-    std::cerr<<"\toutput: "<< outparts.size() <<" particles:\n";
-    for(int i=0; i < outparts.size(); ++i) {
-      LorentzVector<T> lorvec = outparts[i].getFourMomentum();
-      std::cerr<<"  i="<< i <<" part[i]=["<< lorvec.px() <<"; "<< lorvec.py() <<"; "<< lorvec.pz() <<"; "<< lorvec.E() <<")\n";
+    if (verboseLevel > 3) {
+      std::cerr <<"======= GXBalanceCheck:\n";
+      std::cerr<<"\tbullet: "<< *pbullet <<"\n";
+      std::cerr<<"\ttarget: "<< *ptarget <<"\n";
+      const std::vector<GXInuclElementaryParticle<T>>& outparts = output.getOutgoingParticles();
+      std::cerr<<"\toutput: "<< outparts.size() <<" particles:\n";
+      for(int i=0; i < outparts.size(); ++i) {
+	LorentzVector<T> lorvec = outparts[i].getFourMomentum();
+	std::cerr<<"  i="<< i <<" part[i]=["<< lorvec.px() <<"; "<< lorvec.py() <<"; "<< lorvec.pz() <<"; "<< lorvec.E() <<")\n";
+      }
+      std::cerr<<"=========\n";
     }
-    std::cerr<<"=========\n";
-    //===========================
 
     // Baryon number, charge and strangeness must be computed "by hand"
     initialCharge = 0;
@@ -261,7 +262,7 @@ private:
     finalStrange = output.getTotalStrangeness();
 
     // Report results
-    if (verboseLevel) {
+    if (verboseLevel > 2) {
       G4cout << " initial px " << initial.x() << " py " << initial.y()
 	     << " pz " << initial.z() << " E " << initial.t()
 	     << " baryon " << initialBaryon << " charge " << initialCharge
@@ -340,7 +341,9 @@ private:
   baryonOkay() const
   {
     Mask_v<T> bokay = (vecCore::Convert<T,Int_v>(deltaB()) == T(0));	// Must be perfect!
-    if (verboseLevel > 1 && !MaskFull(bokay)) std::cerr << fName << ": Baryon number VIOLATED " << deltaB() <<"\n";
+    if (verboseLevel > 1 && !MaskFull(bokay)) {
+      std::cerr << fName << ": Baryon number conservation VIOLATED " << deltaB() <<"\n";
+    }
     return bokay;
   }
 

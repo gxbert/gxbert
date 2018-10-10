@@ -244,7 +244,7 @@ G4ElementaryParticleCollider::collide(G4InuclParticle* bullet,
   particleIterator ipart;
   for(ipart = particles.begin(); ipart != particles.end(); ipart++) {	
     mom = convertToSCM.backToTheLab(ipart->getMomentum());
-    ipart->setMomentum(mom); 
+    ipart->setMomentum(mom);
   };
   
   // Check conservation in multibody final state
@@ -286,7 +286,7 @@ G4ElementaryParticleCollider::generateMultiplicity(G4int is,
   }
 
   //return mul;
-  return 4;  // GL: temporarily forced to match comparisons with vectorized code
+  return 2;  // GL: temporarily forced to match comparisons with vectorized code
 }
 
  

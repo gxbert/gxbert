@@ -139,7 +139,7 @@ G4LorentzConvertor::backToTheLab(const G4LorentzVector& mom) const {
   if (verboseLevel > 3)
     G4cout << " at rest: px " << mom.x() << " py " << mom.y() << " pz "
 	   << mom.z() << " e " << mom.e() << G4endl
-	   << " v2 " << v2 << G4endl;
+	   << " v2 " << v2 <<" vel="<< velocity << G4endl;
 
   G4LorentzVector mom1 = mom;
   if (v2 > small) mom1.boost(velocity);

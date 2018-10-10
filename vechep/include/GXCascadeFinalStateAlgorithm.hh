@@ -589,7 +589,7 @@ GenerateTwoBody(T initialMass, std::vector<T> const& masses,
     mom.SetMagCosThPhi(pscm, costh, phi);
 
     if (GetVerboseLevel() > 3) {		// Copied from old G4EPCollider
-      std::cerr << " Particle kinds = " << kinds[0] << " , " << kinds[1]
+      std::cerr << " ==> Particle kinds = " << kinds[0] << " , " << kinds[1]
 		<< "\n pmod " << pscm <<" costh="<< costh <<", phi="<< phi
 		<< "\n before rotation px " << mom.x() << " py " << mom.y()
 		<< " pz " << mom.z() <<"\n";

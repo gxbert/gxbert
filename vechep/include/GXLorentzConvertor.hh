@@ -225,9 +225,9 @@ public:
       cerr << " >>> GXLorentzConvertor::backToTheLab" << "\n";
 
     if (verboseLevel > 3)
-      cerr << " at rest: px " << mom.x() << " py " << mom.y() << " pz "
-	     << mom.z() << " e " << mom.t() << "\n"
-	     << " v2 " << v2 << "\n";
+      cerr << " input at rest: px " << mom.x() << " py " << mom.y() << " pz "
+	   << mom.z() << " e " << mom.t() << "\n"
+	   << " v2 " << v2 << ", vel="<< velocity <<"\n";
 
     LorentzVector<Real_v> mom1 = mom;
     mom1.Boost(velocity);
@@ -241,8 +241,8 @@ public:
       vecCore::MaskedAssign(mom1.t(), undo, mom.t());
     }
     if (verboseLevel > 3)
-      cerr << " at lab: px " << mom1.x() << " py " << mom1.y() << " pz "
-	     << mom1.z() << "\n";
+      cerr << " output at lab: px " << mom1.x() << " py " << mom1.y() << " pz "
+	   << mom1.z() <<" e " << mom1.e() << "\n";
 
     return mom1;
   }

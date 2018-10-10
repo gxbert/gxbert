@@ -87,7 +87,7 @@ G4CascadeCheckBalance::G4CascadeCheckBalance(G4double relative,
 void G4CascadeCheckBalance::collide(G4InuclParticle* bullet,
 				    G4InuclParticle* target,
 				    G4CollisionOutput& output) {
-  if (verboseLevel)
+  if (verboseLevel>1)
     G4cout << " >>> G4CascadeCheckBalance(" << theName << ")::collide"
 	   << G4endl;
 
@@ -108,6 +108,19 @@ void G4CascadeCheckBalance::collide(G4InuclParticle* bullet,
   G4InuclNuclei* nbullet = dynamic_cast<G4InuclNuclei*>(bullet);
   G4InuclNuclei* ntarget = dynamic_cast<G4InuclNuclei*>(target);
 
+  if (verboseLevel > 3) {
+    std::cerr <<"======= G4CascadeCheckBalance:\n";
+    std::cerr<<"\tbullet: "<< *pbullet <<"\n";
+    std::cerr<<"\ttarget: "<< *ptarget <<"\n";
+    const std::vector<G4InuclElementaryParticle>& outparts = output.getOutgoingParticles();
+    std::cerr<<"\toutput: "<< outparts.size() <<" particles:\n";
+    for(int i=0; i < outparts.size(); ++i) {
+      G4LorentzVector lorvec = outparts[i].getMomentum();
+      std::cerr<<"  i="<< i <<" part[i]=["<< lorvec.px() <<", "<< lorvec.py() <<", "<< lorvec.pz() <<"; "<< lorvec.e() <<")\n";
+    }
+    std::cerr<<"=========\n";
+  }
+
   initialBaryon =
     ((pbullet ? pbullet->baryon() : nbullet ? nbullet->getA() : 0) +
      (ptarget ? ptarget->baryon() : ntarget ? ntarget->getA() : 0) );
@@ -124,7 +137,7 @@ void G4CascadeCheckBalance::collide(G4InuclParticle* bullet,
   finalStrange = output.getTotalStrangeness();
 
   // Report results
-  if (verboseLevel) {
+  if (verboseLevel > 2) {
     G4cout << " initial px " << initial.px() << " py " << initial.py()
 	   << " pz " << initial.pz() << " E " << initial.e()
 	   << " baryon " << initialBaryon << " charge " << initialCharge
@@ -139,7 +152,7 @@ void G4CascadeCheckBalance::collide(G4InuclParticle* bullet,
 // For de-excitation, take G4Fragment as initial state
 void G4CascadeCheckBalance::collide(const GXFragment& fragment,
 				    G4CollisionOutput& output) {
-  if (verboseLevel)
+  if (verboseLevel>1)
     G4cout << " >>> G4CascadeCheckBalance(" << theName << ")::collide(<FRAG>)"
 	   << G4endl;
 
@@ -174,7 +187,7 @@ void G4CascadeCheckBalance::collide(const GXFragment& fragment,
 void G4CascadeCheckBalance::collide(G4InuclParticle* bullet, 
 				    G4InuclParticle* target,
     const std::vector<G4InuclElementaryParticle>& particles) {
-  if (verboseLevel)
+  if (verboseLevel>1)
     G4cout << " >>> G4CascadeCheckBalance(" << theName << ")::collide(<vector>)"
 	   << G4endl;
 

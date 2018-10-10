@@ -85,6 +85,7 @@ public:
   GXInuclParticle(const GXInuclParticle<T>& right)
     : fDir(right.fDir)
     , fkinEnergy(right.fkinEnergy)
+    , fMass(right.fMass)
     , fModelID(right.fModelID)
   { }
 
@@ -117,7 +118,7 @@ public:
 
   VECCORE_ATT_HOST_DEVICE
   VECCORE_FORCE_INLINE
-  T getKineticEnergy() const { return fkinEnergy; }
+  T getKineticEnergy() const { return fkinEnergy; } // returns GeV, unlike original
 
   VECCORE_ATT_HOST_DEVICE
   VECCORE_FORCE_INLINE
@@ -125,7 +126,7 @@ public:
 
   VECCORE_ATT_HOST_DEVICE
   VECCORE_FORCE_INLINE
-  T getTotalEnergy() const { return fkinEnergy + fMass; }
+  T getTotalEnergy() const { return (fkinEnergy + fMass); }  // returns GeV, unlike original
 
   VECCORE_ATT_HOST_DEVICE
   VECCORE_FORCE_INLINE

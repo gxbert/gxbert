@@ -182,7 +182,7 @@ GenerateTwoBody(G4double initialMass, const std::vector<G4double>& masses,
   mom.setRThetaPhi(pscm, std::acos(costh), phi);
 
   if (GetVerboseLevel()>3) {		// Copied from old G4EPCollider
-    G4cout << " Particle kinds = " << kinds[0] << " , " << kinds[1]
+    G4cout << " ==> Particle kinds = " << kinds[0] << " , " << kinds[1]
 	   << " pmod " << pscm <<" costh="<< costh <<", phi="<< phi
 	   << "\n before rotation px " << mom.x() << " py " << mom.y()
 	   << " pz " << mom.z() << G4endl;
