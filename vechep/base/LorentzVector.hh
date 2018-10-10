@@ -1,7 +1,7 @@
 #ifndef LORENTZVECTOR_H
 #define LORENTZVECTOR_H
 
-/* 
+/*
 SIMD/SIMT version of LORENTZVECTOR of CLHEP
 */
 #include "VecHepDefs.hh"
@@ -67,67 +67,95 @@ public:
   //Get
   VECCORE_ATT_HOST_DEVICE
   VECCORE_FORCE_INLINE
-  T& x() { return fp.x(); }                                          
+  T& x() { return fp.x(); }
 
-  VECCORE_ATT_HOST_DEVICE 
-  VECCORE_FORCE_INLINE                       
-  T const& x() const { return fp.x(); }                                          
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
+  T const& x() const { return fp.x(); }
 
-  VECCORE_ATT_HOST_DEVICE 
-  VECCORE_FORCE_INLINE                       
-  T& y() { return fp.y(); }                                          
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
+  T& y() { return fp.y(); }
 
-  VECCORE_ATT_HOST_DEVICE 
-  VECCORE_FORCE_INLINE                       
-  T const& y() const { return fp.y(); }                                          
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
+  T const& y() const { return fp.y(); }
 
-  VECCORE_ATT_HOST_DEVICE 
-  VECCORE_FORCE_INLINE                       
-  T& z() { return fp.z(); }                                          
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
+  T& z() { return fp.z(); }
 
-  VECCORE_ATT_HOST_DEVICE 
-  VECCORE_FORCE_INLINE                       
-  T const& z() const { return fp.z(); }                                          
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
+  T const& z() const { return fp.z(); }
 
-  VECCORE_ATT_HOST_DEVICE 
-  VECCORE_FORCE_INLINE                       
-  T& t() { return fE; }                                          
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
+  T& t() { return fE; }
 
-  VECCORE_ATT_HOST_DEVICE 
-  VECCORE_FORCE_INLINE                       
-  T const& t() const { return fE; }                                          
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
+  T const& t() const { return fE; }
 
   VECCORE_ATT_HOST_DEVICE
   VECCORE_FORCE_INLINE
   T& E() { return fE; }
 
-  VECCORE_ATT_HOST_DEVICE 
-  VECCORE_FORCE_INLINE                       
-  T& E() { return fE; }                                          
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
+  T const& E() const { return fE; }
 
-  VECCORE_ATT_HOST_DEVICE 
-  VECCORE_FORCE_INLINE                       
-  T const& E() const { return fE; }                                          
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
+  T& e() { return fE; }
+
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
+  T const& e() const { return fE; }
+
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
+  T& px() { return fp.x(); }
+
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
+  T const& px() const { return fp.x(); }
+
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
+  T& py() { return fp.y(); }
+
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
+  T const& py() const { return fp.y(); }
+
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
+  T& pz() { return fp.z(); }
+
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
+  T const& pz() const { return fp.z(); }
 
   //Set
-  VECCORE_ATT_HOST_DEVICE    
-  VECCORE_FORCE_INLINE       
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
   void SetX(T const &x) { fp.SetX(x); }
 
-  VECCORE_ATT_HOST_DEVICE    
-  VECCORE_FORCE_INLINE       
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
   void SetY(T const &y) { fp.SetY(y); }
 
-  VECCORE_ATT_HOST_DEVICE    
-  VECCORE_FORCE_INLINE       
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
   void SetZ(T const &z) { fp.SetZ(z); }
 
-  VECCORE_ATT_HOST_DEVICE    
-  VECCORE_FORCE_INLINE       
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
   void SetT(T const &t) { fE = t; }
 
-  VECCORE_ATT_HOST_DEVICE    
-  VECCORE_FORCE_INLINE       
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
   void SetE(T const &E) { fE = E; }
 
   VECCORE_ATT_HOST_DEVICE
@@ -205,69 +233,69 @@ public:
   T Theta() const { return math::ACos(fp.z() / Mag()) ; }
 
   // Rotates
-  VECCORE_ATT_HOST_DEVICE 
+  VECCORE_ATT_HOST_DEVICE
   VECCORE_FORCE_INLINE
-  LorentzVector<T>& RotateX(T angle) 
-  { 
-    fp.rotateX(angle); 
-    return *this; 
+  LorentzVector<T>& RotateX(T angle)
+  {
+    fp.rotateX(angle);
+    return *this;
   }
 
-  VECCORE_ATT_HOST_DEVICE 
+  VECCORE_ATT_HOST_DEVICE
   VECCORE_FORCE_INLINE
-  LorentzVector<T>& RotateY(T angle) 
-  { 
-    fp.rotateY(angle); 
-    return *this; 
+  LorentzVector<T>& RotateY(T angle)
+  {
+    fp.rotateY(angle);
+    return *this;
   }
 
-  VECCORE_ATT_HOST_DEVICE 
+  VECCORE_ATT_HOST_DEVICE
   VECCORE_FORCE_INLINE
-  LorentzVector<T>& RotateZ(T angle) 
-  { 
-    fp.rotateZ(angle); 
-    return *this; 
+  LorentzVector<T>& RotateZ(T angle)
+  {
+    fp.rotateZ(angle);
+    return *this;
   }
 
   // Rotates reference frame from Uz to newUz (unit vector) (Geant4)
-  VECCORE_ATT_HOST_DEVICE 
+  VECCORE_ATT_HOST_DEVICE
   VECCORE_FORCE_INLINE
-  LorentzVector<T>& RotateUz(LorentzVector<T>& newUz) 
-  { 
-    fp.rotateUz(newUz); 
-    return *this; 
+  LorentzVector<T>& RotateUz(LorentzVector<T>& newUz)
+  {
+    fp.rotateUz(newUz);
+    return *this;
   }
 
   //boost
-  VECCORE_ATT_HOST_DEVICE 
+  VECCORE_ATT_HOST_DEVICE
   VECCORE_FORCE_INLINE
   GXThreeVector<T> BoostVector() const
   {
     return fp/fE;
-  } 
+  }
 
-  VECCORE_ATT_HOST_DEVICE 
+  VECCORE_ATT_HOST_DEVICE
   VECCORE_FORCE_INLINE
-  LorentzVector<T>& Boost(T bx, T by, T bz); 
+  LorentzVector<T>& Boost(T bx, T by, T bz);
 
-  VECCORE_ATT_HOST_DEVICE 
+  VECCORE_ATT_HOST_DEVICE
   VECCORE_FORCE_INLINE
-  LorentzVector<T>& Boost(GXThreeVector<T> b) 
-  { 
+  LorentzVector<T>& Boost(GXThreeVector<T> b)
+  {
     return Boost(b.x(),b.y(),b.z());
   }
 
-  VECCORE_ATT_HOST_DEVICE 
+  VECCORE_ATT_HOST_DEVICE
   VECCORE_FORCE_INLINE
-  LorentzVector<T>& BoostX(T bbeta); 
+  LorentzVector<T>& BoostX(T bbeta);
 
-  VECCORE_ATT_HOST_DEVICE 
+  VECCORE_ATT_HOST_DEVICE
   VECCORE_FORCE_INLINE
-  LorentzVector<T>& BoostY(T bbeta); 
+  LorentzVector<T>& BoostY(T bbeta);
 
-  VECCORE_ATT_HOST_DEVICE 
+  VECCORE_ATT_HOST_DEVICE
   VECCORE_FORCE_INLINE
-  LorentzVector<T>& BoostZ(T bbeta); 
+  LorentzVector<T>& BoostZ(T bbeta);
 
   //operators - index
 #define LORENTZVECTOR_INDEX_OP(OPERATOR)                        \
@@ -353,10 +381,10 @@ LorentzVector<T>& LorentzVector<T>::Boost(T bx, T by, T bz)
   SetT(ggamma*(t() + bp));
 
   return *this;
-} 
+}
 
-template <typename T>                                       
-VECCORE_ATT_HOST_DEVICE 
+template <typename T>
+VECCORE_ATT_HOST_DEVICE
 VECCORE_FORCE_INLINE
 LorentzVector<T>& LorentzVector<T>::BoostX(T bbeta)
 {
@@ -372,10 +400,10 @@ LorentzVector<T>& LorentzVector<T>::BoostX(T bbeta)
   fp.SetX(ggamma*(fp.getX() + bbeta*tt));
 
   return *this;
-} 
+}
 
-template <typename T>                                       
-VECCORE_ATT_HOST_DEVICE 
+template <typename T>
+VECCORE_ATT_HOST_DEVICE
 VECCORE_FORCE_INLINE
 LorentzVector<T>& LorentzVector<T>::BoostY(T bbeta)
 {
@@ -393,8 +421,8 @@ LorentzVector<T>& LorentzVector<T>::BoostY(T bbeta)
   return *this;
 }
 
-template <typename T>                                       
-VECCORE_ATT_HOST_DEVICE 
+template <typename T>
+VECCORE_ATT_HOST_DEVICE
 VECCORE_FORCE_INLINE
 LorentzVector<T>& LorentzVector<T>::BoostZ(T bbeta)
 {
@@ -412,7 +440,7 @@ LorentzVector<T>& LorentzVector<T>::BoostZ(T bbeta)
   fp.SetZ(ggamma*(fp.GetZ() + bbeta*tt));
 
   return *this;
-} 
+}
 
 
 #define LORENTZVECTOR_BINARY_OP(OPERATOR, ASSIGNMENT)                                         \

@@ -134,18 +134,26 @@ public:
 
   // ===== Access contents of lists =====
 
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
   int numberOfOutgoingParticles() const { return outgoingParticles.size(); }
 
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
   std::vector<GXInuclElementaryParticle<T>> const& getOutgoingParticles() const
   {
     return outgoingParticles;
   };
 
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
   std::vector<GXInuclElementaryParticle<T>>& getOutgoingParticles() {
     return outgoingParticles;
   };
 
-  G4int numberOfOutgoingNuclei() const { return 0; } //outgoingNuclei.size(); };
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
+  int numberOfOutgoingNuclei() const { return 0; } //outgoingNuclei.size(); };
  
   // const std::vector<G4InuclNuclei>& getOutgoingNuclei() const {
   //   return outgoingNuclei;
@@ -164,27 +172,54 @@ public:
   // std::vector<GXFragment>& getRecoilFragments() { return recoilFragments; };
 
   // ===== Get event totals for conservation checking, recoil, etc. ======
-
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
   LorentzVector<T> getTotalOutputMomentum() const;
-  int getTotalCharge() const;			// NOTE:  No fractional charges!
-  int getTotalBaryonNumber() const;
-  int getTotalStrangeness() const;
+
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
+  Index_v<T> getTotalCharge() const;			// NOTE:  No fractional charges!
+
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
+  Index_v<T> getTotalBaryonNumber() const;
+
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
+  Index_v<T> getTotalStrangeness() const;
 
   void printCollisionOutput(std::ostream& os = std::cerr) const;
 
   // ===== Manipulate final-state particles for kinematics =====
 
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
   void boostToLabFrame(const GXLorentzConvertor<T>& convertor);
 
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
   G4LorentzVector boostToLabFrame(LorentzVector<T>& mom,	// Note pass by value!
 				  GXLorentzConvertor<T> const& convertor) const;
 
   //void rotateEvent(GXLorentzRotation<T> const& rotate);
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
   void trivialise(GXInuclParticle<T>* bullet, GXInuclParticle<T>* target);
+
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
   void setOnShell(GXInuclParticle<T>* bullet, GXInuclParticle<T>* target);
+
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
   void setRemainingExcitationEnergy();
 
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
   double getRemainingExcitationEnergy() const { return eex_rest; };
+
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
   G4bool acceptable() const { return on_shell; };
 };
 

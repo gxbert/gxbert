@@ -49,25 +49,41 @@ public:
   
 protected:
   // Subclasses MUST implement these functions
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
   virtual void GenerateTwoBody(T initialMass,
 			       const std::vector<T>& masses,
 			       std::vector<LorentzVector<T>>& finalState) = 0;
 
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
   virtual void GenerateMultiBody(T initialMass,
 				 const std::vector<T>& masses,
 				 std::vector<LorentzVector<T>>& finalState) = 0;
 
   // Validate kinematics (e.g., limit number of final state particles)
   // Subclasses may override or call back to this function
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
   virtual Bool_v IsDecayAllowed(T initialMass,
 				std::vector<T> const& masses) const;
 
   // Two-body momentum function (c.f. PDK from CERNLIB W505)
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
   T TwoBodyMomentum(T M0, T M1, T M2) const;
 
   // Convenience functions for uniform angular distributions
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
   T UniformCosTheta() const;
+
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
   T UniformTheta() const;
+
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
   T UniformPhi() const;
 
   // Utility to dump vector contents to line of output
