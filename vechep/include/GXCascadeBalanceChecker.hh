@@ -119,7 +119,7 @@ public:
   VECCORE_FORCE_INLINE
   Bool_v okay() const
   {
-    return (energyOkay() && momentumOkay() && baryonOkay() && chargeOkay());
+    return (energyOkay() && momentumOkay() && strangeOkay() && baryonOkay() && chargeOkay());
   }
 
   // Calculations of conserved quantities from initial and final state
@@ -275,6 +275,8 @@ private:
   }
   
   template <typename T>
+  VECCORE_ATT_HOST_DEVICE
+  VECCORE_FORCE_INLINE
   void GXCascadeBalanceChecker<T>::
   check(GXInuclParticle<T> const* bullet, GXInuclParticle<T> const* target,
 	std::vector<GXInuclElementaryParticle<T>> const& particles)
@@ -293,11 +295,11 @@ private:
     Mask_v<T> relokay = (math::Abs(relativeE()) < relativeLimit);
     Mask_v<T> absokay = (math::Abs(deltaE()) < absoluteLimit);
 
-    if (verboseLevel > 1 && !MaskFull(relokay | absokay)) {    // TODO: fix !relokay || !absokay
+    if (verboseLevel > 1 && !MaskFull(relokay & absokay)) {
       std::cerr << fName << ": Energy conservation: relative " << relativeE()
-		<< (!MaskFull(relokay) ? " conserved" : " VIOLATED")
+		<< (MaskFull(relokay) ? " conserved" : " VIOLATED")
 		<< " absolute " << deltaE()
-		<< (!MaskFull(absokay )? " conserved" : " VIOLATED") <<"\n";
+		<< (MaskFull(absokay)? " conserved" : " VIOLATED") <<"\n";
     } else if (verboseLevel > 1) {
       std::cerr << fName << ": Energy conservation: relative " << relativeE()
 		<< " conserved absolute " << deltaE() << " conserved\n";
@@ -311,7 +313,20 @@ private:
   Mask_v<T> GXCascadeBalanceChecker<T>::
   ekinOkay() const
   {
+    Mask_v<T> relokay = (math::Abs(relativeKE()) < relativeLimit);
+    Mask_v<T> absokay = (math::Abs(deltaKE()) < absoluteLimit);
 
+    if (verboseLevel && !MaskFull(relokay & absokay)) {
+      cerr << fName << ": Kinetic energy balance: relative "
+	   << relativeKE() << (MaskFull(relokay) ? " conserved" : " VIOLATED")
+	   << " absolute " << deltaKE() << (MaskFull(absokay) ? " conserved" : " VIOLATED") <<"\n";
+    }
+    else if (verboseLevel > 1) {
+      cerr << fName << ": Kinetic energy balance: relative " << relativeKE()
+	   << " conserved, absolute " << deltaKE() << " conserved\n";
+    }
+
+    return (relokay & absokay);
   }
 
   template <typename T>
@@ -322,11 +337,11 @@ private:
     Mask_v<T> relokay = (math::Abs(relativeP()) < relativeLimit);
     Mask_v<T> absokay = (math::Abs(deltaP()) < absoluteLimit);
 
-    if (verboseLevel > 1 && !MaskFull(relokay | absokay)) {  // TODO: fix !relokay || !absokay
+    if (verboseLevel > 1 && !MaskFull(relokay & absokay)) {
       std::cerr << fName << ": Momentum conservation: relative " << relativeP()
-		<< (!MaskFull(relokay) ? " conserved" : " VIOLATED")
+		<< (MaskFull(relokay) ? " conserved" : " VIOLATED")
 		<< " absolute " << deltaP()
-		<< (!MaskFull(absokay)? " conserved" : " VIOLATED") <<"\n";
+		<< (MaskFull(absokay)? " conserved" : " VIOLATED") <<"\n";
     } else if (verboseLevel > 1) {
       std::cerr << fName << ": Momentum conservation: relative " << relativeP()
 		<< " conserved absolute " << deltaP() << " conserved\n";

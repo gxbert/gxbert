@@ -561,8 +561,8 @@ std::ostream &operator<<(std::ostream &os, GXInuclElementaryParticle<T> const& t
       masses << Get(trk.mass(),i);
     }
     os << " Particles=["<< names.str() <<"]"
-       << " masses/GeV=[" << masses.str() <<"]"
        << " types=" << trk.type()
+       << " masses/GeV=[" << masses.str() <<"]"
        << " ekin/GeV=" << trk.getKineticEnergy();
   }
   return os;

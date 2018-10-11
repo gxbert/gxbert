@@ -36,10 +36,10 @@ using std::cerr;
 //.. default globals
 constexpr double pmass = 0.938272013;  // proton mass in GeV
 size_t nReps     = 1;
-size_t nEvents   = 4; // 1024*64;
+size_t nEvents   = 128; // 1024*64;
 double kinEnergy = 1.500; // in GeV
 
-int debugLevel   = 4;
+int debugLevel   = 0;
 
 bool isOutputInvalid(G4InuclParticle &bullet, G4InuclParticle &target, G4CollisionOutput &output)
 {
@@ -134,10 +134,9 @@ bool isOutputInvalid(GXInuclParticle<T> const& bullet, GXInuclParticle<T> const&
     first = false;
   }
 
-  std::cerr<<"--- calling checker.check() now...\n";
   checker.check(&bullet, &target, output);
   vecCore::Mask_v<T> ok = checker.okay();
-  if(!vecCore::MaskEmpty(ok)) {
+  if(vecCore::MaskEmpty(ok)) {
     G4cerr<<" *** E/P balance check failed: "<< ok <<"\n";
   }
 
