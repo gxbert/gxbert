@@ -69,6 +69,7 @@ public:
     bullet_mom.y() = py;
     bullet_mom.z() = pz;
     bullet_mom.t() = E;
+    if (verboseLevel > 3) printBullet();
   }
 
   VECCORE_ATT_HOST_DEVICE
@@ -79,6 +80,7 @@ public:
     target_mom.y() = py;
     target_mom.z() = pz;
     target_mom.t() = E;
+    if (verboseLevel > 3) printTarget();
   }
 
   VECCORE_ATT_HOST_DEVICE
@@ -89,6 +91,7 @@ public:
     bullet_mom.y() = (Real_v*)bullet.py;
     bullet_mom.z() = (Real_v*)bullet.pz;
     bullet_mom.t() = (Real_v*)bullet.E;
+    if (verboseLevel > 3) printBullet();
   }
 
   VECCORE_ATT_HOST_DEVICE
@@ -99,6 +102,7 @@ public:
     target_mom.y() = (Real_v*)target.py;
     target_mom.z() = (Real_v*)target.pz;
     target_mom.t() = (Real_v*)target.E;
+    if (verboseLevel > 3) printTarget();
   }
 
   VECCORE_ATT_HOST_DEVICE
@@ -114,6 +118,7 @@ public:
   void setBullet(GXInuclParticle<Real_v> const& bullet)
   {
     bullet_mom = bullet.getFourMomentum();
+    if (verboseLevel > 3) printBullet();
   }
 
   VECCORE_ATT_HOST_DEVICE

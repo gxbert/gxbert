@@ -26,8 +26,8 @@
 #include "GXNeutron.hh"
 #include "G4InuclParticleNames.hh"
 
-#include <iostream>
 #include "Randomize.hh"
+#include <iostream>
 
 //using namespace ::vecCore;
 using namespace gxbert;
@@ -36,10 +36,10 @@ using std::cerr;
 //.. default globals
 constexpr double pmass = 0.938272013;  // proton mass in GeV
 size_t nReps     = 1;
-size_t nEvents   = 128; // 1024*64;
+size_t nEvents   = 4; // 1024*64;
 double kinEnergy = 1.500; // in GeV
 
-int debugLevel   = 0;
+int debugLevel   = 4;
 
 bool isOutputInvalid(G4InuclParticle &bullet, G4InuclParticle &target, G4CollisionOutput &output)
 {
@@ -101,14 +101,14 @@ bool isOutputInvalid(G4InuclParticle &bullet, G4InuclParticle &target, G4Collisi
     // 	     //#endif
     // 	 );
 
-  bool result = (npart==0);
+  bool result = (npart==0 && checker.okay());
 
   if(debugLevel>1) {
     std::cout<<"isOutputInvalid/G4: npart="<< npart <<", nfrag="<< nfrag
 	     <<", out0="<< out0->GetParticleName()
 	     <<", out1="<< out1->GetParticleName()
 	     <<", bullet="<< bullet.getDefinition()->GetParticleName()
-	     <<" --> return "<< result <<"\n";
+	     <<" --> return "<< (result ? "BAD" : "GOOD")<<"\n";
   }
 
   return result;
@@ -136,7 +136,7 @@ bool isOutputInvalid(GXInuclParticle<T> const& bullet, GXInuclParticle<T> const&
 
   checker.check(&bullet, &target, output);
   vecCore::Mask_v<T> ok = checker.okay();
-  if(vecCore::MaskEmpty(ok)) {
+  if(!vecCore::MaskFull(ok)) {
     G4cerr<<" *** E/P balance check failed: "<< ok <<"\n";
   }
 
@@ -180,10 +180,10 @@ bool isOutputInvalid(GXInuclParticle<T> const& bullet, GXInuclParticle<T> const&
   // 	     //#endif
   // 	 );
 
-  bool result = (npart==0);
+  bool result = (npart==0 && !vecCore::MaskFull(ok));
   if(debugLevel>1) {
-    std::cout<<"isOutputInvalid/G4: npart="<< npart <<", nfrag="<< nfrag <<", firstTypes="<< types <<", bullet.types="<< btypes
-	     <<" --> return "<< result <<"\n";
+    std::cout<<"isOutputInvalid/GX: npart="<< npart <<", nfrag="<< nfrag <<", firstTypes="<< types <<", bullet.types="<< btypes
+	     <<" --> return "<< result <<" "<< (!MaskEmpty(result)? "BAD" : "GOOD") <<"\n";
   }
 
   return result;

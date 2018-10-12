@@ -35,10 +35,11 @@ using std::cerr;
 
 //.. default globals
 constexpr double pmass = 0.938272013;  // proton mass in GeV
-size_t nReps     = 100;
-size_t nEvents   = (1 << 20); // 1024*64;
+size_t nReps     = 10;
+size_t nEvents   = (1 << 16); // 1024*64;
 double kinEnergy = 1.500; // in GeV
 
+#define DEBUG
 int debugLevel   = 0;
 
 bool isOutputInvalid(G4InuclParticle const &bullet, G4CollisionOutput const &output)
@@ -93,37 +94,43 @@ bool isOutputInvalid(G4InuclParticle const &bullet, G4CollisionOutput const &out
 //
 void RunG4ElemParticleMultiplicity(GXTrack_v const& soaBullets, GXTrack_v const& soaTargets, G4CollisionOutput &output)
 {
-  int counter = 0;
+  //  int counter = 0;
 
   G4ElementaryParticleCollider collider;
   collider.setVerboseLevel(debugLevel);
 
   G4InuclElementaryParticle bullet, target;
   G4LorentzVector lorvec;
-  Timer<nanoseconds> timer;
-  timer.Start();
-  //int numberOfTries = 0;
-  for(size_t irep = 0; irep < nReps; ++irep) {
-    for(size_t i = 0; i < nEvents; ++i) {
-      soaBullets.getFourMomentum(i, lorvec);
-      bullet.fill(lorvec, G4InuclParticleNames::proton);
 
-      soaTargets.getFourMomentum(i, lorvec);
-      target.fill(lorvec, G4InuclParticleNames::proton);
+  std::cerr<<"\n";
+  for (int mult = 2; mult < 5; ++mult) {
+    Timer<nanoseconds> timer;
+    timer.Start();
+    //int numberOfTries = 0;
+    for(size_t irep = 0; irep < nReps; ++irep) {
+      for(size_t i = 0; i < nEvents; ++i) {
+	soaBullets.getFourMomentum(i, lorvec);
+	bullet.fill(lorvec, G4InuclParticleNames::proton);
 
-      int is = bullet.type() * target.type();
-      double ekin = bullet.getKineticEnergy();
-      int multiplicity = collider.generateMultiplicity(is, ekin);
-      counter += multiplicity;
-      //if (debugLevel > 3) std::cerr << " is=" << is <<" kinE="<< ekin <<", multiplicity="<< multiplicity <<"\n";
-    }
-  }
-  double g4Elapsed = timer.Elapsed();
+	soaTargets.getFourMomentum(i, lorvec);
+	target.fill(lorvec, G4InuclParticleNames::proton);
 
-  std::cerr<<"\nGXBert results: "
-	   <<"  integrated multiplicity="<< counter
-	   <<"\tCPUtime="<< g4Elapsed / nEvents / nReps
-	   <<"\n";
+	int is = bullet.type() * target.type();
+	double ekin = bullet.getKineticEnergy();
+	collider.generateOutgoingPartTypes(is, mult, ekin);
+#ifdef DEBUG
+      if (debugLevel > 3) std::cerr << " is=" << is <<" kinE="<< ekin <<", multiplicity="<< mult <<"\n";
+#endif
+      } // nEvents loop
+    } // nReps loop
+
+    double g4Elapsed = timer.Elapsed();
+
+    std::cerr<<"GXBert results for mult="<< mult <<": "
+      //<<"  integrated multiplicity="<< counter
+	     <<"\tCPUtime="<< g4Elapsed / nEvents / nReps
+	     <<"\n";
+  } // multiplicity loop
 }
 
 
@@ -142,50 +149,40 @@ void RunGXElemParticleMultiplicity(const char* testname, GXTrack_v const& soaBul
 
   GXInuclElementaryParticle<Real_v> bullet, target;
   LorentzVector<Real_v> lorvec;
-  vecCore::Index_v<Real_v> counter(0);
-  Timer<nanoseconds> timer;
-  timer.Start();
-  for(size_t irep = 0; irep < nReps; ++irep) {
-    for(size_t i = 0; i < nEvents; i += vsize) {
-      soaBullets.getFourMomentum(i, lorvec);
-      bullet.fill(lorvec, G4InuclParticleNames::proton);
+  //vecCore::Index_v<Real_v> counter(0);
 
-      soaTargets.getFourMomentum(i, lorvec);
-      target.fill(lorvec, G4InuclParticleNames::neutron);
+  std::cerr<<"\n";
+  for (int mult = 2; mult < 5; ++mult) {
+    Timer<nanoseconds> timer;
+    timer.Start();
+    for(size_t irep = 0; irep < nReps; ++irep) {
+      for(size_t i = 0; i < nEvents; i += vsize) {
+	soaBullets.getFourMomentum(i, lorvec);
+	bullet.fill(lorvec, G4InuclParticleNames::proton);
 
-      auto initialState = bullet.type() * target.type();
-      Real_v kinEnergy = bullet.getKineticEnergy();
-      auto multiplicity = collider.generateMultiplicity(initialState, kinEnergy);
+	soaTargets.getFourMomentum(i, lorvec);
+	target.fill(lorvec, G4InuclParticleNames::neutron);
 
-      // update counters
-      counter += multiplicity;
+	auto initialState = bullet.type() * target.type();
+	Real_v kinEnergy = bullet.getKineticEnergy();
+	collider.generateOutgoingPartTypes(initialState, Index_v<Real_v>(mult), kinEnergy);
 
-      if (debugLevel > 2) {
-	cerr <<"***** Track "<< i
-	     <<" initState="<< initialState
-	     <<", kinEnergy="<< kinEnergy
-	     <<", multiplicity = "<< multiplicity <<"\n";
+#ifdef DEBUG
+	if (debugLevel > 2) {
+	  cerr <<"***** Track "<< i
+	       <<" initState="<< initialState
+	       <<", kinEnergy="<< kinEnergy
+	       <<", multiplicity = "<< mult <<"\n";
+	}
+#endif
       }
-
-      //<<" Final state: "<< output.numberOfOutgoingParticles()
-      //<<" hadrons + "<< output.numberOfOutgoingNuclei() <<" nuclei\n";
-      //nHadrons += output.numberOfOutgoingParticles();
-      //const std::vector<G4InuclElementaryParticle>& outParticles = output.getOutgoingParticles();
-      //std::vector<const G4InuclElementaryParticle>::const_iterator ipart = outParticles.begin(), iend = outParticles.end();
-      //for( ; ipart != iend; ++ipart) {
-      //  if (ipart->type() == G4InuclParticleNames::neutron) ++nNeutrons; //??? suspended...
-      //  else if (ipart->type() == G4InuclParticleNames::proton) ++nProtons; //??? suspended...
-      //  else if (ipart->type() == G4InuclParticleNames::photon) ++nPhotons; //??? suspended...
-      //  else ++nOthers;
-      // }
     }
-  }
-  double elapsed = timer.Elapsed();
+    double elapsed = timer.Elapsed();
 
-  std::cerr<<"\n"<< testname <<" results: "
-	   <<"  integrated multiplicity="<< vecCore::ReduceAdd(counter)
-	   <<"\tCPUtime="<< elapsed / nEvents / nReps
-	   <<"\n";
+    std::cerr<< testname <<" results for mult="<< mult
+	     <<":\tCPUtime="<< elapsed / nEvents / nReps
+	     <<"\n";
+  }
 }
 
 

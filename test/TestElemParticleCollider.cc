@@ -1,6 +1,6 @@
 //
-// File:    TestInteractionCase.cpp
-// Purpose: Unit tests for the vectorized class GXInteractionCase
+// File:    TestElemParticleCollider.cc
+// Purpose: Unit tests for the vectorized class GXElementaryParticleCollider
 //
 // 20180611 Guilherme Lima - created
 
@@ -110,17 +110,16 @@ int main()
 
   // build a vectorized EP collider
   GXElementaryParticleCollider<Real_v> vecCollider;
+  vecCollider.setVerboseLevel(5);
   std::cerr<<"useEPCollider<Real_v>(bullets,targtes): "<< vecCollider.useEPCollider(bullets,targets) <<"\n";
   assert(vecCollider.useEPCollider(bullets, targets));
   assert(vecCollider.useEPCollider(targets, bullets));
 
   auto initStateVec = bullets->type() * targets->type();
   Real_v ekinVec = bullets->getKineticEnergy();
-  auto multipl = vecCollider.generateMultiplicity(initStateVec, ekinVec);
-  std::cerr<<" multipl="<< multipl <<"\n";
-  for(size_t i=2; i<10; ++i) {
-    // make multiplicity vector uniform
-    multipl = vecCore::Index_v<Real_v>(i);
+  for(size_t i=0; i<10; ++i) {
+    auto multipl = vecCollider.generateMultiplicity(initStateVec, ekinVec);
+    std::cerr<<" multipl="<< multipl <<"\n";
     vecCollider.generateOutgoingPartTypes(initStateVec, multipl, ekinVec);
     vecCollider.fillOutgoingMasses();
   }

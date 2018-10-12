@@ -116,6 +116,8 @@ private:
 
   void fillOutgoingMasses();		// Fill mass arrays from particle types
 
+  void printArrays(std::vector<int> const& ikinds, int mult) const;
+
   // Utility class to generate final-state kinematics
   G4CascadeFinalStateGenerator fsGenerator;
 

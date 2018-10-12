@@ -711,7 +711,7 @@ collide(GXInuclParticle<T> const* bullet, GXInuclParticle<T> const* target, GXCo
   }
 
   // Check conservation in multibody final state
-  if (verboseLevel > 1 && !MaskEmpty(validateOutput(bullet, target, particles))) {
+  if (verboseLevel > 1 && !MaskFull(validateOutput(bullet, target, particles))) {
     cerr << " incoming particles: \n" << *particle1 << G4endl
   	   << *particle2 <<"\n"
   	   << " outgoing particles:\n";

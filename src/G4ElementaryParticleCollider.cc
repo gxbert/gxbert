@@ -245,7 +245,7 @@ G4ElementaryParticleCollider::collide(G4InuclParticle* bullet,
   for(ipart = particles.begin(); ipart != particles.end(); ipart++) {	
     mom = convertToSCM.backToTheLab(ipart->getMomentum());
     ipart->setMomentum(mom);
-  };
+  }
   
   // Check conservation in multibody final state
   if (verboseLevel > 1 && !validateOutput(bullet, target, particles)) {
@@ -303,6 +303,10 @@ G4ElementaryParticleCollider::generateOutgoingPartTypes(G4int is, G4int mult,
   else {
     G4cerr << " G4ElementaryParticleCollider: Unknown interaction channel "
 	   << is << " - outgoing kinds not generated " << G4endl;
+  }
+
+  if (verboseLevel > 3) {
+    G4cerr << " returning from generateOutPartTypes: "; this->printArrays(particle_kinds, mult);
   }
 
   return;
@@ -607,4 +611,19 @@ G4bool G4ElementaryParticleCollider::splitQuasiDeuteron(G4int qdtype) {
   particle_kinds.push_back(b2);
 
   return true;
+}
+
+void G4ElementaryParticleCollider::printArrays(std::vector<int> const& ikinds, int mult) const
+{
+  const size_t ksize = ikinds.size();
+  std::cerr<<" mult="<< mult
+	   <<", ikinds[size="<< ksize <<"]: [";
+  for (size_t i = 0; i < ksize; ++i) {
+    std::cerr << ikinds[i] <<" ";
+  }
+  std::cerr<<"] and part_kinds: [";
+  for (size_t i = 0; i < particle_kinds.size(); ++i) {
+    std::cerr << particle_kinds[i] <<" ";
+  }
+  std::cerr <<"]\n";
 }

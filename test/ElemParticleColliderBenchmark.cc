@@ -34,10 +34,10 @@ using std::cerr;
 //.. default globals
 constexpr double pmass = 0.938272013;  // proton mass in GeV
 size_t nReps     = 1;
-size_t nEvents   = 16; // 1024*64;
+size_t nEvents   = 1024; // 1024*64;
 double kinEnergy = 1.500; // in GeV
 
-int debugLevel   = 4;
+int debugLevel   = 0;
 
 bool isOutputInvalid(G4InuclParticle const &bullet, G4CollisionOutput const &output)
 {
@@ -190,14 +190,14 @@ void RunG4ElementaryParticleCollider(GXTrack_v const& soaBullets, GXTrack_v cons
       }
 
       numberOfTries = 0;
-      do {   			// we try to create inelastic interaction
+      do {   			// create inelastic interaction
 	output.reset();
 	collider.collide(&bullet, &target, output);
 	numberOfTries++;
       } while ( numberOfTries <= 20 && isOutputInvalid(bullet, output) );
 
       // update counters
-      if(debugLevel>0) {
+      if (debugLevel > 0) {
 	cerr<<"***** Event "<< i <<" Ntries="<< numberOfTries <<" Final state: "<< output.numberOfOutgoingParticles()
 	    <<" hadrons + "<< output.numberOfOutgoingNuclei() <<" nuclei\n";
       }
@@ -206,9 +206,9 @@ void RunG4ElementaryParticleCollider(GXTrack_v const& soaBullets, GXTrack_v cons
       const std::vector<G4InuclElementaryParticle>& outParticles = output.getOutgoingParticles();
       std::vector<G4InuclElementaryParticle>::const_iterator ipart = outParticles.begin(), iend = outParticles.end();
       for( ; ipart != iend; ++ipart) {
-       	if (ipart->type() == G4InuclParticleNames::neutron) ++nNeutrons; //??? suspended...
-       	else if (ipart->type() == G4InuclParticleNames::proton) ++nProtons; //??? suspended...
-       	else if (ipart->type() == G4InuclParticleNames::photon) ++nPhotons; //??? suspended...
+       	if (ipart->type() == G4InuclParticleNames::neutron) ++nNeutrons;
+       	else if (ipart->type() == G4InuclParticleNames::proton) ++nProtons;
+       	else if (ipart->type() == G4InuclParticleNames::photon) ++nPhotons;
 	else ++nOthers;
       }
     }

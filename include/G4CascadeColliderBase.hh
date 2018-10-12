@@ -73,7 +73,9 @@ public:
 
   virtual void setVerboseLevel(G4int verbose=0);
 
+#ifdef NDEBUG  // avoid definin
 protected:
+#endif
   G4InteractionCase interCase;		// Determine bullet vs. target
 
   // Decide whether to use G4ElementaryParticleCollider or not

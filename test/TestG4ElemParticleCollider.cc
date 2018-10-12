@@ -1,6 +1,6 @@
 //
-// File:    TestG4ElemParticleCollider.cpp
-// Purpose: Unit tests for the G4ElementaryParticleCollider
+// File:    TestG4ElemParticleCollider.cc
+// Purpose: Unit tests for class G4ElementaryParticleCollider
 //
 // 20180824 Guilherme Lima - created
 
@@ -16,14 +16,16 @@
 #include "GXTrack.hh"
 #include "GXTrackHandler.hh"
 
+constexpr double MeV = 0.001;
+
 int main()
 {
   using namespace gxbert;
   using namespace G4InuclParticleNames;
 
   // proton kinematics
-  double kinEnergy = 1.500;
-  double pMass = 0.938272013;
+  double kinEnergy = 1500. * MeV;
+  double pMass = 938.272013 * MeV;
   double etot = pMass + kinEnergy;
   double pmom = sqrt(etot*etot - pMass*pMass);
   G4LorentzVector p4vec(0., 0., pmom, etot);
@@ -31,24 +33,27 @@ int main()
   aProton.fill(p4vec, proton);
 
   // neutron at rest
-  double nMass = 0.93956563;
+  double nMass = 939.56563 * MeV;
   G4LorentzVector n4vec(0., 0., 1., nMass);
   G4InuclElementaryParticle aNeutron;
   aNeutron.fill(n4vec, neutron);
 
   // build a scalar collider
   G4ElementaryParticleCollider collider;
-  //collider.setVerboseLevel(5);
-  //std::cerr<<"useEPCollider(aProton,aNeutron): "<< collider.useEPCollider(&aProton, &aNeutron) <<"\n";
-  //assert(collider.useEPCollider(&aProton, &aNeutron));
-  //assert(collider.useEPCollider(&aNeutron, &aProton));
+  collider.setVerboseLevel(5);
+  std::cerr<<"useEPCollider(aProton,aNeutron): "<< collider.useEPCollider(&aProton, &aNeutron) <<"\n";
+  assert(collider.useEPCollider(&aProton, &aNeutron));
+  assert(collider.useEPCollider(&aNeutron, &aProton));
 
   int initialState = aProton.type() * aNeutron.type();
   double ekin = aProton.getKineticEnergy();
   for(size_t i=0; i<10; ++i) {
-    int multipl = collider.generateMultiplicity(initialState, ekin);
-    if(multipl<9) std::cerr<<" i="<< i <<" multipl="<< multipl <<"\n";
+    auto multipl = collider.generateMultiplicity(initialState, ekin);
+    std::cerr<<" i="<< i <<" multipl="<< multipl <<"\n";
+    collider.generateOutgoingPartTypes(initialState, multipl, ekin);
+    collider.fillOutgoingMasses();
   }
+
   /*
   //=== test basic functionality
   assert(case1.valid());

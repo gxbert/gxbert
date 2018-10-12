@@ -430,9 +430,11 @@ if (GXBERT_VECTEST)
   set(TEST_EXECUTABLES ${TEST_EXECUTABLES}
     ${PROJECT_SOURCE_DIR}/test/gvbertTest.cc
     ${PROJECT_SOURCE_DIR}/test/benchmark.cc
+    ${PROJECT_SOURCE_DIR}/test/InuclColliderBenchmark.cc
     ${PROJECT_SOURCE_DIR}/test/LorentzConvertorBenchmark.cc
-    ${PROJECT_SOURCE_DIR}/test/ElemParticleColliderBenchmark.cc
     ${PROJECT_SOURCE_DIR}/test/ElemPartMultiplicityBenchmark.cc
+    ${PROJECT_SOURCE_DIR}/test/ElemPartOutgPartTypesBenchmark.cc
+    ${PROJECT_SOURCE_DIR}/test/ElemParticleColliderBenchmark.cc
     ${PROJECT_SOURCE_DIR}/test/ValidateEPCollider.cc
     ${PROJECT_SOURCE_DIR}/test/LogABenchmark.cc
     ${PROJECT_SOURCE_DIR}/test/LogXBenchmark.cc
