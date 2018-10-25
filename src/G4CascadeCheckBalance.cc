@@ -114,7 +114,7 @@ void G4CascadeCheckBalance::collide(G4InuclParticle* bullet,
     std::cerr<<"\ttarget: "<< *ptarget <<"\n";
     const std::vector<G4InuclElementaryParticle>& outparts = output.getOutgoingParticles();
     std::cerr<<"\toutput: "<< outparts.size() <<" particles:\n";
-    for(int i=0; i < outparts.size(); ++i) {
+    for(size_t i = 0; i < outparts.size(); ++i) {
       G4LorentzVector lorvec = outparts[i].getMomentum();
       std::cerr<<"  i="<< i <<" part[i]=["<< lorvec.px() <<", "<< lorvec.py() <<", "<< lorvec.pz() <<"; "<< lorvec.e() <<")\n";
     }
