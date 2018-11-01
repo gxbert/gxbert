@@ -42,6 +42,8 @@ class GXCascadeFinalStateAlgorithm : public GXVCascadeAlgorithm<T> {
   using GXVCascadeAlgorithm<T>::GetName;
   using GXVCascadeAlgorithm<T>::SetVerboseLevel;
   using GXVCascadeAlgorithm<T>::GetVerboseLevel;
+  using GXVCascadeAlgorithm<T>::GenerateTwoBody;
+  using GXVCascadeAlgorithm<T>::GenerateMultiBody;
 
 public:
   GXCascadeFinalStateAlgorithm();
@@ -62,14 +64,14 @@ protected:
   VECCORE_FORCE_INLINE
   virtual void GenerateTwoBody(T initialMass,
 			       std::vector<T> const& masses,
-			       std::vector<LorentzVector<T>>& finalState);
+			       std::vector<LorentzVector<T>>& finalState) final;
 
   // N-body generation uses momentum-modulus distribution, computed angles
   VECCORE_ATT_HOST_DEVICE
   VECCORE_FORCE_INLINE
   virtual void GenerateMultiBody(T initialMass,
-				 const std::vector<T>& masses,
-				 std::vector<LorentzVector<T>>& finalState);
+				 std::vector<T> const& masses,
+				 std::vector<LorentzVector<T>>& finalState) final;
 
   // Compute kinematic quantities needed for distributions
   VECCORE_ATT_HOST_DEVICE
@@ -555,8 +557,8 @@ GenerateCosTheta(vecCore::Index_v<T> ptype, T pmod) const {
 
 
 template <typename T>
-VECCORE_ATT_HOST_DEVICE
-VECCORE_FORCE_INLINE
+// VECCORE_ATT_HOST_DEVICE
+// VECCORE_FORCE_INLINE
 void GXCascadeFinalStateAlgorithm<T>::
 GenerateTwoBody(T initialMass, std::vector<T> const& masses,
 		std::vector<LorentzVector<T>>& finalState)
@@ -615,9 +617,9 @@ template <typename T>
 VECCORE_ATT_HOST_DEVICE
 VECCORE_FORCE_INLINE
 void GXCascadeFinalStateAlgorithm<T>::
-GenerateMultiBody(T initialMass, const std::vector<T>& masses,
-		  std::vector<LorentzVector<T>>& finalState) {
-
+GenerateMultiBody(T initialMass, std::vector<T> const& masses,
+		  std::vector<LorentzVector<T>>& finalState)
+{
   if (GetVerboseLevel()>1)
     std::cerr << " >>> " << GetName() << "::GenerateMultiBody\n";
 
@@ -713,7 +715,7 @@ BetaKopylov(size_t K) const
   GXPowVec<T,Int_v>* g4pow = GXPowVec<T,Int_v>::GetInstance();
 
   Index_v<T> N(3 * K - 5);
-  const T xN( N );
+  const T xN( 3 * K - 5 );
   const T one(1.0);
 
   // original: Fmax = std::sqrt(g4pow->powN(xN/(xN+1.),N)/(xN+1.)); 
@@ -721,7 +723,7 @@ BetaKopylov(size_t K) const
   const T Fmax = math::Sqrt(g4pow->PowN(xN * oneOverXnPlus1, N) * oneOverXnPlus1); 
 
   // Loop checking 08.06.2015 MHK
-  T F, chi;
+  T F(0.), chi(0.);
   vecCore::Mask_v<T> done(false);
   do {
     vecCore::MaskedAssign( chi, !done, inuclRndm<T>());

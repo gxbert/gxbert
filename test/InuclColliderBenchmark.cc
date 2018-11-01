@@ -117,7 +117,7 @@ void RunG4InuclColliderTimer(GXTrack_v const& soaBullets, GXTrack_v const& soaTa
       nHadrons += output.numberOfOutgoingParticles();
       nNuclei += output.numberOfOutgoingNuclei();
       const std::vector<G4InuclElementaryParticle>& outParticles = output.getOutgoingParticles();
-      std::vector<const G4InuclElementaryParticle>::const_iterator ipart = outParticles.begin(), iend = outParticles.end();
+      std::vector<G4InuclElementaryParticle>::const_iterator ipart = outParticles.begin(), iend = outParticles.end();
       for( ; ipart != iend; ++ipart) {
        	if (ipart->type() == G4InuclParticleNames::neutron) ++nNeutrons; //??? suspended...
        	else if (ipart->type() == G4InuclParticleNames::proton) ++nProtons; //??? suspended...

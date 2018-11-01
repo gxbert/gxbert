@@ -50,15 +50,13 @@ public:
 protected:
   // Subclasses MUST implement these functions
   VECCORE_ATT_HOST_DEVICE
-  VECCORE_FORCE_INLINE
   virtual void GenerateTwoBody(T initialMass,
-			       const std::vector<T>& masses,
+			       std::vector<T> const& masses,
 			       std::vector<LorentzVector<T>>& finalState) = 0;
 
   VECCORE_ATT_HOST_DEVICE
-  VECCORE_FORCE_INLINE
   virtual void GenerateMultiBody(T initialMass,
-				 const std::vector<T>& masses,
+				 std::vector<T> const& masses,
 				 std::vector<LorentzVector<T>>& finalState) = 0;
 
   // Validate kinematics (e.g., limit number of final state particles)
@@ -205,10 +203,10 @@ private:
 
     // Allow different procedures for two-body or N-body distributions
     if (masses.size() == 2U) {
-      GenerateTwoBody(initialMass, masses, finalState);
+      this->GenerateTwoBody(initialMass, masses, finalState);
     }
     else {
-      GenerateMultiBody(initialMass, masses, finalState);
+      this->GenerateMultiBody(initialMass, masses, finalState);
     }
   }
 

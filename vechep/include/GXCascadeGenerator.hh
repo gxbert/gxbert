@@ -5,6 +5,9 @@
 #define GXCascadeGenerator_HH 1
 
 #include "LorentzVector.hh"
+#include "GXHadPhaseSpaceKopylov.hh"
+#include "GXHadPhaseSpaceGenbod.hh"
+#include "GXHadPhaseSpaceNBodyAsai.hh"
 #include <vector>
 
 class GXParticleDefinition;
@@ -77,6 +80,24 @@ protected:
   int verboseLevel;
   GXVCascadeAlgorithm<T>* theAlgorithm;
 };
+
+template <typename T>
+GXCascadeGenerator<T>::GXCascadeGenerator(Algorithm alg, G4int verbose)
+  : verboseLevel(verbose), theAlgorithm(0) {
+  switch (alg) {
+  case Kopylov: theAlgorithm = new GXHadPhaseSpaceKopylov(verboseLevel); break;
+  case GENBOD: theAlgorithm = new GXHadPhaseSpaceGenbod(verboseLevel); break;
+  case NBody: theAlgorithm = new GXHadPhaseSpaceNBodyAsai(verboseLevel); break;
+  case NONE: theAlgorithm = 0; break;	// User may explicitly set no algorithm
+  default: ReportInvalidAlgorithm(alg);
+  }
+
+  if (verboseLevel) {
+    G4cout << " >>> GXHadDecayGenerator";
+    if (theAlgorithm) G4cout << " using " << theAlgorithm->GetName();
+    G4cout << G4endl;
+  }
+}
 
 template <typename T>
 GXCascadeGenerator<T>::GXCascadeGenerator(GXVCascadeAlgorithm<T>* alg,

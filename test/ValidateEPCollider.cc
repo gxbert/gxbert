@@ -346,8 +346,8 @@ void RunGXElementaryParticleCollider(const char* testname, GXTrack_v const& soaB
       */
 
       const std::vector<GXInuclElementaryParticle<Real_v>>& outParticles = output.getOutgoingParticles();
-      typename std::vector<const GXInuclElementaryParticle<Real_v>>::const_iterator ipart = outParticles.begin();
-      typename std::vector<const GXInuclElementaryParticle<Real_v>>::const_iterator iend  = outParticles.end();
+      typename std::vector<GXInuclElementaryParticle<Real_v>>::const_iterator ipart = outParticles.begin();
+      typename std::vector<GXInuclElementaryParticle<Real_v>>::const_iterator iend  = outParticles.end();
       for( ; ipart != iend; ++ipart) {
 	Index_v<Real_v> types = ipart->type();
 	for(size_t j = 0; j < VectorSize<Real_v>(); ++j) {
@@ -411,18 +411,15 @@ int main(int argc, char* argv[]) {
   // }
 
   // Using function calls for benchmarks
-  //CLHEP::HepRandomEngine* theEngine = G4Random::getTheEngine();
   CLHEP::HepRandom::setTheSeed(17263543);
   G4CollisionOutput output;
   RunG4ElementaryParticleCollider(soaBullets, soaTargets, output);
 
   // benchmarks templated on types
-  //theEngine->setSeeds(seeds);
   CLHEP::HepRandom::setTheSeed(17263543);
   GXCollisionOutput<double> scalarOutput;
   RunGXElementaryParticleCollider<double>("double", soaBullets, soaTargets, scalarOutput);
 
-  //theEngine->setSeeds(seeds);
   CLHEP::HepRandom::setTheSeed(17263543);
   GXCollisionOutput<Real_v> vectorOutput;
   RunGXElementaryParticleCollider<Real_v>("Real_v", soaBullets, soaTargets, vectorOutput);

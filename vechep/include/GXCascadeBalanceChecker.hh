@@ -234,7 +234,7 @@ private:
       std::cerr<<"\ttarget: "<< *ptarget <<"\n";
       const std::vector<GXInuclElementaryParticle<T>>& outparts = output.getOutgoingParticles();
       std::cerr<<"\toutput: "<< outparts.size() <<" particles:\n";
-      for(int i=0; i < outparts.size(); ++i) {
+      for(size_t i=0; i < outparts.size(); ++i) {
 	LorentzVector<T> lorvec = outparts[i].getFourMomentum();
 	std::cerr<<"  i="<< i <<" part[i]=["<< lorvec.px() <<"; "<< lorvec.py() <<"; "<< lorvec.pz() <<"; "<< lorvec.E() <<")\n";
       }

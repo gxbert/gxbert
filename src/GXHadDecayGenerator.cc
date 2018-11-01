@@ -81,7 +81,7 @@ GXHadDecayGenerator::GXHadDecayGenerator(GXVHadDecayAlgorithm* alg,
 }
 
 GXHadDecayGenerator::~GXHadDecayGenerator() {
-  delete theAlgorithm;
+  if (theAlgorithm) delete theAlgorithm;
   theAlgorithm = 0;
 }
 

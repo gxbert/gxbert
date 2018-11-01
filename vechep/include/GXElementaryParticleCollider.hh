@@ -239,7 +239,7 @@ generateMultiplicity(vecCore::Index_v<T> const& hadPairs, T const& ekin) const
   Int_v mult(0);
   static bool first = true;
 
-  const G4CascadeChannel* xsecTable;
+  const G4CascadeChannel* xsecTable = 0;
   size_t vsize = vecCore::VectorSize<T>();
   int lastPair = -999;
   //std::cerr<<" genMult(): vsize="<< vsize <<", lastPair="<< lastPair <<", hadPairs="<< hadPairs <<" and ekin="<< ekin <<"\n";
@@ -345,7 +345,7 @@ generateOutgoingPartTypes(Int_v hadPairs, Int_v mult, T& ekin)
   particle_kinds.resize(cmultiplicity);
   std::vector<int> tempKinds;  // buffer for scalar calls to xsecTable->getOutgoingParticleTypes()
 
-  const G4CascadeChannel* xsecTable;
+  const G4CascadeChannel* xsecTable = 0;
   size_t vsize = vecCore::VectorSize<T>();
   int lastPair = -999;
   for (size_t i =0; i < vsize; ++i) {
@@ -613,18 +613,15 @@ collide(GXInuclParticle<T> const* bullet, GXInuclParticle<T> const* target, GXCo
     return;
   }
 
-  // Keep track of lanes for which no cascading is needed
-  const size_t vsize = vecCore::VectorSize<T>();
+  //  // Keep track of lanes for which no cascading is needed
+  //const size_t vsize = vecCore::VectorSize<T>();
   done = done | Bool_v( particle1->isNeutrino() || particle2->isNeutrino() );
 
   // Check if input is homogeneous -- redundant!?
+#ifdef DEBUG
   Index_v<T> hadcase = interCase.hadrons();
-  const size_t case0 = Get(hadcase, 0);
-  bool allsame(true);
-  for (size_t i = 1; i < vsize; ++i) {
-    allsame &= (case0 == Get(hadcase, i));
-  }
-  assert(allsame && "GXEPCollider::collide() called for inhomogeneous interCases");
+  assert(isHomogeneous(hadcase) && "GXEPCollider::collide() called for non-homogeneous interCases.");
+#endif
 
   // Check for available interaction table, if not quasi-deuteron special cases
   {
